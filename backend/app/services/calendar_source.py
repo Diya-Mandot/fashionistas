@@ -72,12 +72,28 @@ def _hint(name: str, description: str) -> Optional[str]:
     return None
 
 
+def _sources() -> list[str]:
+    """CALENDAR_ICS_URL may be a URL, an .ics file, a folder of .ics files, or several, comma-separated."""
+    out: list[str] = []
+    for part in (p.strip() for p in get_settings().calendar_ics_url.split(",")):
+        if not part:
+            continue
+        path = Path(part.removeprefix("file://")).expanduser()
+        if path.is_dir():
+            out.extend(str(f) for f in sorted(path.glob("*.ics")))
+        else:
+            out.append(part)
+    return out
+
+
 def _ics_events(start: date, end: date) -> list[dict[str, Any]]:
     import icalendar
     import recurring_ical_events
 
-    cal = icalendar.Calendar.from_ical(_fetch(get_settings().calendar_ics_url.strip()))
-    raw = recurring_ical_events.of(cal).between(start, end + timedelta(days=1))
+    raw = []
+    for src in _sources():
+        cal = icalendar.Calendar.from_ical(_fetch(src))
+        raw.extend(recurring_ical_events.of(cal).between(start, end + timedelta(days=1)))
     events = []
     for ev in raw:
         dt = ev.get("DTSTART").dt if ev.get("DTSTART") else None

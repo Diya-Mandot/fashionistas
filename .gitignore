@@ -22,3 +22,6 @@ backend/seed_images/photos/*
 # Recorded live API traffic (may include real calendar events); local replay only
 backend/recordings/*
 !backend/recordings/.gitkeep
+
+# Private calendar exports (personal data)
+backend/private_calendar/
