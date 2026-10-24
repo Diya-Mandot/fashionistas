@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     vision_timeout_s: float = 12.0
     scan_max_image_bytes: int = 15 * 1024 * 1024
     scan_max_image_pixels: int = 50_000_000
+    scan_vision_model: str = "gpt-6-astra"
+    scan_vision_mode: ApiMode = "live"
+    scan_timeout_seconds: float = Field(default=120, gt=0, le=300)
+    scan_uploads_dir: Path = BACKEND_DIR / "uploads"
     google_application_credentials: str = ""
 
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"

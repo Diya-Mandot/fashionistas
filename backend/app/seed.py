@@ -10,7 +10,7 @@ from typing import Any
 
 from sqlmodel import Session, delete, select
 
-from app.models import AgentRunRecord, WardrobeItem
+from app.models import AgentRunRecord, ClosetScanRecord, WardrobeItem
 
 # (art, name, category, subcategory, color, style, formality, season, material, brand,
 #  days_since_worn | None, times_worn, favorite)
@@ -151,6 +151,7 @@ def reset(session: Session) -> int:
     """Restore the seed closet and clear runs. Returns the item count."""
     session.exec(delete(WardrobeItem))
     session.exec(delete(AgentRunRecord))
+    session.exec(delete(ClosetScanRecord))
     items = closet_items()
     session.add_all(items)
     session.commit()

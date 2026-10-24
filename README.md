@@ -17,8 +17,8 @@ make test
 
 ## Backend progress
 
-Agents SDK adapters, async Decisions adapters, and weather integration are implemented.
-Photo scanning comes next, followed by outfit planning.
+Agents SDK adapters, async Decisions adapters, weather, and backend photo scanning are implemented.
+Outfit planning comes next.
 The frontend does not call these adapters yet.
 The new async Decisions adapter lives in `backend/app/integrations/decisions_adapter.py`.
 Main's synchronous `decisions_client.py` remains available. Consolidating these interfaces remains integration work.
@@ -102,8 +102,50 @@ Out-of-range dates and provider failures stay unavailable. Missing values remain
 The service does not substitute nearby dates, seasonal averages, or dry weather.
 The `weather_tool(client)` factory supplies the existing `AgentTool` contract for later planner integration.
 
-Verification: 70 backend tests pass. A live Seattle lookup returned three days without missing data.
-The repeat request used the cache. Complete scanning and planning flows remain untested.
+A live Seattle lookup returned three days without missing data. The repeat request used the cache.
+
+## Closet scanning
+
+The scanner reuses the WIP closet model and our async Decisions adapter. It adds image understanding and batch storage.
+The current pipeline does not require a Google Vision key.
+
+1. Upload a JPEG, PNG, WebP, or HEIC photo to `POST /api/scan`.
+2. The server checks actual image content, file size, pixel count, and animation.
+3. It corrects orientation, strips metadata, and sends a normalized image to OpenAI image understanding.
+4. Image understanding identifies up to eight garment regions. Decisions tags each cropped region.
+5. The server saves recognized garments into the existing closet. It returns tags, sources, confidence values, and review flags.
+
+```bash
+curl -X POST http://localhost:8000/api/scan \
+  -H 'Idempotency-Key: closet-photo-001' \
+  -F 'file=@/absolute/path/to/clothes.jpg'
+
+curl http://localhost:8000/api/scan/SCAN_ID
+curl -X POST http://localhost:8000/api/scan/SCAN_ID/undo
+```
+
+Use a fresh idempotency key for each new upload. Reuse that key when retrying the same photo bytes.
+Retrying returns the saved response without repeating model calls or adding duplicate items.
+Reusing a key with different photo bytes returns HTTP 409.
+Undo removes that scan's closet items and crop files. Repeating undo is safe.
+Demo reset also clears scan records, retry keys, and generated scan images.
+
+Material stays unknown unless a readable composition label supports the returned material tag.
+Waterproof protection remains unverified. Unknown categories do not become guessed closet items.
+Unclear detections and duplicate regions are skipped with explicit issues.
+Detection coordinates and model confidence require review; they do not guarantee correct segmentation.
+
+`SCAN_VISION_MODE` and `DECISIONS_MODE` independently support `live`, `replay`, and `mock`.
+Live is the default. Mock scans save no garments. Replay reuses recorded model results.
+A replay upload can save a new batch; use the original idempotency key to avoid duplicate saves.
+Model failures and timeouts save no partial closet batch. No automatic fallback hides those failures.
+
+The original photo is not saved in the application uploads directory. Saved garment crops are served through `/media/uploads`.
+Scan records contain historical response snapshots. Model recordings and scan metadata can contain personal information.
+The current app has no authentication. Keep the demo and its local files private.
+
+All 99 backend tests pass. Verification includes simulated Responses and Decisions calls through saving, retrieval, replay, and undo.
+Live photo recognition and the Scan frontend remain unverified. Outfit planning remains unfinished.
 
 ## Ported from the capstone
 
