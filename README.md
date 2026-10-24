@@ -45,7 +45,7 @@ One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/
 
 ## The demo closet
 
-The closet is real product photos in `backend/seed_images/photos/`, labelled in `manifest.json`. **Photos are git-ignored and stay on your machine**: a fresh clone starts with an empty closet, and you add clothes in the **Scan** tab or with the importer. The local set deliberately has **no waterproof outerwear and no shoes**, so the agent flags both as closet gaps on a rainy trip.
+The closet is 22 real product photos in `backend/seed_images/photos/`, labelled in `manifest.json` (no wear history yet: every piece starts as never worn). A fresh clone starts with this closet; add more in the **Scan** tab or with the importer. The local set deliberately has **no waterproof outerwear and no shoes**, so the agent flags both as closet gaps on a rainy trip.
 
 ```bash
 make import-photos DIR=~/Desktop/more-clothes   # JPG/PNG/WEBP/HEIC
@@ -103,7 +103,7 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind; pages Stylist, Closet,
 | `frontend/src/theme/typography.ts` + `src/index.css` | `ecostylistfe/theme/typography.ts` | Same presets as CSS classes |
 | `frontend/src/theme/glass.ts` | `ecostylistfe/theme/glass.ts` | Web branch only |
 
-Demo closet photos are stored locally in `backend/seed_images/photos/` (git-ignored), so the demo never depends on image hosts.
+Demo closet photos are stored in the repo under `backend/seed_images/photos/`, so the demo never depends on image hosts.
 
 ## 2-minute demo script
 
