@@ -3,7 +3,7 @@ from pathlib import Path
 
 import logging
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -75,3 +75,20 @@ def health() -> dict:
         "calendar": "your calendar (iCal)" if calendar_configured() else "demo calendar",
         "home_city": settings.home_city,
     }
+
+
+# Production mode (`make start`): serve the built frontend from this same server.
+FRONTEND_DIST = BACKEND_DIR.parent / "frontend" / "dist"
+if FRONTEND_DIST.exists():
+    from fastapi.responses import FileResponse
+
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        if path.startswith(("api/", "media/")):
+            raise HTTPException(404, "Not found")
+        file = FRONTEND_DIST / path
+        if path and file.is_file() and FRONTEND_DIST in file.resolve().parents:
+            return FileResponse(file)
+        return FileResponse(FRONTEND_DIST / "index.html")  # client-side routes: /closet, /scan

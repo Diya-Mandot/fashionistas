@@ -21,6 +21,8 @@ cp backend/.env.example backend/.env   # then paste OPENAI_API_KEY (see below)
 make dev                               # backend :8000, frontend :5173
 ```
 
+For the live demo, use **`make start`** instead: it builds the frontend and serves the whole app from http://localhost:8000 with no hot reload, which is more stable on stage.
+
 Open http://localhost:5173.
 
 ```bash

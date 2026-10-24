@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend install test preflight warmup reset import-photos
+.PHONY: dev start backend frontend install test preflight warmup reset import-photos
 
 install:
 	cd backend && uv sync
@@ -16,6 +16,11 @@ dev:
 	$(MAKE) backend & \
 	$(MAKE) frontend & \
 	wait
+
+# Demo/production mode: build the frontend once, serve everything from :8000 (no hot reload).
+start:
+	cd frontend && npm run build
+	cd backend && uv run uvicorn app.main:app --port 8000
 
 test:
 	cd backend && uv run pytest -q
