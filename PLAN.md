@@ -4,7 +4,9 @@ Track 1: **Agents in Action**. We use the **Agents SDK** and **Decisions API**.
 The SDK is the current choice. A separate adapter permits a later hosted API migration.
 
 Current sequence: adapters, weather, scanning, then outfit planning.
-The adapters are implemented. Live account access still needs an explicit preflight check.
+The adapters and weather integration are implemented. Live OpenAI account access still needs an explicit preflight check.
+WIP commit `9c6108b` already supplies closet CRUD, calendar data, and candidate generation.
+Commit `886b1b4` supplies the Closet page and synchronous Decisions adapter. Reuse these components.
 
 Judges must see three things: **API input → the agent's task or decision → the result in our app.**
 
@@ -35,7 +37,7 @@ Both APIs sit behind adapters, so their shapes never leak into the rest of the a
 - `backend/app/integrations/decisions_client.py`: existing synchronous adapter from main. Keep its callers compatible during integration.
 
 Adapters follow the official Agents SDK and Decisions API documentation.
-Weather, scanning, planner validation, and frontend integration remain separate implementation steps.
+Weather lookup is implemented. Scanning, planner validation, and frontend integration remain separate steps.
 
 ## Architecture
 
@@ -57,7 +59,7 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind, web only
 
 | Tool | Source | Notes |
 |---|---|---|
-| `get_weather_forecast(city, start, end)` | Open-Meteo (free, no key) | Planned: 30 min cache. Missing forecast days remain unavailable. Never present seasonal guesses as forecasts. |
+| `get_weather_forecast(city, start, end)` | Open-Meteo (free, no key) | Implemented: city selection, 30 min cache, local dates, and explicit missing days. Available as an SDK tool and `/api/weather`. |
 | `read_calendar(start, end)` | Mock, from `seed.py` | Events are relative to today: a Seattle conference trip and an NYC weekend. |
 | `query_closet(filters)` | SQLite | Compact payload. |
 | `build_and_score_outfits(event, weather, vibe)` | Generator + **Decisions API** | Candidates are referenced by index only and mapped back to item IDs server-side. Scores per criterion: vibe, dress code, weather, color, freshness. |
@@ -77,7 +79,7 @@ Ported exactly from `ecostylistfe/theme`: Paper `#FAF9F6`, Deep Forest `#1A3226`
 1. ★ **Scaffold**: FastAPI and Vite running, theme and fonts, styled Stylist hero with the glass prompt box.
 2. **Data + ported core**: models, seed closet (~25 items, no waterproof outerwear) and calendar, generator tests, Closet page.
 3. ★ **Adapters**: implemented live / replay / mock modes and explicit preflight health check. Real account access remains untested.
-4. **Weather integration**: city lookup, dated forecasts, caching, and explicit missing-data handling.
+4. **Weather integration**: implemented city lookup, dated forecasts, caching, and explicit missing-data handling. Live Seattle check passed.
 5. **Agentic Scan**: upload → image understanding → Decisions classification → save with undo.
 6. ★ **Outfit planning + UI**: implement all 5 tools, `/api/stylist/plan`, and plan validation. Add plan views, scores, gaps, and traces.
 7. **Demo hardening**: reset endpoint, fallbacks, mode badge, README demo script, polish at 1440px.
