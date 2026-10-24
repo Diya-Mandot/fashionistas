@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { IoCameraOutline, IoShirtOutline, IoSparklesOutline } from 'react-icons/io5';
+import { ModeBadge } from './ModeBadge';
 import { Wordmark } from './Wordmark';
 
 const LINKS = [
@@ -18,6 +19,10 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
         <NavLink to="/" aria-label="Home">
           <Wordmark light={light} size={24} />
         </NavLink>
+        <div className="flex items-center gap-3">
+        <span className="hidden md:block">
+          <ModeBadge light={light} />
+        </span>
         <div className={`flex gap-1 rounded-full p-1 ${overlay ? 'glass' : 'bg-sand-100'}`}>
           {LINKS.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -38,6 +43,7 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
               <span className="hidden sm:inline">{label}</span>
             </NavLink>
           ))}
+        </div>
         </div>
       </nav>
     </header>

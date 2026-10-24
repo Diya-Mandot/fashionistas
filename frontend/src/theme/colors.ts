@@ -33,4 +33,8 @@ export const colors = {
   sage100: '#E7F0EA',
   sage200: '#C8D9CE',
   forestMid: '#2F6B3B',
+
+  // Derived from Eco Emerald for data marks (score bars). Validated: lightness band,
+  // chroma floor and >=3:1 contrast on white.
+  emeraldDeep: '#1F8A5B',
 } as const;

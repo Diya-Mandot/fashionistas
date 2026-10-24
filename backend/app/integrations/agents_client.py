@@ -335,6 +335,13 @@ def _run_mock(context: dict[str, Any], execute: Execute, emit: Emit) -> AgentRun
         events = [{"name": "Your plans", "date": start.isoformat(), "start_time": None, "dress_code_hint": vibe}]
 
     days_w = {d["date"]: d for d in weather.get("days", [])}
+    if re.search(r"\b(rain|rainy|raining|drizzl|wet|storm)", message, flags=re.IGNORECASE):
+        dry = [d for d in days_w.values() if (d.get("precip_pct") or 0) < 50]
+        if dry:
+            emit(TraceStep(kind="thinking", title="You said it'll be rainy, so I'm planning for rain",
+                           detail=f"The forecast shows {max((d.get('precip_pct') or 0) for d in days_w.values())}% max; trusting your message", source="mock"))
+        for d in days_w.values():
+            d["precip_pct"] = max(d.get("precip_pct") or 0, 70)
     plan_days: dict[str, list[dict[str, Any]]] = {}
     for e in events:
         w = days_w.get(e["date"], {})

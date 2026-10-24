@@ -26,6 +26,7 @@ export default {
         'sage-100': colors.sage100,
         'sage-200': colors.sage200,
         'forest-mid': colors.forestMid,
+        'emerald-deep': colors.emeraldDeep,
       },
       fontFamily: {
         display: ['Syne', 'sans-serif'],

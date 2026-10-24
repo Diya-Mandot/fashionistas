@@ -37,6 +37,7 @@ export interface OutfitPick {
   item_ids: string[];
   scores: Scores;
   rationale: string;
+  ref?: string | null;
 }
 
 export interface PlanEvent {
@@ -128,4 +129,20 @@ export interface Health {
   agents_mode: string;
   decisions_mode: string;
   key_configured?: boolean;
+  vision_configured?: boolean;
+}
+
+export interface PreflightCheck {
+  ok: boolean;
+  ms?: number;
+  error?: string;
+}
+
+export interface Preflight {
+  key_configured: boolean;
+  modes: { agents: string; decisions: string };
+  recordings: { agents: number; decisions: number };
+  vision_configured: boolean;
+  decisions: PreflightCheck;
+  agents: PreflightCheck;
 }

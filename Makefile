@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend install test
+.PHONY: dev backend frontend install test preflight warmup reset
 
 install:
 	cd backend && uv sync
@@ -19,3 +19,15 @@ dev:
 
 test:
 	cd backend && uv run pytest -q
+
+# One tiny real call to each API (needs OPENAI_API_KEY and the backend running).
+preflight:
+	@curl -s localhost:8000/api/health/apis | python3 -m json.tool
+
+# Run every demo path live once so honest replay recordings exist.
+warmup:
+	cd backend && uv run python scripts/warmup.py
+
+# Restore the seed closet and clear runs.
+reset:
+	@curl -s -X POST localhost:8000/api/dev/reset; echo
