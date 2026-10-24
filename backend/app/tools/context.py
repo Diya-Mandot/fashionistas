@@ -32,6 +32,7 @@ class RunContext:
     today: date
     home_city: str
     emit: Callable[[TraceStep], None]
+    home_coords: Optional[tuple[float, float]] = None
     city: Optional[str] = None
     weather_by_date: dict[str, dict[str, Any]] = field(default_factory=dict)
     events_seen: list[dict[str, Any]] = field(default_factory=list)

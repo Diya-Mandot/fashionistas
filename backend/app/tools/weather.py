@@ -103,7 +103,10 @@ def get_weather_forecast(ctx: RunContext, city: str, start_date: Optional[str] =
     ctx.city = ctx.city or city
     note = None
     try:
-        place = _geocode(city)
+        if ctx.home_coords and city.strip().lower() == ctx.home_city.strip().lower():
+            place = {"name": ctx.home_city, "latitude": ctx.home_coords[0], "longitude": ctx.home_coords[1], "admin1": None}
+        else:
+            place = _geocode(city)
         daily, cached = _forecast(place["latitude"], place["longitude"])
         all_days = [
             {

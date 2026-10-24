@@ -5,11 +5,13 @@ import { AgentTrace } from '../components/AgentTrace';
 import { DayTabs } from '../components/DayTabs';
 import { GapCard } from '../components/GapCard';
 import { GlassPanel } from '../components/GlassPanel';
+import { LocationChip } from '../components/LocationChip';
 import { NavBar } from '../components/NavBar';
 import { OutfitCard } from '../components/OutfitCard';
 import { PackingList } from '../components/PackingList';
 import { api } from '../lib/api';
-import type { AgentRun, WardrobeItem } from '../lib/types';
+import type { AgentRun, DeviceLocation, WardrobeItem } from '../lib/types';
+import { useDeviceLocation } from '../lib/useDeviceLocation';
 import { HERO_IMAGE } from '../theme/brand';
 
 const EXAMPLES = [
@@ -37,6 +39,7 @@ export function Stylist() {
   const [closet, setCloset] = useState<WardrobeItem[]>([]);
   const [day, setDay] = useState(0);
   const pollRef = useRef<number | null>(null);
+  const geo = useDeviceLocation();
   const runId = params.get('run');
 
   const items = useMemo(() => new Map(closet.map((i) => [i.id, i])), [closet]);
@@ -84,7 +87,7 @@ export function Stylist() {
     setDay(0);
     setRun(null);
     try {
-      const { run_id } = await api.startPlan(text);
+      const { run_id } = await api.startPlan(text, geo.location);
       setParams({ run: run_id });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -123,12 +126,12 @@ export function Stylist() {
             An agent checks the weather, reads your calendar and searches your closet, then lets a decision engine
             score every outfit.
           </p>
-          <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark />
+          <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
         </section>
       ) : (
         <main className="mx-auto max-w-[1360px] px-5 pb-24 pt-24 md:px-10">
-          <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} compact busy={run?.status === 'running'} />
+          <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} compact busy={run?.status === 'running'} geo={geo} />
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)]">
             {/* Left: plan */}
@@ -187,6 +190,7 @@ function PromptBox({
   dark = false,
   compact = false,
   busy = false,
+  geo,
 }: {
   message: string;
   setMessage: (s: string) => void;
@@ -194,6 +198,7 @@ function PromptBox({
   dark?: boolean;
   compact?: boolean;
   busy?: boolean;
+  geo: { location: DeviceLocation | null; status: string; locate: () => void; clear: () => void };
 }) {
   return (
     <GlassPanel radius="hero" className={compact ? 'p-2.5' : 'mt-10 p-3 md:p-4'}>
@@ -214,9 +219,15 @@ function PromptBox({
             compact ? 'py-3 text-[15px] leading-6' : 'py-4 text-[16px] leading-6'
           }`}
         />
-        <div className={compact ? 'flex shrink-0 gap-2' : 'mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between'}>
+        <div className={compact ? 'flex shrink-0 items-center gap-2' : 'mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between'}>
+          {compact && (
+            <span className="hidden lg:block">
+              <LocationChip location={geo.location} status={geo.status} onLocate={geo.locate} onClear={geo.clear} dark={false} />
+            </span>
+          )}
           {!compact && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <LocationChip location={geo.location} status={geo.status} onLocate={geo.locate} onClear={geo.clear} dark={dark} />
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex.label}

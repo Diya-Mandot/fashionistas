@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     google_application_credentials: str = ""
 
     home_city: str = "San Francisco"
+    # Real calendar: a private iCal (.ics) URL or file path. Google Calendar:
+    # Settings -> your calendar -> "Secret address in iCal format".
+    calendar_ics_url: str = ""
+    # Also include the seeded demo trips (Seattle/NYC/new job). Defaults to on only
+    # when no real calendar is configured.
+    calendar_include_demo: Optional[bool] = None
     uploads_dir: str = str(BACKEND_DIR / "uploads")
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"
     frontend_origin: str = "http://localhost:5173"

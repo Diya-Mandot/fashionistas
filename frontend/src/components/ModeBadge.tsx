@@ -74,6 +74,10 @@ export function ModeBadge({ light }: { light: boolean }) {
                 </span>
               </li>
               <li className="flex justify-between">
+                <span className="font-semibold text-ink">Calendar</span>
+                <span className="text-muted">{health.calendar ?? 'demo calendar'}</span>
+              </li>
+              <li className="flex justify-between">
                 <span className="font-semibold text-ink">Google Vision</span>
                 <span className="text-muted">{pf.vision_configured ? 'configured' : 'not set (local fallback)'}</span>
               </li>

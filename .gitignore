@@ -18,3 +18,7 @@ dist/
 # Demo closet photos stay local (uploaded manually during the demo)
 backend/seed_images/photos/*
 !backend/seed_images/photos/.gitkeep
+
+# Recorded live API traffic (may include real calendar events); local replay only
+backend/recordings/*
+!backend/recordings/.gitkeep

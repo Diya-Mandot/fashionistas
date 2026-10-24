@@ -13,9 +13,16 @@ from app.models import AgentRunRecord
 router = APIRouter(prefix="/api/stylist", tags=["stylist"])
 
 
+class Location(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    city: Optional[str] = None
+
+
 class PlanRequest(BaseModel):
     message: str = Field(min_length=3, max_length=2000)
     home_city: Optional[str] = None
+    location: Optional[Location] = None
     wait: bool = False
 
 
@@ -34,7 +41,7 @@ def _mode() -> dict[str, Any]:
 
 @router.post("/plan", response_model=PlanResponse)
 def create_plan(body: PlanRequest, session: Session = Depends(get_session)):
-    run_id = start_run(body.message.strip(), body.home_city)
+    run_id = start_run(body.message.strip(), body.home_city, body.location.model_dump() if body.location else None)
     if body.wait:
         wait(run_id)
     rec = session.get(AgentRunRecord, run_id)

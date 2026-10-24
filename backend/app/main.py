@@ -11,9 +11,10 @@ from sqlmodel import Session
 
 from app.config import BACKEND_DIR, get_settings
 from app.core.vision import vision_configured
+from app.services.calendar_source import calendar_configured
 from app.db import engine, init_db
 from app.integrations.openai_client import key_configured
-from app.routers import calendar, closet, dev, health, scan, stylist
+from app.routers import calendar, closet, dev, health, location, scan, stylist
 from app.seed import seed_if_empty
 
 settings = get_settings()
@@ -51,6 +52,7 @@ async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
 
 app.include_router(stylist.router)
 app.include_router(health.router)
+app.include_router(location.router)
 app.include_router(scan.router)
 app.include_router(closet.router)
 app.include_router(calendar.router)
@@ -70,4 +72,6 @@ def health() -> dict:
         "decisions_mode": settings.decisions_mode,
         "key_configured": key_configured(),
         "vision_configured": vision_configured(),
+        "calendar": "your calendar (iCal)" if calendar_configured() else "demo calendar",
+        "home_city": settings.home_city,
     }

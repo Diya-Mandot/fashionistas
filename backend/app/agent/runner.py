@@ -14,6 +14,7 @@ from app.config import get_settings
 from app.db import engine
 from app.integrations.agents_client import build_goal, run_agent
 from app.models import AgentRunRecord
+from app.services.location import reverse_geocode
 from app.tools.context import RunContext
 from app.tools.registry import dispatch, submit_plan, tool_specs
 from app.trace import Timer, TraceStep
@@ -49,14 +50,23 @@ class _Persist:
             session.commit()
 
 
-def start_run(message: str, home_city: Optional[str] = None) -> str:
-    home = (home_city or get_settings().home_city).strip() or get_settings().home_city
+def start_run(message: str, home_city: Optional[str] = None, location: Optional[dict[str, Any]] = None) -> str:
+    home = (home_city or "").strip()
+    coords = None
+    if location:
+        coords = (location["lat"], location["lon"])
+        if not home:
+            home = (location.get("city") or "").strip()
+            if not home:
+                place = reverse_geocode(*coords)
+                home = place["city"] if place else ""
+    home = home or get_settings().home_city
     with Session(engine) as session:
         rec = AgentRunRecord(message=message, home_city=home)
         session.add(rec)
         session.commit()
         run_id = rec.id
-    t = threading.Thread(target=_execute, args=(run_id, message, home), daemon=True)
+    t = threading.Thread(target=_execute, args=(run_id, message, home, coords), daemon=True)
     _threads[run_id] = t
     t.start()
     return run_id
@@ -68,16 +78,17 @@ def wait(run_id: str, timeout: float = 240) -> None:
         t.join(timeout)
 
 
-def _execute(run_id: str, message: str, home: str) -> None:
+def _execute(run_id: str, message: str, home: str, coords: Optional[tuple[float, float]] = None) -> None:
     p = _Persist(run_id)
     total = Timer()
     today = date.today()
-    ctx = RunContext(run_id=run_id, message=message, today=today, home_city=home, emit=p.emit)
-    p.emit(TraceStep(kind="input", title="Your request", detail=message, source="local"))
+    ctx = RunContext(run_id=run_id, message=message, today=today, home_city=home, emit=p.emit, home_coords=coords)
+    p.emit(TraceStep(kind="input", title="Your request", detail=message, source="local",
+                     args={"message": message, "home_city": home, "device_location": bool(coords)}))
     agent_source = "mock"
     try:
         run = run_agent(
-            build_goal(today, home),
+            build_goal(today, home, located=bool(coords)),
             tool_specs(),
             {"message": message, "today": today, "home_city": home},
             execute=lambda name, args: dispatch(ctx, name, args),

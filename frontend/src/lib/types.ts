@@ -130,6 +130,15 @@ export interface Health {
   decisions_mode: string;
   key_configured?: boolean;
   vision_configured?: boolean;
+  calendar?: string;
+  home_city?: string;
+}
+
+export interface DeviceLocation {
+  lat: number;
+  lon: number;
+  city: string;
+  label: string;
 }
 
 export interface PreflightCheck {

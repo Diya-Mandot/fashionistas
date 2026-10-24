@@ -84,7 +84,15 @@ def build_and_score_outfits(
     wctx = gen.WeatherContext(temp_f=w.temp_f, precipitation=w.precipitation)
     seed = int(hashlib.sha256(f"{event['name']}{event['date']}".encode()).hexdigest()[:8], 16)
     filtered = gen.filter_for_weather(data, wctx)
-    candidates = gen.diversify(gen.generate_candidates(filtered, wctx, today=ctx.today, seed=seed), k=MAX_CANDIDATES)
+    ranked_all = gen.generate_candidates(filtered, wctx, today=ctx.today, seed=seed)
+    if wctx.wants_outerwear:
+        # Cold or wet: make sure layered outfits are well represented in the shortlist.
+        layered = [c for c in ranked_all if any(by_id[i].category == "outerwear" for i in c.item_ids)]
+        bare = [c for c in ranked_all if c not in layered]
+        half = MAX_CANDIDATES // 2
+        candidates = gen.diversify(layered, k=half) + gen.diversify(bare, k=MAX_CANDIDATES - min(half, len(layered)))
+    else:
+        candidates = gen.diversify(ranked_all, k=MAX_CANDIDATES)
     if not candidates:
         return ToolOutput(
             result={"event": event, "options": [], "error": "No valid outfit combinations in the closet for this event."},

@@ -546,6 +546,8 @@ def classify_item(signals: ItemSignals) -> ItemClassification:
     if not base_name or len(base_name) > 40 or guess_category(base_name) is None:
         sub = values["subcategory"] if values["subcategory"] != "other" else values["category"].rstrip("s")
         base_name = f"{values['color']} {sub}"
+    elif len(base_name.split()) == 1:
+        base_name = f"{values['color']} {base_name}"
     name = base_name.title()
     if signals.ocr_brand and signals.ocr_brand.lower() not in name.lower():
         name = f"{signals.ocr_brand} {name}"

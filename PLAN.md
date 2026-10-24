@@ -68,9 +68,9 @@ Ported exactly from `ecostylistfe/theme`: Paper `#FAF9F6`, Deep Forest `#1A3226`
 
 ## Status (2026-10-24)
 
-Milestones 1–7 are built and pushed; 46 backend tests pass. The only thing missing is the **OpenAI API key**. Until it's added, every Agents/Decisions step runs the clearly labelled mock. Once it's in `backend/.env`: `make preflight`, then `make warmup`.
+All milestones are built, with 51 backend tests. **The Agents and Decisions APIs are live and verified with the real key.** A full Seattle plan runs in about 48s: the agent picks its own tools and every Decisions call is live. A live scan takes about 2.5s (Vision plus Decisions classify, 0.98 average confidence). Successful live runs are recorded for replay.
 
-The live code paths are unit-tested against the documented event/answer shapes with fake clients, but they haven't yet been run against the real API.
+The calendar reads a real iCal feed when `CALENDAR_ICS_URL` is set, and the demo calendar otherwise. Location comes from the browser and is reverse-geocoded. Closet photos are git-ignored and uploaded manually for the demo.
 
 ## Milestones (★ = stop for review)
 

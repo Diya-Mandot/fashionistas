@@ -36,18 +36,21 @@ One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
+## Calendar and location
+
+- **Calendar.** Set `CALENDAR_ICS_URL` in `backend/.env` to your calendar's private iCal address. In Google Calendar that's Settings → your calendar → *Integrate calendar* → **Secret address in iCal format**; Apple and Outlook ICS links work too. The agent's `read_calendar` tool then reads your real events, including recurring ones, and infers dress-code hints from titles or a "Dress code: …" line in the description. Without the URL, or if the feed fails, it uses the seeded demo calendar and says so in the trace. To show the demo trips alongside your events, set `CALENDAR_INCLUDE_DEMO=true`. Event titles and locations are sent to the Agents API as part of the plan.
+- **Location.** Click **Use my location** under the prompt. The browser asks permission, and the backend turns the coordinates into a city using OpenStreetMap. When a message doesn't name a destination, the agent plans for that city, and the weather tool uses your exact coordinates. Without it, `HOME_CITY` is used.
+
 ## The demo closet
 
-The closet is 22 real product photos in `backend/seed_images/photos/`, hand-labelled in `manifest.json` (category, formality, season, wear history, and so on). They load on startup and on `make reset`. It deliberately has **no waterproof outerwear and no shoes**, so the agent flags both as closet gaps on a rainy trip.
-
-To add more photos:
+The closet is real product photos in `backend/seed_images/photos/`, labelled in `manifest.json`. **Photos are git-ignored and stay on your machine**: a fresh clone starts with an empty closet, and you add clothes in the **Scan** tab or with the importer. The local set deliberately has **no waterproof outerwear and no shoes**, so the agent flags both as closet gaps on a rainy trip.
 
 ```bash
 make import-photos DIR=~/Desktop/more-clothes   # JPG/PNG/WEBP/HEIC
 make reset                                      # reload the closet (deletes items scanned in the app!)
 ```
 
-New photos are classified by the same Vision → Decisions pipeline as the Scan tab. Hand-labelled entries are never overwritten unless you pass `--include-manual`. After adding the API key, run `cd backend && uv run python scripts/import_photos.py --reclassify` to replace any mock classifications with live ones. The importer warns you if a waterproof jacket slips in, since that removes the rain-gap moment.
+New photos are classified by the same Vision → Decisions pipeline as the Scan tab. Hand-labelled entries are never overwritten unless you pass `--include-manual`. The importer warns you if a waterproof jacket slips in, since that removes the rain-gap moment.
 
 ## Live, replay and mock (the APIs must work no matter what)
 
@@ -98,7 +101,7 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind; pages Stylist, Closet,
 | `frontend/src/theme/typography.ts` + `src/index.css` | `ecostylistfe/theme/typography.ts` | Same presets as CSS classes |
 | `frontend/src/theme/glass.ts` | `ecostylistfe/theme/glass.ts` | Web branch only |
 
-Demo closet photos are stored locally in `backend/seed_images/photos/`, so the demo never depends on image hosts.
+Demo closet photos are stored locally in `backend/seed_images/photos/` (git-ignored), so the demo never depends on image hosts.
 
 ## 2-minute demo script
 
