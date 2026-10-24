@@ -8,11 +8,11 @@ from sqlmodel import Session
 
 from app.config import BACKEND_DIR, get_settings
 from app.db import engine, init_db
-from app.routers import calendar, closet, dev
+from app.routers import calendar, closet, dev, health as api_health, scan, weather
 from app.seed import seed_if_empty
 
 settings = get_settings()
-UPLOADS_DIR = BACKEND_DIR / "uploads"
+UPLOADS_DIR = settings.scan_uploads_dir
 SEED_IMAGES_DIR = BACKEND_DIR / "seed_images"
 
 
@@ -37,6 +37,9 @@ app.add_middleware(
 
 app.include_router(closet.router)
 app.include_router(calendar.router)
+app.include_router(api_health.router)
+app.include_router(weather.router)
+app.include_router(scan.router)
 if settings.dev_endpoints:
     app.include_router(dev.router)
 

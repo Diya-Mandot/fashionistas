@@ -59,3 +59,13 @@ class AgentRunRecord(SQLModel, table=True):
     error: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     finished_at: Optional[datetime] = None
+
+
+class ClosetScanRecord(SQLModel, table=True):
+    __tablename__ = "closet_scans"
+
+    id: str = Field(primary_key=True)
+    request_key: Optional[str] = Field(default=None, unique=True, index=True)
+    image_sha256: str
+    result: dict[str, Any] = Field(sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
