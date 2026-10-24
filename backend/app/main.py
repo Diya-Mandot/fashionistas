@@ -8,7 +8,7 @@ from sqlmodel import Session
 
 from app.config import BACKEND_DIR, get_settings
 from app.db import engine, init_db
-from app.routers import calendar, closet, dev
+from app.routers import calendar, closet, dev, health
 from app.seed import seed_if_empty
 
 settings = get_settings()
@@ -37,6 +37,7 @@ app.add_middleware(
 
 app.include_router(closet.router)
 app.include_router(calendar.router)
+app.include_router(health.router)
 if settings.dev_endpoints:
     app.include_router(dev.router)
 
@@ -46,7 +47,7 @@ app.mount("/media/uploads", StaticFiles(directory=Path(UPLOADS_DIR)), name="uplo
 
 
 @app.get("/api/health")
-def health() -> dict:
+def health_status() -> dict:
     return {
         "status": "ok",
         "agents_mode": settings.agents_mode,
