@@ -105,11 +105,16 @@ Demo closet photos are stored locally in `backend/seed_images/photos/` (git-igno
 
 ## 2-minute demo script
 
-1. *"Our capstone, EcoStylist, generated outfits from hardcoded rules. Watch what happens with a real request."* Click **Seattle tech conference**, then **Plan my outfits**.
+1. *"Our capstone, EcoStylist, generated outfits from hardcoded rules. Watch what happens with a real request."* Paste the Seattle prompt (below) and click **Plan my outfits**.
 2. **Point at the trace.** The agent chose to check the weather, read the calendar and query the closet. That's the API input and the agent's tasks, each with its exact request and response.
 3. **Open a Decisions step.** The per-criterion scores show *why* the dinner outfit won for "professional but edgy". Open **Score breakdown** on the outfit card for the same view.
 4. **Show the gap card.** Rain is forecast and there's no waterproof layer in the closet, so the agent pivoted and suggested a secondhand trench with links.
 5. **Scan tab.** Upload a photo of a jacket. It's classified and saved with zero typing; Undo is there for 10 seconds.
 6. **Close:** *"Rules can't parse vibes or weather. An agent that gathers context, plus a decision engine that scores it, can."*
+
+**Prompts to paste:**
+- *Packing for a tech conference in Seattle Tue–Thu. There's a fancy dinner Tuesday night and I want to look professional but a little edgy.*
+- *Pack my bag for NYC this weekend: networking brunch and a Broadway show*
+- *First day at a new job Monday, rainy, want to look put-together but not stiff*
 
 **Before going on stage:** `make reset` (note: it removes items scanned during rehearsal), `make preflight` (both APIs green), `make warmup`, and check that the nav badge says **Live APIs**.

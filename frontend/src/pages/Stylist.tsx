@@ -14,21 +14,6 @@ import type { AgentRun, DeviceLocation, WardrobeItem } from '../lib/types';
 import { useDeviceLocation } from '../lib/useDeviceLocation';
 import { HERO_IMAGE } from '../theme/brand';
 
-const EXAMPLES = [
-  {
-    label: 'Seattle tech conference',
-    text: "Packing for a tech conference in Seattle Tue–Thu. There's a fancy dinner Tuesday night and I want to look professional but a little edgy.",
-  },
-  {
-    label: 'NYC weekend',
-    text: 'Pack my bag for NYC this weekend: networking brunch and a Broadway show',
-  },
-  {
-    label: 'First day, new job',
-    text: 'First day at a new job Monday, rainy, want to look put-together but not stiff',
-  },
-];
-
 const POLL_MS = 700;
 
 export function Stylist() {
@@ -228,18 +213,6 @@ function PromptBox({
           {!compact && (
             <div className="flex flex-wrap items-center gap-2">
               <LocationChip location={geo.location} status={geo.status} onLocate={geo.locate} onClear={geo.clear} dark={dark} />
-              {EXAMPLES.map((ex) => (
-                <button
-                  key={ex.label}
-                  type="button"
-                  onClick={() => setMessage(ex.text)}
-                  className={`rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors ${
-                    dark ? 'border-white/50 bg-white/20 text-white hover:bg-white/35' : 'border-line bg-white/70 text-ink hover:bg-white'
-                  }`}
-                >
-                  {ex.label}
-                </button>
-              ))}
             </div>
           )}
           <button
