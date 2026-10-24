@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #faf9f6;
+  --forest: #1a3226;
+  --sand: #d4a373;
+  --emerald: #34d399;
+  --ink: #141414;
+  --muted: #6b6b6b;
+  --faint: #a0a0a0;
+  --glass: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.48);
+}
+
+body {
+  @apply bg-paper font-sans text-muted antialiased;
+}
+
+@layer components {
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 28px rgba(20, 50, 40, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .type-display-lg { @apply font-display text-ink font-bold; font-size: 32px; line-height: 38px; letter-spacing: -0.8px; }
+  .type-display-md { @apply font-display text-ink font-bold; font-size: 24px; line-height: 30px; letter-spacing: -0.5px; }
+  .type-display-sm { @apply font-display text-ink font-bold; font-size: 20px; line-height: 26px; letter-spacing: -0.3px; }
+  .type-body-lg { @apply font-sans text-muted; font-size: 16px; line-height: 24px; }
+  .type-body-md { @apply font-sans text-muted; font-size: 14px; line-height: 21px; }
+  .type-body-sm { @apply font-sans text-muted; font-size: 13px; line-height: 19px; }
+  .type-label-bold { @apply font-sans text-ink font-bold; font-size: 15px; }
+  .type-label-medium { @apply font-sans text-ink font-medium; font-size: 14px; }
+  .type-micro { @apply font-sans text-faint font-bold uppercase; font-size: 10px; letter-spacing: 3px; }
+  .type-micro-dark { @apply font-sans text-ink font-bold uppercase; font-size: 10px; letter-spacing: 3px; }
+}
