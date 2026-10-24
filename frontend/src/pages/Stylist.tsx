@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { IoArrowForward, IoRainyOutline, IoSparklesOutline } from 'react-icons/io5';
-import { useSearchParams } from 'react-router-dom';
+import { IoArrowBack, IoArrowForward, IoRainyOutline, IoSparklesOutline } from 'react-icons/io5';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AgentTrace } from '../components/AgentTrace';
 import { DayTabs } from '../components/DayTabs';
 import { GapCard } from '../components/GapCard';
@@ -17,8 +17,11 @@ import { HERO_IMAGE } from '../theme/brand';
 
 const POLL_MS = 700;
 
-export function Stylist() {
-  const [params, setParams] = useSearchParams();
+export function Stylist({ active = true }: { active?: boolean }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const urlRun = active ? new URLSearchParams(location.search).get('run') : null;
+  const [runId, setRunId] = useState<string | null>(urlRun);
   const [message, setMessage] = useState('');
   const [run, setRun] = useState<AgentRun | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,13 +29,26 @@ export function Stylist() {
   const [day, setDay] = useState(0);
   const pollRef = useRef<number | null>(null);
   const geo = useDeviceLocation();
-  const runId = params.get('run');
+
+  // Shared link or back/forward to a specific run: follow it, but only when the URL itself changes
+  // (so "New plan" isn't undone by the old ?run= still being in the address bar for a moment).
+  const lastUrlRun = useRef(urlRun);
+  useEffect(() => {
+    if (!active || urlRun === lastUrlRun.current) return;
+    lastUrlRun.current = urlRun;
+    if (urlRun) setRunId(urlRun);
+  }, [active, urlRun]);
+
+  // Coming back to this tab: keep showing the run (and keep it in the URL for sharing).
+  useEffect(() => {
+    if (active && runId && !urlRun) navigate(`/?run=${runId}`, { replace: true });
+  }, [active, runId, urlRun, navigate]);
 
   const items = useMemo(() => new Map(closet.map((i) => [i.id, i])), [closet]);
 
   useEffect(() => {
-    api.closet().then(setCloset).catch(() => undefined);
-  }, []);
+    if (active) api.closet().then(setCloset).catch(() => undefined);
+  }, [active]);
 
   const stopPolling = () => {
     if (pollRef.current) window.clearInterval(pollRef.current);
@@ -74,7 +90,8 @@ export function Stylist() {
     setRun(null);
     try {
       const { run_id } = await api.startPlan(text.trim(), geo.location);
-      setParams({ run: run_id });
+      setRunId(run_id);
+      navigate(`/?run=${run_id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -92,6 +109,13 @@ export function Stylist() {
     setStyling(ev.id);
     setMessage(text);
     startWith(text);
+  };
+
+  const newPlan = () => {
+    setRunId(null);
+    setRun(null);
+    setMessage('');
+    navigate('/');
   };
 
   const started = Boolean(runId);
@@ -132,6 +156,18 @@ export function Stylist() {
         </section>
       ) : (
         <main className="mx-auto max-w-[1360px] px-5 pb-24 pt-24 md:px-10">
+          <div className="mb-3 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={newPlan}
+              className="flex items-center gap-1.5 rounded-full bg-white/70 px-3.5 py-1.5 text-[13px] font-semibold text-ink ring-1 ring-line hover:bg-white"
+            >
+              <IoArrowBack size={14} /> New plan
+            </button>
+            {run?.status === 'running' && (
+              <span className="text-[12px] text-muted">Keeps running if you switch tabs</span>
+            )}
+          </div>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} compact busy={run?.status === 'running'} geo={geo} />
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)]">

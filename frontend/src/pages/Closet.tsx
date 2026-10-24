@@ -11,7 +11,7 @@ import type { WardrobeItem } from '../lib/types';
 const CATEGORY_FILTERS = ['all', 'tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'activewear', 'accessories', 'bags'];
 const FORMALITY_FILTERS = ['any', 'casual', 'smart casual', 'business', 'formal'];
 
-export function Closet() {
+export function Closet({ active = true }: { active?: boolean }) {
   const [items, setItems] = useState<WardrobeItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState('all');
@@ -19,8 +19,8 @@ export function Closet() {
   const [selected, setSelected] = useState<WardrobeItem | null>(null);
 
   useEffect(() => {
-    api.closet().then(setItems).catch((e: Error) => setError(e.message));
-  }, []);
+    if (active) api.closet().then(setItems).catch((e: Error) => setError(e.message));
+  }, [active]);
 
   const visible = useMemo(
     () =>
