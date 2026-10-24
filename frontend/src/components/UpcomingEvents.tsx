@@ -64,13 +64,8 @@ export function UpcomingEvents({ onStyle, busy }: { onStyle: (e: CalendarEvent) 
 
   return (
     <GlassPanel radius="hero" className="mt-5 p-4 md:p-5">
-      <div className="mb-3 flex items-end justify-between gap-3 px-1">
-        <div>
-          <p className="type-micro !text-white/75">Up next on your calendar</p>
-          <p className="mt-0.5 text-[13px] text-white/70">
-            {cal ? `${cal.label} · next ${DAYS_AHEAD} days` : 'Loading your calendar…'}
-          </p>
-        </div>
+      <div className="mb-3 flex items-center justify-between gap-3 px-1">
+        <p className="type-micro !text-white/75">Up next on your calendar</p>
         <IoCalendarOutline className="text-white/70" size={20} />
       </div>
 
