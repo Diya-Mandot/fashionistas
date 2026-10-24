@@ -14,12 +14,11 @@ class Settings(BaseSettings):
 
     app_name: str = "EcoStylist"
 
-    agents_api_key: str = ""
-    agents_api_base_url: str = ""
+    # One OpenAI key powers both the Agents API and the Decisions API.
+    openai_api_key: str = ""
+    agents_model: str = "gpt-6-astra"
+    decisions_model: str = "gpt-6-luna"
     agents_mode: ApiMode = "live"
-
-    decisions_api_key: str = ""
-    decisions_api_base_url: str = ""
     decisions_mode: ApiMode = "live"
 
     google_vision_api_key: str = ""
