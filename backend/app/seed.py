@@ -5,7 +5,9 @@ the Seattle and NYC demos. A few items were worn recently so freshness matters.
 Calendar dates are computed relative to today so the demo always works.
 """
 
+import json
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
 
 from sqlmodel import Session, delete, select
@@ -53,6 +55,18 @@ _CLOSET: list[tuple] = [
 ]
 
 
+PHOTO_MANIFEST = Path(__file__).resolve().parent.parent / "seed_images" / "photos" / "manifest.json"
+_PHOTO_FIELDS = ("name", "category", "subcategory", "color", "style", "formality", "season", "material", "brand", "waterproof")
+
+
+def _photo_manifest() -> list[dict[str, Any]]:
+    """Real photos imported with scripts/import_photos.py (optional)."""
+    try:
+        return json.loads(PHOTO_MANIFEST.read_text()) if PHOTO_MANIFEST.exists() else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
 def closet_items(today: date | None = None) -> list[WardrobeItem]:
     today = today or date.today()
     items = []
@@ -78,6 +92,20 @@ def closet_items(today: date | None = None) -> list[WardrobeItem]:
                 source="seed",
             )
         )
+    by_id = {i.id: i for i in items}
+    for n, entry in enumerate(_photo_manifest(), start=1):
+        url = f"/media/seed/photos/{entry['file']}"
+        if entry.get("replaces") in by_id:
+            by_id[entry["replaces"]].image_url = url
+        elif entry.get("category"):
+            items.append(
+                WardrobeItem(
+                    id=f"itm_photo{n:02d}",
+                    image_url=url,
+                    source="seed",
+                    **{k: entry[k] for k in _PHOTO_FIELDS if entry.get(k) is not None},
+                )
+            )
     return items
 
 

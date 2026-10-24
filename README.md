@@ -36,6 +36,20 @@ One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/
 
 `GOOGLE_VISION_API_KEY` is optional. Without it, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
+## Using real clothing photos
+
+The demo closet ships with rendered illustrations. To use real photos:
+
+```bash
+make import-photos DIR=~/Desktop/closet-photos   # JPG/PNG/WEBP/HEIC
+make reset                                       # load them (backend running)
+```
+
+- A photo whose filename matches a demo item (e.g. `black-leather-moto-jacket.jpg` or `14-moto.jpg`) **replaces** that item's illustration and keeps its attributes and wear history.
+- Every other photo is classified by the same Vision → Decisions pipeline as the Scan tab and added as an extra item. Results go to `backend/seed_images/photos/manifest.json`; edit it to fix anything.
+- Without an API key, classification is the labelled mock. After adding the key, run `cd backend && uv run python scripts/import_photos.py --reclassify`.
+- Keep waterproof outerwear out of the closet if you want the rain-gap moment. The importer warns you if one slips in.
+
 ## Live, replay and mock (the APIs must work no matter what)
 
 | Mode (`AGENTS_MODE` / `DECISIONS_MODE`) | Behavior |

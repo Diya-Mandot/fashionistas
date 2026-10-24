@@ -66,6 +66,12 @@ The agent picks the tool order itself; it is not hardcoded in Python. In mock mo
 
 Ported exactly from `ecostylistfe/theme`: Paper `#FAF9F6`, Deep Forest `#1A3226`, Warm Sand `#D4A373`, Eco Emerald `#34D399`, Ocean `#5B8DB8`, plus glass panels (`rgba(255,255,255,0.30)`, 20px blur, white 48% border). Fonts: Syne for display, Manrope for body, Playfair Display for the wordmark only.
 
+## Status (2026-10-24)
+
+Milestones 1–7 are built and pushed; 46 backend tests pass. The only thing missing is the **OpenAI API key**. Until it's added, every Agents/Decisions step runs the clearly labelled mock. Once it's in `backend/.env`: `make preflight`, then `make warmup`.
+
+The live code paths are unit-tested against the documented event/answer shapes with fake clients, but they haven't yet been run against the real API.
+
 ## Milestones (★ = stop for review)
 
 1. ★ **Scaffold**: FastAPI and Vite running, theme and fonts, styled Stylist hero with the glass prompt box.

@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
@@ -35,6 +38,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
+@app.exception_handler(Exception)
+async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
+    # Demo safety: never show a raw traceback; log it and return a readable error.
+    logging.getLogger("ecostylist").exception("Unhandled error on %s", request.url.path)
+    return JSONResponse(status_code=500, content={"detail": f"Something went wrong ({type(exc).__name__}). Try again."})
+
 
 app.include_router(stylist.router)
 app.include_router(health.router)

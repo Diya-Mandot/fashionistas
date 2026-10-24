@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend install test preflight warmup reset
+.PHONY: dev backend frontend install test preflight warmup reset import-photos
 
 install:
 	cd backend && uv sync
@@ -31,3 +31,7 @@ warmup:
 # Restore the seed closet and clear runs.
 reset:
 	@curl -s -X POST localhost:8000/api/dev/reset; echo
+
+# Import a folder of real clothing photos: make import-photos DIR=~/Desktop/closet-photos
+import-photos:
+	cd backend && uv run python scripts/import_photos.py "$(DIR)"

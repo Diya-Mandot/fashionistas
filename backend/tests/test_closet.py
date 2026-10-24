@@ -28,3 +28,22 @@ def test_closet_filters_and_crud(client):
     assert res.json()["waterproof"] is True
     assert client.delete(f"/api/closet/{item_id}").status_code == 204
     assert client.delete(f"/api/closet/{item_id}").status_code == 404
+
+
+def test_photo_manifest_replaces_and_adds(tmp_path, monkeypatch):
+    import json
+
+    from app import seed
+
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps([
+        {"file": "moto.jpg", "replaces": "itm_seed14"},
+        {"file": "trench.jpg", "replaces": None, "name": "Tan Trench", "category": "outerwear",
+         "formality": "smart casual", "waterproof": False, "color": "tan"},
+    ]))
+    monkeypatch.setattr(seed, "PHOTO_MANIFEST", manifest)
+    items = {i.id: i for i in seed.closet_items()}
+    assert items["itm_seed14"].image_url == "/media/seed/photos/moto.jpg"
+    assert items["itm_seed14"].name == "Black Leather Moto Jacket"
+    extra = [i for i in items.values() if i.id.startswith("itm_photo")]
+    assert len(extra) == 1 and extra[0].name == "Tan Trench" and extra[0].category == "outerwear"
