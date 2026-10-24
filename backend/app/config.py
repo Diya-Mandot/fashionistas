@@ -21,7 +21,13 @@ class Settings(BaseSettings):
     agents_mode: ApiMode = "live"
     decisions_mode: ApiMode = "live"
 
+    api_timeout_s: float = 45.0
+    api_max_retries: int = 3
+
     google_vision_api_key: str = ""
+    vision_timeout_s: float = 12.0
+    scan_max_image_bytes: int = 15 * 1024 * 1024
+    scan_max_image_pixels: int = 50_000_000
     google_application_credentials: str = ""
 
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"
