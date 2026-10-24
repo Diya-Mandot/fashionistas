@@ -36,19 +36,18 @@ One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
-## Using real clothing photos
+## The demo closet
 
-The demo closet ships with rendered illustrations. To use real photos:
+The closet is 22 real product photos in `backend/seed_images/photos/`, hand-labelled in `manifest.json` (category, formality, season, wear history, and so on). They load on startup and on `make reset`. It deliberately has **no waterproof outerwear and no shoes**, so the agent flags both as closet gaps on a rainy trip.
+
+To add more photos:
 
 ```bash
-make import-photos DIR=~/Desktop/closet-photos   # JPG/PNG/WEBP/HEIC
-make reset                                       # load them (backend running)
+make import-photos DIR=~/Desktop/more-clothes   # JPG/PNG/WEBP/HEIC
+make reset                                      # reload the closet (deletes items scanned in the app!)
 ```
 
-- A photo whose filename matches a demo item (e.g. `black-leather-moto-jacket.jpg` or `14-moto.jpg`) **replaces** that item's illustration and keeps its attributes and wear history.
-- Every other photo is classified by the same Vision → Decisions pipeline as the Scan tab and added as an extra item. Results go to `backend/seed_images/photos/manifest.json`; edit it to fix anything.
-- Without an API key, classification is the labelled mock. After adding the key, run `cd backend && uv run python scripts/import_photos.py --reclassify`.
-- Keep waterproof outerwear out of the closet if you want the rain-gap moment. The importer warns you if one slips in.
+New photos are classified by the same Vision → Decisions pipeline as the Scan tab. Hand-labelled entries are never overwritten unless you pass `--include-manual`. After adding the API key, run `cd backend && uv run python scripts/import_photos.py --reclassify` to replace any mock classifications with live ones. The importer warns you if a waterproof jacket slips in, since that removes the rain-gap moment.
 
 ## Live, replay and mock (the APIs must work no matter what)
 
@@ -99,7 +98,7 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind; pages Stylist, Closet,
 | `frontend/src/theme/typography.ts` + `src/index.css` | `ecostylistfe/theme/typography.ts` | Same presets as CSS classes |
 | `frontend/src/theme/glass.ts` | `ecostylistfe/theme/glass.ts` | Web branch only |
 
-Demo closet images are illustrations rendered locally by `backend/seed_images/render.py`, so the demo never depends on image hosts.
+Demo closet photos are stored locally in `backend/seed_images/photos/`, so the demo never depends on image hosts.
 
 ## 2-minute demo script
 
@@ -110,4 +109,4 @@ Demo closet images are illustrations rendered locally by `backend/seed_images/re
 5. **Scan tab.** Upload a photo of a jacket. It's classified and saved with zero typing; Undo is there for 10 seconds.
 6. **Close:** *"Rules can't parse vibes or weather. An agent that gathers context, plus a decision engine that scores it, can."*
 
-**Before going on stage:** `make reset`, `make preflight` (both APIs green), `make warmup`, and check that the nav badge says **Live APIs**.
+**Before going on stage:** `make reset` (note: it removes items scanned during rehearsal), `make preflight` (both APIs green), `make warmup`, and check that the nav badge says **Live APIs**.

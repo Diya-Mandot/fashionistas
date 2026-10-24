@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     google_application_credentials: str = ""
 
     home_city: str = "San Francisco"
+    uploads_dir: str = str(BACKEND_DIR / "uploads")
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"
     frontend_origin: str = "http://localhost:5173"
     dev_endpoints: bool = True

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from app.config import BACKEND_DIR
+from app.config import get_settings
 from app.core.vision import (
     InvalidImageError,
     ProviderUnavailableError,
@@ -21,7 +21,6 @@ from app.models import WardrobeItem, new_id
 from app.trace import Timer, TraceStep
 
 router = APIRouter(prefix="/api/closet", tags=["scan"])
-UPLOADS_DIR = BACKEND_DIR / "uploads"
 
 
 class ScanResponse(BaseModel):
@@ -122,8 +121,9 @@ async def scan_item(file: UploadFile = File(...), session: Session = Depends(get
     # --- Save ------------------------------------------------------------------
     item_id = new_id("itm")
     suffix = Path(image.filename).suffix or ".jpg"
-    UPLOADS_DIR.mkdir(exist_ok=True)
-    (UPLOADS_DIR / f"{item_id}{suffix}").write_bytes(image.content)
+    uploads = Path(get_settings().uploads_dir)
+    uploads.mkdir(parents=True, exist_ok=True)
+    (uploads / f"{item_id}{suffix}").write_bytes(image.content)
     item = WardrobeItem(
         id=item_id,
         name=cls.name,

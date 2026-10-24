@@ -382,11 +382,13 @@ def _mock_scores(req: OutfitScoringRequest) -> dict[str, Any]:
         if target is None:
             dress_s = sum(1 for it in items if it.style == "sporty" or it.category == "activewear") / len(items)
         else:
-            ranks = [_FORMALITY_RANK.get(it.formality or "casual", 0) for it in items if it.category not in ("accessories", "bags")]
+            ranks = [_FORMALITY_RANK.get(it.formality or "casual", 0) for it in items if it.category not in ("accessories", "bags", "outerwear")]
             dress_s = 1 - (sum(abs(r - target) for r in ranks) / max(1, len(ranks))) / 3 if ranks else 0.5
         weather_s = (gen.combo_weather_fit(data, weather) + 1) / 2
         if req.weather.precipitation and not any(it.waterproof for it in items):
-            weather_s = min(weather_s, 0.62)
+            # Rain with nothing waterproof: a layer still helps, bare outfits are worse.
+            has_layer = any(it.category == "outerwear" for it in items)
+            weather_s = min(weather_s, 0.72 if has_layer else 0.45)
         color_s = (gen.color_harmony(data) + 1) / 2
         fresh_s = sum(gen.item_rotation(d, today) for d in data) / len(data)
         for c, v in zip(CRITERIA, (vibe_s, dress_s, weather_s, color_s, fresh_s)):
@@ -595,7 +597,7 @@ def _mock_gaps(gaps: list[GapIn], context: dict[str, Any]) -> dict[str, Any]:
     answers = []
     for i, g in enumerate(gaps):
         text = f"{g.need} {g.reason}".lower()
-        must = any(w in text for w in ("rain", "waterproof", "formal", "dressy", "cold"))
+        must = any(w in text for w in ("rain", "waterproof", "formal", "dressy", "cold", "no shoes", "missing footwear"))
         answers.append({"type": "score", "name": f"gap{i}", "score": 1.7 if must else 0.9, "confidence": 0.5})
     return {"answers": answers, "mock": True}
 

@@ -37,10 +37,13 @@ def find_closet_gaps(
 
     found: list[GapIn] = []
     rainy = [d for d in days if (d.get("precip_pct") or 0) >= 50]
+    if not shoes:
+        rain_note = f"; rain likely {_days_label([d['date'] for d in rainy])}, so choose water-resistant ones" if rainy else ""
+        found.append(GapIn(need="shoes", reason=f"No shoes in the closet, so every outfit is missing footwear{rain_note}"))
     if rainy and not any(i.waterproof for i in outer):
         peak = max(d.get("precip_pct") or 0 for d in rainy)
         found.append(GapIn(need="waterproof outer layer", reason=f"{peak}% chance of rain {_days_label([d['date'] for d in rainy])}; no waterproof outerwear in closet"))
-    if rainy and not any(i.waterproof for i in shoes):
+    if rainy and shoes and not any(i.waterproof for i in shoes):
         found.append(GapIn(need="water-resistant shoes", reason=f"Rain likely {_days_label([d['date'] for d in rainy])}; suede and mesh shoes soak through"))
     cold = [d for d in days if d.get("low_f") is not None and d["low_f"] < 38]
     if cold and not any(any(w in (i.material or "").lower() for w in WARM) and i.subcategory == "coat" for i in outer):

@@ -21,17 +21,23 @@ from app.tools.context import OutfitOption, RunContext, ToolOutput
 MAX_CANDIDATES = 18
 TOP_K = 3
 REPEAT_PENALTY = 0.07  # per item already chosen for an earlier event in this trip
+REWEARABLE = ("outerwear", "shoes", "bags")
 LABELS = {"vibe": "vibe", "dress_code": "dress code", "weather": "weather", "color": "color harmony", "freshness": "freshness"}
 
 
 def _occasion_filter(items: list[WardrobeItem], event: dict[str, Any]) -> list[WardrobeItem]:
     text = f"{event.get('name', '')} {event.get('dress_code_hint', '')}".lower()
     if any(w in text for w in ("run", "athletic", "gym", "workout", "yoga")):
-        sporty = [i for i in items if i.style == "sporty" or i.category == "activewear"]
+        sporty = [
+            i for i in items
+            if i.style == "sporty" or i.category == "activewear"
+            or (i.category == "tops" and i.subcategory in ("t-shirt", "tank top"))
+        ]
         return sporty or items
     pool = [i for i in items if i.style != "sporty" and i.category != "activewear"]
     if any(w in text for w in ("dressy", "formal", "upscale", "gala", "black tie", "business")):
-        pool = [i for i in pool if i.formality != "casual" or i.category in ("accessories", "bags")]
+        # Layers stay available regardless of formality: a casual jacket beats being cold.
+        pool = [i for i in pool if i.formality != "casual" or i.category in ("accessories", "bags", "outerwear")]
     return pool or items
 
 
@@ -104,8 +110,11 @@ def build_and_score_outfits(
     scored = score_outfits(req)
     ctx.note_source("decisions", scored.meta.source)
     # Rotate across the trip: down-rank items already picked for earlier events.
+    # Jackets, shoes and bags are normally re-worn on a trip, so they don't count.
     def repeat_cost(idx: int) -> float:
-        return REPEAT_PENALTY * sum(ctx.used_items.get(i, 0) for i in candidates[idx].item_ids)
+        return REPEAT_PENALTY * sum(
+            ctx.used_items.get(i, 0) for i in candidates[idx].item_ids if by_id[i].category not in REWEARABLE
+        )
 
     ranked = sorted(scored.scores, key=lambda s: -(s.scores.overall - repeat_cost(s.index)))
     rotated = ranked[0].index != max(scored.scores, key=lambda s: s.scores.overall).index

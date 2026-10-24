@@ -293,6 +293,8 @@ def _secondhand_query(need: str, vibe: str) -> str:
     edgy = any(w in vibe.lower() for w in ("edgy", "edge", "black", "rock"))
     if "outer" in n or "rain" in n:
         return "black trench coat" if edgy else "waterproof trench coat"
+    if n.strip() == "shoes":
+        return "black leather ankle boots" if edgy else "water-resistant leather ankle boots"
     if "shoe" in n:
         return "black leather chelsea rain boots" if edgy else "waterproof leather boots"
     if "coat" in n:

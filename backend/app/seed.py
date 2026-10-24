@@ -1,8 +1,9 @@
-"""Demo closet and mock calendar.
+"""Demo closet (real photos) and mock calendar.
 
-The closet deliberately has NO waterproof outerwear, so the rain gap triggers in
-the Seattle and NYC demos. A few items were worn recently so freshness matters.
-Calendar dates are computed relative to today so the demo always works.
+The closet comes from seed_images/photos/manifest.json: real product photos with
+their attributes and wear history (add more with scripts/import_photos.py).
+It deliberately has NO waterproof outerwear, so the rain gap triggers on rainy
+trips. Calendar dates are computed relative to today so the demo always works.
 """
 
 import json
@@ -14,53 +15,11 @@ from sqlmodel import Session, delete, select
 
 from app.models import AgentRunRecord, WardrobeItem
 
-# (art, name, category, subcategory, color, style, formality, season, material, brand,
-#  days_since_worn | None, times_worn, favorite)
-_CLOSET: list[tuple] = [
-    # Tops
-    ("shirt", "White Oxford Shirt", "tops", "button-down", "white", "smart casual", "business", "all season", "cotton", "Everlane", 1, 14, True),
-    ("cami", "Black Silk Camisole", "tops", "camisole", "black", "formal", "formal", "spring, summer, fall", "silk", "Vince", None, 2, False),
-    ("sweater", "Grey Merino Crewneck", "tops", "sweater", "heather grey", "smart casual", "smart casual", "fall, winter", "merino wool", "Uniqlo", 20, 9, False),
-    ("tee_stripe", "Breton Striped Tee", "tops", "t-shirt", "navy stripe", "casual", "casual", "spring, fall", "cotton", "Saint James", 40, 6, False),
-    ("mockneck", "Black Mock-Neck Knit", "tops", "sweater", "black", "smart casual", "business", "fall, winter", "fine-gauge wool", "COS", 2, 18, True),
-    ("tee", "White Crew Tee", "tops", "t-shirt", "white", "casual", "casual", "all season", "organic cotton", "Pact", 5, 30, False),
-    ("shirt", "Sage Linen Shirt", "tops", "button-down", "sage", "casual", "smart casual", "spring, summer", "linen", "Quince", 60, 3, False),
-    # Bottoms
-    ("trousers", "Black Tailored Trousers", "bottoms", "trousers", "black", "formal", "business", "all season", "wool blend", "Theory", 9, 12, True),
-    ("jeans", "Dark Wash Straight Jeans", "bottoms", "jeans", "dark denim", "casual", "casual", "all season", "denim", "Levi's", 3, 40, False),
-    ("trousers_wide", "Camel Wide-Leg Trousers", "bottoms", "trousers", "camel", "smart casual", "business", "fall, spring", "wool", "Aritzia", 25, 5, False),
-    ("skirt", "Black Leather Midi Skirt", "bottoms", "skirt", "black", "streetwear", "smart casual", "fall, winter", "vegan leather", "& Other Stories", None, 1, False),
-    # Dresses
-    ("slipdress", "Black Satin Slip Dress", "dresses", "slip dress", "black", "formal", "formal", "spring, summer, fall", "satin", "Reformation", 70, 3, True),
-    ("wrapdress", "Emerald Wrap Dress", "dresses", "wrap dress", "emerald", "smart casual", "smart casual", "spring, fall", "crepe", "Diane von Furstenberg", None, 0, False),
-    # Outerwear (none waterproof on purpose)
-    ("moto", "Black Leather Moto Jacket", "outerwear", "jacket", "black", "streetwear", "smart casual", "fall, spring", "leather", "AllSaints", 14, 22, True),
-    ("coat", "Camel Wool Coat", "outerwear", "coat", "camel", "formal", "business", "fall, winter", "wool", "Max Mara", 120, 8, False),
-    ("blazer", "Charcoal Blazer", "outerwear", "blazer", "charcoal", "formal", "business", "all season", "wool", "J.Crew", 10, 15, False),
-    ("denimjacket", "Vintage Denim Jacket", "outerwear", "jacket", "light denim", "vintage", "casual", "spring, fall", "denim", "Levi's", 30, 11, False),
-    # Shoes
-    ("sneakers", "White Leather Sneakers", "shoes", "sneakers", "white", "casual", "casual", "all season", "leather", "Veja", 1, 60, True),
-    ("boots", "Black Chelsea Boots", "shoes", "boots", "black", "smart casual", "smart casual", "fall, winter", "suede", "Blundstone", 6, 25, False),
-    ("heels", "Black Pointed Pumps", "shoes", "heels", "black", "formal", "formal", "all season", "patent leather", "Sam Edelman", 90, 4, False),
-    ("loafers", "Tan Leather Loafers", "shoes", "loafers", "tan", "smart casual", "business", "spring, fall", "leather", "G.H. Bass", 12, 10, False),
-    ("runners", "Grey Running Shoes", "shoes", "running shoes", "grey", "sporty", "casual", "all season", "mesh", "Allbirds", 4, 35, False),
-    # Activewear
-    ("tank", "Black Running Tank", "activewear", "tank top", "black", "sporty", "casual", "spring, summer, fall", "recycled polyester", "Girlfriend Collective", 4, 20, False),
-    ("leggings", "Black Running Leggings", "activewear", "leggings", "black", "sporty", "casual", "all season", "recycled nylon", "Girlfriend Collective", 4, 28, False),
-    # Accessories and bags
-    ("earrings", "Gold Hoop Earrings", "accessories", "jewelry", "gold", "smart casual", "smart casual", "all season", "gold vermeil", "Mejuri", 3, 40, True),
-    ("necklace", "Silver Chain Necklace", "accessories", "jewelry", "silver", "streetwear", "smart casual", "all season", "sterling silver", "Mejuri", 15, 12, False),
-    ("scarf", "Grey Cashmere Scarf", "accessories", "scarf", "grey", "smart casual", "smart casual", "fall, winter", "cashmere", "Naadam", 100, 6, False),
-    ("tote", "Black Leather Tote", "bags", "tote", "black", "smart casual", "business", "all season", "leather", "Cuyana", 1, 50, True),
-]
-
-
 PHOTO_MANIFEST = Path(__file__).resolve().parent.parent / "seed_images" / "photos" / "manifest.json"
-_PHOTO_FIELDS = ("name", "category", "subcategory", "color", "style", "formality", "season", "material", "brand", "waterproof")
+_PHOTO_FIELDS = ("name", "category", "subcategory", "color", "style", "formality", "season", "material", "brand", "waterproof", "is_favorite")
 
 
 def _photo_manifest() -> list[dict[str, Any]]:
-    """Real photos imported with scripts/import_photos.py (optional)."""
     try:
         return json.loads(PHOTO_MANIFEST.read_text()) if PHOTO_MANIFEST.exists() else []
     except (OSError, json.JSONDecodeError):
@@ -70,48 +29,21 @@ def _photo_manifest() -> list[dict[str, Any]]:
 def closet_items(today: date | None = None) -> list[WardrobeItem]:
     today = today or date.today()
     items = []
-    for n, row in enumerate(_CLOSET, start=1):
-        art, name, cat, sub, color, style, formality, season, material, brand, days, worn, fav = row
+    for n, entry in enumerate(_photo_manifest(), start=1):
+        if not entry.get("category"):
+            continue
+        days = entry.get("days_since_worn")
         items.append(
             WardrobeItem(
-                id=f"itm_seed{n:02d}",
-                name=name,
-                category=cat,
-                subcategory=sub,
-                color=color,
-                style=style,
-                formality=formality,
-                season=season,
-                material=material,
-                brand=brand,
-                waterproof=False,
-                image_url=f"/media/seed/{n:02d}-{art}.svg",
-                last_worn=None if days is None else today - timedelta(days=days),
-                number_of_times_worn=worn,
-                is_favorite=fav,
+                id=entry.get("id") or f"itm_photo{n:02d}",
+                image_url=f"/media/seed/photos/{entry['file']}",
+                last_worn=None if days is None else today - timedelta(days=int(days)),
+                number_of_times_worn=int(entry.get("times_worn") or 0),
                 source="seed",
+                **{k: entry[k] for k in _PHOTO_FIELDS if entry.get(k) is not None},
             )
         )
-    by_id = {i.id: i for i in items}
-    for n, entry in enumerate(_photo_manifest(), start=1):
-        url = f"/media/seed/photos/{entry['file']}"
-        if entry.get("replaces") in by_id:
-            by_id[entry["replaces"]].image_url = url
-        elif entry.get("category"):
-            items.append(
-                WardrobeItem(
-                    id=f"itm_photo{n:02d}",
-                    image_url=url,
-                    source="seed",
-                    **{k: entry[k] for k in _PHOTO_FIELDS if entry.get(k) is not None},
-                )
-            )
     return items
-
-
-def art_manifest() -> list[tuple[str, str, str]]:
-    """(filename, art kind, color) for the seed image renderer."""
-    return [(f"{n:02d}-{row[0]}.svg", row[0], row[4]) for n, row in enumerate(_CLOSET, start=1)]
 
 
 # ---------------------------------------------------------------------------

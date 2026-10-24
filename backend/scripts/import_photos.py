@@ -6,12 +6,11 @@
 Each photo is converted to JPEG (HEIC supported), downscaled, copied into
 seed_images/photos/, and classified with the same pipeline as the Scan page
 (Google Vision if configured -> Decisions API classify_item; mock without a key).
-Results go to seed_images/photos/manifest.json, which seed.py reads:
-  - a photo whose filename matches a demo item (e.g. "black-leather-moto-jacket.jpg"
-    or "14-moto.jpg") REPLACES that item's illustration and keeps its attributes;
-  - every other photo becomes an extra closet item.
-Edit manifest.json by hand to fix anything. Re-run with --reclassify after adding
-OPENAI_API_KEY to upgrade mock classifications to live ones.
+Results go to seed_images/photos/manifest.json, which seed.py reads, so every
+photo becomes a closet item that survives `make reset`. Edit manifest.json by hand
+to fix anything. Re-run with --reclassify after adding OPENAI_API_KEY to upgrade
+mock classifications to live ones (hand-labelled entries are kept unless
+--include-manual is passed).
 """
 
 from __future__ import annotations
@@ -40,7 +39,6 @@ from app.core.vision import (  # noqa: E402
     to_data_url,
 )
 from app.integrations.decisions_client import ItemSignals, classify_item  # noqa: E402
-from app.seed import _CLOSET  # noqa: E402
 
 PHOTOS = BACKEND / "seed_images" / "photos"
 MANIFEST = PHOTOS / "manifest.json"
@@ -52,26 +50,9 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-SEED_SLUGS = {slug(row[1]): f"itm_seed{n:02d}" for n, row in enumerate(_CLOSET, start=1)}
-SEED_ART = {f"{n:02d}-{row[0]}": f"itm_seed{n:02d}" for n, row in enumerate(_CLOSET, start=1)}
-
-
-def match_seed(stem: str) -> str | None:
-    s = slug(stem)
-    if s in SEED_SLUGS:
-        return SEED_SLUGS[s]
-    if s.replace("_", "-") in SEED_ART:
-        return SEED_ART[s.replace("_", "-")]
-    m = re.match(r"^(\d{1,2})\b", s)
-    if m and 1 <= int(m.group(1)) <= len(_CLOSET) and s.startswith(f"{int(m.group(1)):02d}-"):
-        return f"itm_seed{int(m.group(1)):02d}"
-    tokens = set(s.split("-"))
-    best, best_overlap = None, 0
-    for seed_slug, item_id in SEED_SLUGS.items():
-        overlap = len(tokens & set(seed_slug.split("-")))
-        if overlap > best_overlap:
-            best, best_overlap = item_id, overlap
-    return best if best_overlap >= 3 else None
+def next_id(manifest: list[dict]) -> str:
+    used = {int(m.group(1)) for e in manifest if (m := re.match(r"itm_photo(\d+)$", e.get("id", "")))}
+    return f"itm_photo{max(used, default=0) + 1:02d}"
 
 
 def to_jpeg(path: Path) -> bytes:
@@ -112,7 +93,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("folder", nargs="?", type=Path, help="Folder of photos to import")
     ap.add_argument("--reclassify", action="store_true", help="Re-run classification for photos already in the manifest")
-    ap.add_argument("--no-replace", action="store_true", help="Never replace demo illustrations; import everything as extra items")
+    ap.add_argument("--include-manual", action="store_true", help="With --reclassify, also overwrite hand-labelled entries")
     args = ap.parse_args()
 
     PHOTOS.mkdir(parents=True, exist_ok=True)
@@ -124,25 +105,28 @@ def main() -> int:
         if not files:
             print(f"No images found in {args.folder}")
             return 1
+        known_sources = {e.get("source_file"): e for e in manifest}
         for path in files:
-            out_name = f"{slug(path.stem) or 'photo'}.jpg"
+            entry = known_sources.get(path.name)
+            if entry is None:
+                n = len(by_file) + 1
+                entry = {"id": next_id(list(by_file.values())), "file": f"{n:02d}-{slug(path.stem) or 'photo'}.jpg", "source_file": path.name}
             try:
                 content = to_jpeg(path)
             except Exception as exc:
                 print(f"  skip {path.name}: {exc}")
                 continue
-            (PHOTOS / out_name).write_bytes(content)
-            replaces = None if args.no_replace else match_seed(path.stem)
-            entry = by_file.get(out_name, {"file": out_name})
-            entry["replaces"] = replaces
-            if replaces is None and ("category" not in entry or args.reclassify):
+            (PHOTOS / entry["file"]).write_bytes(content)
+            manual = entry.get("classified_by", {}).get("decisions") == "manual"
+            if "category" not in entry or (args.reclassify and (not manual or args.include_manual)):
                 entry.update(classify(content, path.name))
-            by_file[out_name] = entry
-            what = f"replaces {replaces}" if replaces else f"{entry.get('name')} · {entry.get('category')} · {entry.get('formality')} [{entry.get('classified_by', {}).get('decisions')}]"
-            print(f"  {path.name:40} -> {what}")
+            entry.setdefault("days_since_worn", None)
+            entry.setdefault("times_worn", 0)
+            by_file[entry["file"]] = entry
+            print(f"  {path.name:40} -> {entry.get('name')} · {entry.get('category')} · {entry.get('formality')} [{entry.get('classified_by', {}).get('decisions')}]")
     elif args.reclassify:
         for name, entry in by_file.items():
-            if entry.get("replaces"):
+            if entry.get("classified_by", {}).get("decisions") == "manual" and not args.include_manual:
                 continue
             entry.update(classify((PHOTOS / name).read_bytes(), name))
             print(f"  {name:40} -> {entry['name']} [{entry['classified_by']['decisions']}]")
@@ -152,9 +136,9 @@ def main() -> int:
 
     manifest = sorted(by_file.values(), key=lambda e: e["file"])
     MANIFEST.write_text(json.dumps(manifest, indent=1))
-    extras = [e for e in manifest if not e.get("replaces")]
+    extras = manifest
     wet = [e["file"] for e in extras if e.get("category") == "outerwear" and e.get("waterproof")]
-    print(f"\n{len(manifest)} photos in manifest ({len(manifest) - len(extras)} replace illustrations, {len(extras)} extra items).")
+    print(f"\n{len(manifest)} photos in manifest.")
     if wet:
         print(f"Heads up: {wet} classified as WATERPROOF outerwear, so the rain-gap demo won't trigger. "
               "Set waterproof to false in manifest.json if that's wrong.")

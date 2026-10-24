@@ -69,7 +69,7 @@ def test_weather_tool_falls_back_to_seasonal():
 def test_plan_validation_drops_unknown_refs_and_ids(client):
     ctx = _ctx()
     ctx.outfits["E1-A"] = OutfitOption(
-        ref="E1-A", event_name="Dinner", event_date="2026-10-27", item_ids=["itm_seed12", "itm_seed20", "itm_ghost"],
+        ref="E1-A", event_name="Dinner", event_date="2026-10-27", item_ids=["itm_photo03", "itm_photo08", "itm_ghost"],
         item_names=[], scores=dict(overall=0.8, vibe=0.9, dress_code=0.8, weather=0.7, color=0.8, freshness=0.9), hint="h",
     )
     plan, warnings = assemble_plan(ctx, {
@@ -81,14 +81,14 @@ def test_plan_validation_drops_unknown_refs_and_ids(client):
         "gaps": [{"need": "waterproof outer layer", "severity": "must-have", "reason": "rain", "suggestion_ref": "S7"}],
     })
     dinner, lunch = plan.days[0].events
-    assert dinner.outfit.item_ids == ["itm_seed12", "itm_seed20"]
+    assert dinner.outfit.item_ids == ["itm_photo03", "itm_photo08"]
     assert lunch.outfit is None
     assert any("E9-Z" in w for w in warnings)
     assert any("itm_fake" in w for w in warnings)
     assert any("no longer in the closet" in w for w in warnings)
     assert any("S7" in w for w in warnings)
     assert plan.gaps[0].suggestion is not None  # must-have gaps always get search links
-    assert {p.item_id for p in plan.packing_list} == {"itm_seed12", "itm_seed20"}
+    assert {p.item_id for p in plan.packing_list} == {"itm_photo03", "itm_photo08"}
 
 
 def test_plan_endpoint_end_to_end_mock(client):
@@ -109,8 +109,9 @@ def test_plan_endpoint_end_to_end_mock(client):
         for e in d["events"]:
             assert set(e["outfit"]["item_ids"]) <= closet_ids
             assert 0 <= e["outfit"]["scores"]["overall"] <= 1
-    assert plan["gaps"][0]["need"] == "waterproof outer layer"
-    assert plan["gaps"][0]["suggestion"]["links"][0]["url"].startswith("https://www.depop.com/search/?q=")
+    gaps = {g["need"]: g for g in plan["gaps"]}
+    assert "waterproof outer layer" in gaps and "shoes" in gaps  # demo closet has neither
+    assert gaps["waterproof outer layer"]["suggestion"]["links"][0]["url"].startswith("https://www.depop.com/search/?q=")
     tools = [s["tool"] for s in body["trace"] if s["kind"] in ("tool_call", "decision", "validation")]
     assert tools[:3] == ["get_weather_forecast", "read_calendar", "query_closet"]
     assert "build_and_score_outfits" in tools and tools[-1] == "submit_plan"

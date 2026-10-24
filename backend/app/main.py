@@ -17,13 +17,13 @@ from app.routers import calendar, closet, dev, health, scan, stylist
 from app.seed import seed_if_empty
 
 settings = get_settings()
-UPLOADS_DIR = BACKEND_DIR / "uploads"
+UPLOADS_DIR = Path(settings.uploads_dir)
 SEED_IMAGES_DIR = BACKEND_DIR / "seed_images"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    UPLOADS_DIR.mkdir(exist_ok=True)
+    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
     (BACKEND_DIR / "logs").mkdir(exist_ok=True)
     init_db()
     with Session(engine) as session:
@@ -57,7 +57,7 @@ app.include_router(calendar.router)
 if settings.dev_endpoints:
     app.include_router(dev.router)
 
-UPLOADS_DIR.mkdir(exist_ok=True)
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/media/seed", StaticFiles(directory=Path(SEED_IMAGES_DIR)), name="seed-images")
 app.mount("/media/uploads", StaticFiles(directory=Path(UPLOADS_DIR)), name="uploads")
 
