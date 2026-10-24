@@ -145,8 +145,9 @@ def _span_label(days: list[dict[str, Any]]) -> str:
     if not days:
         return "no days"
     a, b = date.fromisoformat(days[0]["date"]), date.fromisoformat(days[-1]["date"])
+    # d.day rather than %-d, which is glibc-only and raises ValueError on Windows.
     if a == b:
-        return a.strftime("%a %b %-d")
+        return f"{a:%a %b} {a.day}"
     if a.month == b.month:
-        return f"{a.strftime('%b %-d')}–{b.strftime('%-d')}"
-    return f"{a.strftime('%b %-d')}–{b.strftime('%b %-d')}"
+        return f"{a:%b} {a.day}–{b.day}"
+    return f"{a:%b} {a.day}–{b:%b} {b.day}"

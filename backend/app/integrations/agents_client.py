@@ -316,7 +316,7 @@ def _run_mock(context: dict[str, Any], execute: Execute, emit: Emit) -> AgentRun
     emit(
         TraceStep(
             kind="thinking",
-            title=f"Plan: {city}, {start.strftime('%a %b %-d')} → {end.strftime('%a %b %-d')}",
+            title=f"Plan: {city}, {start:%a %b} {start.day} → {end:%a %b} {end.day}",
             detail=f"Vibe: “{vibe}”. I need the forecast, the calendar for those dates, and the closet.",
             source="mock",
         )
