@@ -8,6 +8,7 @@ __pycache__/
 .env
 *.db
 backend/logs/
+backend/recordings/
 backend/uploads/
 
 # Node

@@ -27,7 +27,12 @@ class Settings(BaseSettings):
     agent_max_turns: int = Field(default=10, ge=1, le=30)
     api_recordings_path: Path = BACKEND_DIR / "logs" / "api_calls.jsonl"
 
+    api_timeout_s: float = 45.0
+
     google_vision_api_key: str = ""
+    vision_timeout_s: float = 12.0
+    scan_max_image_bytes: int = 15 * 1024 * 1024
+    scan_max_image_pixels: int = 50_000_000
     google_application_credentials: str = ""
 
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"

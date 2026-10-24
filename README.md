@@ -35,8 +35,9 @@ Set `AGENTS_MODE` and `DECISIONS_MODE` to `live`, `replay`, or `mock`.
 Live mode is the default. Replay requires the same request and a successful recording.
 Replay does not execute tools. Mock mode does not classify garments or produce real outfit scores.
 
-Successful calls save validated results in `backend/logs/api_calls.jsonl`.
-Recordings exclude request bodies, keys, and image bytes.
+Successful async adapter calls save validated results in `backend/logs/api_calls.jsonl`.
+These recordings exclude request bodies, keys, and image bytes.
+The existing synchronous adapter uses its original recording format and behavior.
 Results can contain personal information, including tool results. Keep this ignored file local.
 Delete it to clear saved results. File permissions restrict access to the current user.
 
