@@ -15,6 +15,7 @@ import httpx
 
 from app.config import get_settings
 from app.seed import events_between as demo_events_between
+from app.text_rules import has_word
 
 CACHE_TTL_S = 5 * 60
 _cache: dict[str, tuple[float, bytes]] = {}
@@ -65,9 +66,8 @@ def _hint(name: str, description: str) -> Optional[str]:
     m = re.search(r"dress(?:\s*code)?\s*[:\-]\s*([^\n.;]{2,60})", description, flags=re.IGNORECASE)
     if m:
         return m.group(1).strip()
-    text = name.lower()
     for words, hint in _DRESS_HINTS:
-        if any(w in text for w in words):
+        if has_word(name, words):
             return hint
     return None
 

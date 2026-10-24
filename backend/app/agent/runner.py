@@ -95,6 +95,14 @@ def _execute(run_id: str, message: str, home: str, coords: Optional[tuple[float,
             emit=p.emit,
         )
         agent_source = run.source
+        if ctx.plan is None and not ctx.options_by_event:
+            # Nothing to plan yet (e.g. "hi"): surface the agent's question instead of an empty plan.
+            p.emit(TraceStep(kind="final", title="The stylist needs a bit more detail",
+                             detail=run.final_text or "Tell me where you're going and the vibe you want.",
+                             duration_ms=total.ms, source=run.source))
+            p._save(status="needs_input", plan=None, sources={"agent": agent_source},
+                    finished_at=datetime.now(timezone.utc))
+            return
         if ctx.plan is None:
             p.emit(TraceStep(kind="fallback", title="Agent didn't submit a plan; assembling one from its scored outfits", source="local"))
             out = submit_plan(ctx, **fallback_submission(ctx))

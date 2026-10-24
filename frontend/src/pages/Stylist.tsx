@@ -122,7 +122,11 @@ export function Stylist() {
             {/* Left: plan */}
             <div className="flex min-w-0 flex-col gap-5">
               {!plan ? (
-                <PlanSkeleton failed={run?.status === 'failed'} error={run?.error ?? error} />
+                run?.status === 'needs_input' ? (
+                  <NeedsInput run={run} />
+                ) : (
+                  <PlanSkeleton failed={run?.status === 'failed'} error={run?.error ?? error} />
+                )
               ) : (
                 <>
                   <header>
@@ -263,5 +267,18 @@ function PlanSkeleton({ failed, error }: { failed: boolean; error: string | null
         </div>
       ))}
     </div>
+  );
+}
+
+function NeedsInput({ run }: { run: AgentRun }) {
+  const ask = [...run.trace].reverse().find((s) => s.kind === 'final' || s.kind === 'message')?.detail;
+  return (
+    <GlassPanel radius="hero" className="p-6">
+      <p className="type-micro mb-2">The stylist needs a bit more</p>
+      <p className="type-display-sm">{ask ?? 'Tell me where you’re going and the vibe you want.'}</p>
+      <p className="type-body-md mt-2">
+        Try something like: where you’re headed, the dates or day, what’s happening, and the look you’re after.
+      </p>
+    </GlassPanel>
   );
 }

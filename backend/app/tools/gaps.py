@@ -11,6 +11,7 @@ from sqlmodel import Session, select
 from app.db import engine
 from app.integrations.decisions_client import GapIn, rate_gaps
 from app.models import WardrobeItem
+from app.text_rules import is_athletic
 from app.tools.context import RunContext, ToolOutput
 
 WARM = ("wool", "cashmere", "down", "fleece")
@@ -51,7 +52,7 @@ def find_closet_gaps(
     texts = [f"{e.get('name', '')} {e.get('dress_code_hint', '')}".lower() for e in events]
     if any("black tie" in t or "gala" in t for t in texts) and not any(i.formality == "formal" and i.category == "dresses" for i in closet):
         found.append(GapIn(need="formal evening outfit", reason="Black-tie event on the calendar"))
-    if any(w in t for t in texts for w in ("run", "gym", "workout")) and not any(i.category == "activewear" for i in closet):
+    if any(is_athletic(t) for t in texts) and not any(i.category == "activewear" for i in closet):
         found.append(GapIn(need="workout clothes", reason="Workout on the calendar"))
 
     if not found:

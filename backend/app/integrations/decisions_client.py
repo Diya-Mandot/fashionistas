@@ -22,6 +22,7 @@ from app.config import get_settings
 from app.core import outfit_generator as gen
 from app.integrations import recorder
 from app.integrations.openai_client import ApiNotConfigured, get_client, short_error
+from app.text_rules import is_athletic
 
 API = "decisions"
 
@@ -339,7 +340,7 @@ def _item_data(items: list[CandidateItem], today: date) -> list[gen.ItemData]:
 
 def _dress_target(hint: str) -> Optional[float]:
     h = hint.lower()
-    if "athletic" in h or "run" in h or "gym" in h:
+    if is_athletic(h):
         return None
     if "black tie" in h or "formal" in h:
         return 3.0

@@ -118,3 +118,13 @@ def test_plan_endpoint_end_to_end_mock(client):
     # Replay via GET works
     again = client.get(f"/api/stylist/runs/{body['run_id']}").json()
     assert again["plan"] == plan and again["sources"]["agent"] == "mock"
+
+
+def test_brunch_is_not_a_workout():
+    from app.services.calendar_source import _hint
+    from app.text_rules import is_athletic
+
+    assert not is_athletic("Sunday brunch in Austin")
+    assert is_athletic("Morning run") and is_athletic("Running club") and is_athletic("gym")
+    assert _hint("Networking Brunch", "") == "smart casual"
+    assert _hint("Trail run", "") == "athletic"

@@ -16,6 +16,7 @@ from app.core import outfit_generator as gen
 from app.db import engine
 from app.integrations.decisions_client import CandidateItem, EventIn, OutfitScoringRequest, WeatherIn, score_outfits
 from app.models import WardrobeItem
+from app.text_rules import is_athletic
 from app.tools.context import OutfitOption, RunContext, ToolOutput
 
 MAX_CANDIDATES = 18
@@ -27,7 +28,7 @@ LABELS = {"vibe": "vibe", "dress_code": "dress code", "weather": "weather", "col
 
 def _occasion_filter(items: list[WardrobeItem], event: dict[str, Any]) -> list[WardrobeItem]:
     text = f"{event.get('name', '')} {event.get('dress_code_hint', '')}".lower()
-    if any(w in text for w in ("run", "athletic", "gym", "workout", "yoga")):
+    if is_athletic(text):
         sporty = [
             i for i in items
             if i.style == "sporty" or i.category == "activewear"

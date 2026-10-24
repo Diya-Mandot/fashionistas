@@ -115,7 +115,7 @@ export interface TraceStep {
 export interface AgentRun {
   id: string;
   message: string;
-  status: 'running' | 'completed' | 'failed';
+  status: 'running' | 'completed' | 'failed' | 'needs_input';
   plan: Plan | null;
   trace: TraceStep[];
   sources: Record<string, string>;
