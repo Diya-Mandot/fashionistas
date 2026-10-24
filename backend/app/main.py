@@ -9,7 +9,7 @@ from sqlmodel import Session
 from app.config import BACKEND_DIR, get_settings
 from app.db import engine, init_db
 from app.integrations.openai_client import key_configured
-from app.routers import calendar, closet, dev, scan
+from app.routers import calendar, closet, dev, health, scan, stylist
 from app.seed import seed_if_empty
 
 settings = get_settings()
@@ -36,6 +36,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(stylist.router)
+app.include_router(health.router)
 app.include_router(scan.router)
 app.include_router(closet.router)
 app.include_router(calendar.router)

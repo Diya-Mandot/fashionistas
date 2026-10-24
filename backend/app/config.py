@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     scan_max_image_pixels: int = 50_000_000
     google_application_credentials: str = ""
 
+    home_city: str = "San Francisco"
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"
     frontend_origin: str = "http://localhost:5173"
     dev_endpoints: bool = True
