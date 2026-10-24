@@ -5,9 +5,11 @@ Kept: validate_upload with HEIC -> JPEG, parse_label_suggestions, the category
 guesser, and a Vision adapter. Dropped: Cloudinary (images are stored under
 backend/uploads/) and the SSRF-safe remote downloader (we never fetch remote images).
 
-Vision is called over its REST API with GOOGLE_VISION_API_KEY in a single
-request (web detection + OCR + labels + dominant colors), so no Google SDK
-or service account is needed.
+Vision is called over its REST API in a single request (web detection + OCR +
+labels + dominant colors). Auth, in order: GOOGLE_VISION_API_KEY, then a
+service-account file in GOOGLE_APPLICATION_CREDENTIALS, then gcloud Application
+Default Credentials (`gcloud auth application-default login`), which is what
+the capstone used.
 """
 
 from __future__ import annotations
@@ -237,17 +239,66 @@ class VisionResult:
     ocr_excerpt: Optional[str] = None
 
 
+VISION_SCOPE = "https://www.googleapis.com/auth/cloud-vision"
+_adc_lock = threading.Lock()
+_adc_creds = None
+
+
+def _auth() -> tuple[dict[str, str], dict[str, str], str]:
+    """Return (query params, headers, method label) for a Vision request."""
+    global _adc_creds
+    s = get_settings()
+    key = s.google_vision_api_key.strip()
+    if key:
+        return {"key": key}, {}, "API key"
+    try:
+        import google.auth
+        from google.auth.transport.requests import Request
+        from google.oauth2 import service_account
+    except ImportError as exc:
+        raise ProviderUnavailableError("Google Vision is not configured") from exc
+    with _adc_lock:
+        try:
+            if _adc_creds is None:
+                path = s.google_application_credentials.strip()
+                if path:
+                    _adc_creds = service_account.Credentials.from_service_account_file(
+                        str(Path(path).expanduser()), scopes=[VISION_SCOPE]
+                    )
+                else:
+                    _adc_creds, _project = google.auth.default(scopes=[VISION_SCOPE])
+            if not _adc_creds.valid:
+                _adc_creds.refresh(Request())
+        except Exception as exc:
+            _adc_creds = None
+            raise ProviderUnavailableError(
+                "Google Vision is not configured (no API key, service account, or gcloud application-default login)"
+            ) from exc
+        headers = {"Authorization": f"Bearer {_adc_creds.token}"}
+        quota = getattr(_adc_creds, "quota_project_id", None)
+        if quota:
+            headers["x-goog-user-project"] = quota
+        label = "service account" if s.google_application_credentials.strip() else "gcloud credentials"
+        return {}, headers, label
+
+
+def vision_configured() -> bool:
+    try:
+        _auth()
+        return True
+    except ProviderUnavailableError:
+        return False
+
+
 class GoogleVisionService:
     """Small mockable adapter around the Google Cloud Vision REST API."""
 
     def configured(self) -> bool:
-        return bool(get_settings().google_vision_api_key.strip())
+        return vision_configured()
 
     def _annotate_sync(self, content: bytes) -> VisionResult:
         s = get_settings()
-        key = s.google_vision_api_key.strip()
-        if not key:
-            raise ProviderUnavailableError("GOOGLE_VISION_API_KEY is not set")
+        params, headers, _method = _auth()
         body = {
             "requests": [
                 {
@@ -262,11 +313,15 @@ class GoogleVisionService:
             ]
         }
         try:
-            res = httpx.post(VISION_URL, params={"key": key}, json=body, timeout=s.vision_timeout_s)
+            res = httpx.post(VISION_URL, params=params, headers=headers, json=body, timeout=s.vision_timeout_s)
         except httpx.HTTPError as exc:
             raise ProviderUnavailableError(f"Vision request failed: {type(exc).__name__}") from exc
         if res.status_code != 200:
-            raise ProviderUnavailableError(f"Vision returned HTTP {res.status_code}")
+            try:
+                msg = res.json().get("error", {}).get("message", "")[:160]
+            except ValueError:
+                msg = ""
+            raise ProviderUnavailableError(f"Vision returned HTTP {res.status_code} {msg}".strip())
         r = (res.json().get("responses") or [{}])[0]
         if r.get("error"):
             raise ProviderUnavailableError(f"Vision error: {r['error'].get('message', '')[:120]}")

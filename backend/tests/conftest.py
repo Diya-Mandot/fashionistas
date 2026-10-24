@@ -6,6 +6,7 @@ _tmp = tempfile.mkdtemp()
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 os.environ["OPENAI_API_KEY"] = ""
 os.environ["GOOGLE_VISION_API_KEY"] = ""
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/nonexistent/tests-disable-adc.json"
 os.environ["DECISIONS_MODE"] = "mock"
 os.environ["AGENTS_MODE"] = "mock"
 

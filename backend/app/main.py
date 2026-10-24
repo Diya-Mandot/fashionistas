@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
 from app.config import BACKEND_DIR, get_settings
+from app.core.vision import vision_configured
 from app.db import engine, init_db
 from app.integrations.openai_client import key_configured
 from app.routers import calendar, closet, dev, health, scan, stylist
@@ -68,5 +69,5 @@ def health() -> dict:
         "agents_mode": settings.agents_mode,
         "decisions_mode": settings.decisions_mode,
         "key_configured": key_configured(),
-        "vision_configured": bool(settings.google_vision_api_key.strip()),
+        "vision_configured": vision_configured(),
     }

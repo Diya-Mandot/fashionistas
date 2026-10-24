@@ -537,9 +537,13 @@ def classify_item(signals: ItemSignals) -> ItemClassification:
     wp_prob = float(wp.get("probability", 0.0)) if wp.get("type") == "predicate" else 0.0
     confidence["waterproof"] = round(max(wp_prob, 1 - wp_prob), 2)
 
+    from app.core.vision import guess_category
+
+    # Use Vision's guess only if it actually names a garment ("denim jacket", not "pocket").
     base_name = (signals.best_guess or "").strip()
-    if not base_name or len(base_name) > 40:
-        base_name = f"{values['color']} {values['subcategory']}"
+    if not base_name or len(base_name) > 40 or guess_category(base_name) is None:
+        sub = values["subcategory"] if values["subcategory"] != "other" else values["category"].rstrip("s")
+        base_name = f"{values['color']} {sub}"
     name = base_name.title()
     if signals.ocr_brand and signals.ocr_brand.lower() not in name.lower():
         name = f"{signals.ocr_brand} {name}"

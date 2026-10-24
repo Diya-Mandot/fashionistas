@@ -34,7 +34,7 @@ make reset       # restore the demo closet and clear runs
 
 One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/api-keys **in the project that holds the hackathon credits**. The Agents API needs `api.agents.read`, `api.agents.write` and `api.responses.write`. To check that the key loaded without printing it, run `cd backend && uv run python check_key.py`.
 
-`GOOGLE_VISION_API_KEY` is optional. Without it, Scan uses the photo plus colors detected on your machine, and says so in the trace.
+**Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
 ## Using real clothing photos
 

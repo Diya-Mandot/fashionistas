@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from app.config import get_settings
+from app.core.vision import vision_configured
 from app.integrations import recorder
 from app.integrations.openai_client import get_client, key_configured, short_error
 
@@ -63,7 +64,7 @@ def preflight() -> dict[str, Any]:
     base = {
         "modes": {"agents": s.agents_mode, "decisions": s.decisions_mode},
         "recordings": {"agents": recorder.recording_count("agents"), "decisions": recorder.recording_count("decisions")},
-        "vision_configured": bool(s.google_vision_api_key.strip()),
+        "vision_configured": vision_configured(),
     }
     if not key_configured():
         msg = "OPENAI_API_KEY is not set in backend/.env"
