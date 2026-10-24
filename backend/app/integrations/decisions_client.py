@@ -179,7 +179,7 @@ def _run(
     start = time.perf_counter()
     response = mock()
     ms = int((time.perf_counter() - start) * 1000)
-    notes.append("Used local mock scoring (labelled MOCK)")
+    notes.append("Used the local mock (labelled MOCK)")
     return response, DecisionMeta(source="mock", note="; ".join(notes), questions=n_questions, duration_ms=ms)
 
 

@@ -1,9 +1,6 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-
-def test_health():
-    res = TestClient(app).get("/api/health")
+def test_health(client):
+    res = client.get("/api/health")
     assert res.status_code == 200
-    assert res.json()["status"] == "ok"
+    body = res.json()
+    assert body["status"] == "ok"
+    assert body["key_configured"] is False

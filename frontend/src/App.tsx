@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Closet } from './pages/Closet';
-import { Placeholder } from './pages/Placeholder';
+import { Scan } from './pages/Scan';
 import { Stylist } from './pages/Stylist';
 
 export default function App() {
@@ -9,7 +9,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Stylist />} />
         <Route path="/closet" element={<Closet />} />
-        <Route path="/scan" element={<Placeholder title="Scan" />} />
+        <Route path="/scan" element={<Scan />} />
       </Routes>
     </BrowserRouter>
   );
