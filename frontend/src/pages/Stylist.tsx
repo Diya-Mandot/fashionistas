@@ -151,26 +151,6 @@ export function Stylist({ active = true }: { active?: boolean }) {
           </p>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
-          {runId && run && (
-            <button
-              type="button"
-              onClick={() => navigate(`/?run=${runId}`)}
-              className="glass mt-5 flex w-full items-center gap-3 rounded-hero p-4 text-left text-white transition hover:bg-white/40"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/25">
-                <IoSparklesOutline size={18} className={run.status === 'running' ? 'animate-pulse' : ''} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="type-micro block !text-white/75">
-                  {run.status === 'running' ? 'Your plan is still being built' : 'Your last plan'}
-                </span>
-                <span className="block truncate text-[14px] font-semibold">“{run.message}”</span>
-              </span>
-              <span className="flex shrink-0 items-center gap-1 text-[13px] font-bold">
-                View <IoArrowForward size={14} />
-              </span>
-            </button>
-          )}
           <UpcomingEvents onStyle={styleEvent} busy={styling} />
         </section>
       ) : (
