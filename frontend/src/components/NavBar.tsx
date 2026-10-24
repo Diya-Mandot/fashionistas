@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useStylistPath } from '../lib/navMemory';
 import { IoCameraOutline, IoShirtOutline, IoSparklesOutline } from 'react-icons/io5';
 import { ModeBadge } from './ModeBadge';
 import { Wordmark } from './Wordmark';
@@ -11,6 +12,8 @@ const LINKS = [
 
 export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; dark?: boolean }) {
   const light = overlay && dark;
+  const stylistPath = useStylistPath();
+  const { pathname } = useLocation();
   return (
     <header
       className={`${overlay ? 'absolute inset-x-0 top-0 z-20' : 'relative border-b border-line-subtle bg-paper'}`}
@@ -27,9 +30,11 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
           {LINKS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
-              to={to}
+              to={to === '/' ? stylistPath : to}
               end
-              className={({ isActive }) =>
+              className={({ isActive: active }) => {
+                const isActive = to === '/' ? pathname === '/' : active;
+                return (
                 `flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors ${
                   isActive
                     ? 'bg-forest text-white'
@@ -37,7 +42,8 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
                       ? 'text-white/90 hover:bg-white/15'
                       : 'text-ink hover:bg-white'
                 }`
-              }
+                );
+              }}
             >
               <Icon size={16} />
               <span className="hidden sm:inline">{label}</span>

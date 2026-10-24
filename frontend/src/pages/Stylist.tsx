@@ -12,6 +12,7 @@ import { PackingList } from '../components/PackingList';
 import { styleMessage, UpcomingEvents } from '../components/UpcomingEvents';
 import { api } from '../lib/api';
 import type { AgentRun, CalendarEvent, DeviceLocation, WardrobeItem } from '../lib/types';
+import { setStylistPath } from '../lib/navMemory';
 import { useDeviceLocation } from '../lib/useDeviceLocation';
 import { HERO_IMAGE } from '../theme/brand';
 
@@ -20,8 +21,9 @@ const POLL_MS = 700;
 export function Stylist({ active = true }: { active?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const urlRun = active ? new URLSearchParams(location.search).get('run') : null;
-  const [runId, setRunId] = useState<string | null>(urlRun);
+  const urlRun = new URLSearchParams(location.search).get('run');
+  const [runId, setRunId] = useState<string | null>(active ? urlRun : null);
+  const [view, setView] = useState<'home' | 'plan'>(active && urlRun ? 'plan' : 'home');
   const [message, setMessage] = useState('');
   const [run, setRun] = useState<AgentRun | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,19 +32,18 @@ export function Stylist({ active = true }: { active?: boolean }) {
   const pollRef = useRef<number | null>(null);
   const geo = useDeviceLocation();
 
-  // Shared link or back/forward to a specific run: follow it, but only when the URL itself changes
-  // (so "New plan" isn't undone by the old ?run= still being in the address bar for a moment).
-  const lastUrlRun = useRef(urlRun);
+  // While this tab is showing, the URL decides the view: "/" is home, "/?run=…" is a plan.
+  // The last run stays in memory (and keeps polling) when you go home or switch tabs.
   useEffect(() => {
-    if (!active || urlRun === lastUrlRun.current) return;
-    lastUrlRun.current = urlRun;
-    if (urlRun) setRunId(urlRun);
-  }, [active, urlRun]);
-
-  // Coming back to this tab: keep showing the run (and keep it in the URL for sharing).
-  useEffect(() => {
-    if (active && runId && !urlRun) navigate(`/?run=${runId}`, { replace: true });
-  }, [active, runId, urlRun, navigate]);
+    if (!active) return;
+    setStylistPath(location.pathname + location.search);
+    if (urlRun) {
+      setRunId(urlRun);
+      setView('plan');
+    } else {
+      setView('home');
+    }
+  }, [active, urlRun, location.pathname, location.search]);
 
   const items = useMemo(() => new Map(closet.map((i) => [i.id, i])), [closet]);
 
@@ -111,14 +112,12 @@ export function Stylist({ active = true }: { active?: boolean }) {
     startWith(text);
   };
 
-  const newPlan = () => {
-    setRunId(null);
-    setRun(null);
+  const goHome = () => {
     setMessage('');
     navigate('/');
   };
 
-  const started = Boolean(runId);
+  const started = view === 'plan';
   const plan = run?.plan ?? null;
   const days = plan?.days ?? [];
   const activeDay = days[Math.min(day, Math.max(0, days.length - 1))];
@@ -152,6 +151,26 @@ export function Stylist({ active = true }: { active?: boolean }) {
           </p>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
+          {runId && run && (
+            <button
+              type="button"
+              onClick={() => navigate(`/?run=${runId}`)}
+              className="glass mt-5 flex w-full items-center gap-3 rounded-hero p-4 text-left text-white transition hover:bg-white/40"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/25">
+                <IoSparklesOutline size={18} className={run.status === 'running' ? 'animate-pulse' : ''} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="type-micro block !text-white/75">
+                  {run.status === 'running' ? 'Your plan is still being built' : 'Your last plan'}
+                </span>
+                <span className="block truncate text-[14px] font-semibold">“{run.message}”</span>
+              </span>
+              <span className="flex shrink-0 items-center gap-1 text-[13px] font-bold">
+                View <IoArrowForward size={14} />
+              </span>
+            </button>
+          )}
           <UpcomingEvents onStyle={styleEvent} busy={styling} />
         </section>
       ) : (
@@ -159,10 +178,10 @@ export function Stylist({ active = true }: { active?: boolean }) {
           <div className="mb-3 flex items-center justify-between">
             <button
               type="button"
-              onClick={newPlan}
+              onClick={goHome}
               className="flex items-center gap-1.5 rounded-full bg-white/70 px-3.5 py-1.5 text-[13px] font-semibold text-ink ring-1 ring-line hover:bg-white"
             >
-              <IoArrowBack size={14} /> New plan
+              <IoArrowBack size={14} /> Home
             </button>
             {run?.status === 'running' && (
               <span className="text-[12px] text-muted">Keeps running if you switch tabs</span>
