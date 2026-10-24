@@ -1,6 +1,10 @@
 # EcoStylist: Context-Aware Stylist (Hackathon Plan)
 
-Track 1: **Agents in Action**. We use both the hackathon **Agents API** and **Decisions API**.
+Track 1: **Agents in Action**. We use the **Agents SDK** and **Decisions API**.
+The SDK is the current choice. A separate adapter permits a later hosted API migration.
+
+Current sequence: adapters, weather, scanning, then outfit planning.
+The adapters are implemented. Live account access still needs an explicit preflight check.
 
 Judges must see three things: **API input → the agent's task or decision → the result in our app.**
 
@@ -10,26 +14,28 @@ Judges must see three things: **API input → the agent's task or decision → t
 > 'professional but edgy' or account for a Seattle drizzle. Now an agent gathers context
 > and the Decisions API makes the judgment calls."
 
-- **Context-Aware Stylist**: the user types a messy trip or occasion request. The agent chooses its own tools: weather, calendar, closet. It builds candidate outfits per event and asks the Decisions API to score them. It flags closet gaps (for example, no rain jacket) and suggests secondhand items. It returns a day-by-day packing plan.
+- **Context-Aware Stylist**: the user types a messy trip or occasion request. The agent chooses its own tools: weather, calendar, closet. It builds candidate outfits per event and asks the Decisions API to score them. It flags closet gaps (for example, no rain jacket). It returns a day-by-day packing plan. Shopping is excluded.
 - **Agentic Closet Scanner**: the user uploads a photo. Google Vision extracts signals, the Decisions API classifies the item, and the item is auto-saved with an undo option.
 
-## Hard requirement: the Decisions and Agents APIs must work, no matter what
+## Adapter reliability
 
 The demo depends on real API calls. The reliability design:
 
 1. **Live is the default.** Synthetic mock data is never served silently.
-2. **Preflight check.** `GET /api/health/apis` runs on startup and from the UI. It checks keys, base URL, auth and one tiny real call to each API, and shows green or red per API. We run it before going on stage.
+2. **Preflight check.** `GET /api/health/apis` reports configuration without paid calls. Explicit `POST /api/health/apis/check` tests each configured adapter. Only a successful live check confirms current access. Replay and mock checks retain their source labels. Startup never makes paid calls.
 3. **Resilient client.** Every call has a timeout, retries with exponential backoff and jitter on 429/5xx/network errors, and honors any `Retry-After` header. If the docs list request limits, we enforce them in our client before the API does.
-4. **Record and replay real responses.** Every successful live request and response is written to `backend/logs/api_calls.jsonl` with keys redacted. If the network dies mid-demo, the adapter can replay a **previously recorded real response** for the same request fingerprint. The trace labels it "replayed from live call at HH:MM", never as fake.
-5. **Synthetic mock is the last resort.** It's only used when there is no recording. A loud badge in the UI says so. `AGENTS_MODE` / `DECISIONS_MODE` = `live | replay | mock`, default `live`. The auto-fallback order is live → replay → mock, and the trace shows the actual source for every step.
+4. **Record and replay validated results.** Successful live results enter `backend/logs/api_calls.jsonl`. Requests become hashes, so raw prompts and images are excluded. Results can contain personal information and must stay local. Replay requires the same request fingerprint, output schema, and tool versions. Replay never executes tool handlers.
+5. **Explicit modes.** `AGENTS_MODE` / `DECISIONS_MODE` = `live | replay | mock`, default `live`. Failures remain visible. Changing mode is explicit. Mock classifications return unknown tags. Mock scoring returns zero scores with zero confidence. Mock mode cannot fabricate structured plans. The future UI must show each result's source.
 6. **Warm-up.** Before the demo, run the 3 example prompts and 2 scans live so replay recordings exist for every demo path.
 7. **Persisted runs.** Each stylist run is stored, so `GET /api/stylist/runs/{id}` can re-show a real past run instantly.
 
 Both APIs sit behind adapters, so their shapes never leak into the rest of the app:
 - `backend/app/integrations/agents_client.py`: `run_agent(goal, tools, context) -> AgentRun`, which returns the answer and a structured trace.
-- `backend/app/integrations/decisions_client.py`: `score_outfits(...)` and `classify_item(...)`.
+- `backend/app/integrations/decisions_adapter.py`: async `DecisionsClient` classification and scoring.
+- `backend/app/integrations/decisions_client.py`: existing synchronous adapter from main. Keep its callers compatible during integration.
 
-**Blocked on:** the Agents API and Decisions API docs links from the hackathon page.
+Adapters follow the official Agents SDK and Decisions API documentation.
+Weather, scanning, planner validation, and frontend integration remain separate implementation steps.
 
 ## Architecture
 
@@ -38,7 +44,7 @@ backend/   Python 3.11 (via uv), FastAPI, SQLModel + SQLite (create_all, no migr
   app/core/outfit_generator.py   ported from ecostylistbe, used as the candidate builder (≤20 combos)
   app/core/vision.py             ported GoogleVisionService (no Cloudinary, local uploads/)
   app/integrations/              agents_client.py, decisions_client.py
-  app/tools/                     6 agent tools (function + JSON schema each)
+  app/tools/                     5 planned agent tools (function + JSON schema each)
   app/routers/                   stylist, closet, calendar, health, dev
 frontend/  React + Vite + TypeScript (strict) + Tailwind, web only
   src/theme/                     tokens ported from ecostylistfe/theme
@@ -51,14 +57,14 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind, web only
 
 | Tool | Source | Notes |
 |---|---|---|
-| `get_weather_forecast(city, start, end)` | Open-Meteo (free, no key) | 30 min cache. Beyond the forecast window, returns the furthest available days plus a note. On timeout, uses the seasonal average and says so in the trace. |
+| `get_weather_forecast(city, start, end)` | Open-Meteo (free, no key) | Planned: 30 min cache. Missing forecast days remain unavailable. Never present seasonal guesses as forecasts. |
 | `read_calendar(start, end)` | Mock, from `seed.py` | Events are relative to today: a Seattle conference trip and an NYC weekend. |
 | `query_closet(filters)` | SQLite | Compact payload. |
 | `build_and_score_outfits(event, weather, vibe)` | Generator + **Decisions API** | Candidates are referenced by index only and mapped back to item IDs server-side. Scores per criterion: vibe, dress code, weather, color, freshness. |
 | `find_closet_gaps(plan, weather)` | Rules + **Decisions API** severity | Falls back to a simple rule (stated in the trace) if Decisions can't express it. |
-| `suggest_secondhand_item(desc, size)` | Search links only | Depop, ThredUp and Poshmark search URLs. No scraping. |
 
-The agent picks the tool order itself; it is not hardcoded in Python. In mock mode, a deterministic keyword planner reads the message, so even the fallback isn't a fixed script.
+The live agent picks the tool order itself. Python does not prescribe that order.
+Mock mode returns a labeled preview without running tools or inventing a plan.
 
 **Safety (from the capstone `outfit_curator.py` pattern):** the model picks candidates by index and never invents IDs. User text is passed in as quoted data, never as instructions. Item IDs in the output are checked against the closet, and unknown ones are dropped and noted in the trace.
 
@@ -70,10 +76,10 @@ Ported exactly from `ecostylistfe/theme`: Paper `#FAF9F6`, Deep Forest `#1A3226`
 
 1. ★ **Scaffold**: FastAPI and Vite running, theme and fonts, styled Stylist hero with the glass prompt box.
 2. **Data + ported core**: models, seed closet (~25 items, no waterproof outerwear) and calendar, generator tests, Closet page.
-3. ★ **APIs**: read the docs, implement adapters (live / replay / mock), preflight health check. Show one real call to each API in the logs.
-4. **Agent + tools**: all 6 tools, `/api/stylist/plan` end to end, plan validation.
-5. ★ **Stylist UI + Agent Trace**: plan view, score breakdowns, gap card, streamed or polled trace.
-6. **Agentic Scan**: upload → Vision → Decisions classify → auto-save with undo.
+3. ★ **Adapters**: implemented live / replay / mock modes and explicit preflight health check. Real account access remains untested.
+4. **Weather integration**: city lookup, dated forecasts, caching, and explicit missing-data handling.
+5. **Agentic Scan**: upload → image understanding → Decisions classification → save with undo.
+6. ★ **Outfit planning + UI**: implement all 5 tools, `/api/stylist/plan`, and plan validation. Add plan views, scores, gaps, and traces.
 7. **Demo hardening**: reset endpoint, fallbacks, mode badge, README demo script, polish at 1440px.
 
 ## Known risks

@@ -8,7 +8,7 @@ from sqlmodel import Session
 
 from app.config import BACKEND_DIR, get_settings
 from app.db import engine, init_db
-from app.routers import calendar, closet, dev
+from app.routers import calendar, closet, dev, health as api_health
 from app.seed import seed_if_empty
 
 settings = get_settings()
@@ -37,6 +37,7 @@ app.add_middleware(
 
 app.include_router(closet.router)
 app.include_router(calendar.router)
+app.include_router(api_health.router)
 if settings.dev_endpoints:
     app.include_router(dev.router)
 
