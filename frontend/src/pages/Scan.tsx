@@ -104,7 +104,7 @@ export function Scan() {
     <PageShell>
       <div className="mb-8">
         <p className="type-micro mb-2">Agentic closet scan</p>
-        <h1 className="type-display-lg">Snap it. We’ll file it.</h1>
+        <h1 className="type-display-lg">Digital closet</h1>
         <p className="type-body-md mt-1 max-w-[560px]">
           Upload a photo of any piece, even a messy one. Google Vision reads it, the Decisions API classifies it,
           and it lands in your closet with zero typing.
