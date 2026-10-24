@@ -12,7 +12,7 @@ ApiMode = Literal["live", "replay", "mock"]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore")
 
-    app_name: str = "EcoStylist"
+    app_name: str = "Fashionistas"
 
     # One OpenAI key powers both the Agents API and the Decisions API.
     openai_api_key: str = ""

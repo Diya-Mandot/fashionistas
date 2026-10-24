@@ -1,4 +1,4 @@
-# EcoStylist: Context-Aware Stylist
+# Fashionistas: Context-Aware Stylist
 
 Hackathon **Track 1: Agents in Action**. Built on the OpenAI **Agents API** and **Decisions API**.
 

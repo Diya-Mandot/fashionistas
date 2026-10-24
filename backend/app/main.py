@@ -46,7 +46,7 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
     # Demo safety: never show a raw traceback; log it and return a readable error.
-    logging.getLogger("ecostylist").exception("Unhandled error on %s", request.url.path)
+    logging.getLogger("fashionistas").exception("Unhandled error on %s", request.url.path)
     return JSONResponse(status_code=500, content={"detail": f"Something went wrong ({type(exc).__name__}). Try again."})
 
 

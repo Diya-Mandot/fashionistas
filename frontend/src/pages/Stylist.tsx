@@ -9,8 +9,9 @@ import { LocationChip } from '../components/LocationChip';
 import { NavBar } from '../components/NavBar';
 import { OutfitCard } from '../components/OutfitCard';
 import { PackingList } from '../components/PackingList';
+import { styleMessage, UpcomingEvents } from '../components/UpcomingEvents';
 import { api } from '../lib/api';
-import type { AgentRun, DeviceLocation, WardrobeItem } from '../lib/types';
+import type { AgentRun, CalendarEvent, DeviceLocation, WardrobeItem } from '../lib/types';
 import { useDeviceLocation } from '../lib/useDeviceLocation';
 import { HERO_IMAGE } from '../theme/brand';
 
@@ -64,19 +65,33 @@ export function Stylist() {
     return stopPolling;
   }, [runId, follow]);
 
-  const onSubmit = async (e?: FormEvent) => {
-    e?.preventDefault();
-    const text = message.trim();
-    if (!text) return;
+  const [styling, setStyling] = useState<string | null>(null);
+
+  const startWith = async (text: string) => {
+    if (!text.trim()) return;
     setError(null);
     setDay(0);
     setRun(null);
     try {
-      const { run_id } = await api.startPlan(text, geo.location);
+      const { run_id } = await api.startPlan(text.trim(), geo.location);
       setParams({ run: run_id });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setStyling(null);
     }
+  };
+
+  const onSubmit = (e?: FormEvent) => {
+    e?.preventDefault();
+    startWith(message);
+  };
+
+  const styleEvent = (ev: CalendarEvent) => {
+    const text = styleMessage(ev);
+    setStyling(ev.id);
+    setMessage(text);
+    startWith(text);
   };
 
   const started = Boolean(runId);
@@ -100,7 +115,7 @@ export function Stylist() {
       <NavBar overlay dark={!started} />
 
       {!started ? (
-        <section className="mx-auto flex min-h-screen w-full max-w-[880px] flex-col justify-center px-5 pb-16 pt-28 md:px-10">
+        <section className="mx-auto flex min-h-screen w-full max-w-[880px] flex-col justify-center px-5 pb-16 pt-32 md:px-10">
           <p className="type-micro mb-4 text-white/80">Context-aware stylist</p>
           <h1 className="font-display text-[40px] font-bold leading-[44px] tracking-[-1px] text-white md:text-[56px] md:leading-[60px] md:tracking-[-1.4px]">
             Tell me the plan and the vibe.
@@ -113,6 +128,7 @@ export function Stylist() {
           </p>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
+          <UpcomingEvents onStyle={styleEvent} busy={styling} />
         </section>
       ) : (
         <main className="mx-auto max-w-[1360px] px-5 pb-24 pt-24 md:px-10">
@@ -133,7 +149,9 @@ export function Stylist() {
                     <p className="type-micro mb-1">
                       {plan.trip.city} · {fmt(plan.trip.start)} – {fmt(plan.trip.end)}
                     </p>
-                    <h1 className="type-display-lg">{plan.trip.summary.charAt(0).toUpperCase() + plan.trip.summary.slice(1)}</h1>
+                    <h1 className={plan.trip.summary.length > 48 ? 'type-display-md' : 'type-display-lg'}>
+                      {plan.trip.summary.charAt(0).toUpperCase() + plan.trip.summary.slice(1)}
+                    </h1>
                     {plan.gaps.some((g) => g.severity === 'must-have') && (
                       <p className="type-body-md mt-1 flex items-center gap-1.5">
                         <IoRainyOutline /> {plan.gaps.filter((g) => g.severity === 'must-have').length} must-have gap

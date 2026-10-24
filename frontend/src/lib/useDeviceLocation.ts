@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { api } from './api';
 import type { DeviceLocation } from './types';
 
-const KEY = 'ecostylist.location';
+const KEY = 'fashionistas.location';
 
 function load(): DeviceLocation | null {
   try {

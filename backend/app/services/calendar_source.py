@@ -127,14 +127,14 @@ def _ics_events(start: date, end: date) -> list[dict[str, Any]]:
 def events_between(start: date, end: date, today: Optional[date] = None) -> CalendarResult:
     demo = [dict(e, calendar="demo") for e in demo_events_between(start, end, today)] if _include_demo() else []
     if not calendar_configured():
-        return CalendarResult(events=demo_events_between(start, end, today), source="demo", label="Demo calendar")
+        return CalendarResult(events=[dict(e, calendar="demo") for e in demo_events_between(start, end, today)], source="demo", label="Demo calendar")
     try:
         real = _ics_events(start, end)
         events = sorted(real + demo, key=lambda e: (e["date"], e.get("start_time") or ""))
         label = "Your calendar" + (" + demo trips" if demo else "")
         return CalendarResult(events=events, source="ics", label=label, extra={"real": len(real), "demo": len(demo)})
     except Exception as exc:
-        fallback = demo_events_between(start, end, today)
+        fallback = [dict(e, calendar="demo") for e in demo_events_between(start, end, today)]
         return CalendarResult(
             events=fallback, source="demo", label="Demo calendar",
             note=f"Couldn't read your calendar ({type(exc).__name__}); used the demo calendar",

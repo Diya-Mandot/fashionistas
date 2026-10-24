@@ -99,7 +99,7 @@ SUBMIT_PLAN_SCHEMA: dict[str, Any] = {
                 "city": {"type": "string"},
                 "start": {"type": "string", "description": "YYYY-MM-DD"},
                 "end": {"type": "string", "description": "YYYY-MM-DD"},
-                "summary": {"type": "string", "description": "e.g. '3 days, cool and drizzly'"},
+                "summary": {"type": "string", "description": "A short title, at most 8 words, e.g. '3 days, cool and drizzly'. No full sentences."},
             },
             "required": ["city", "start", "end", "summary"],
         },

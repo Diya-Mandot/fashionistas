@@ -288,7 +288,7 @@ def _scoring_body(req: OutfitScoringRequest) -> dict[str, Any]:
             },
         ],
         "questions": questions,
-        "prompt_cache_key": "ecostylist-outfit-scoring",
+        "prompt_cache_key": "fashionistas-outfit-scoring",
     }
 
 

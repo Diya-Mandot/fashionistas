@@ -18,7 +18,7 @@ def reverse_geocode(lat: float, lon: float) -> Optional[dict[str, Any]]:
         res = httpx.get(
             NOMINATIM,
             params={"lat": lat, "lon": lon, "format": "jsonv2", "zoom": 10, "addressdetails": 1},
-            headers={"User-Agent": "EcoStylist-hackathon/0.1 (local demo)"},
+            headers={"User-Agent": "Fashionistas-hackathon/0.1 (local demo)"},
             timeout=6.0,
         )
         res.raise_for_status()

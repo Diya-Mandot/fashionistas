@@ -1,4 +1,4 @@
-import type { AgentRun, DeviceLocation, Health, Preflight, WardrobeItem } from './types';
+import type { AgentRun, CalendarResponse, DeviceLocation, Health, Preflight, WardrobeItem } from './types';
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
@@ -7,6 +7,8 @@ async function json<T>(res: Response): Promise<T> {
 
 export const api = {
   health: () => fetch('/api/health').then((r) => json<Health>(r)),
+  calendar: (start: string, end: string) =>
+    fetch(`/api/calendar?start=${start}&end=${end}`).then((r) => json<CalendarResponse>(r)),
   preflight: () => fetch('/api/health/apis').then((r) => json<Preflight>(r)),
   runs: (limit = 5) => fetch(`/api/stylist/runs?limit=${limit}`).then((r) => json<AgentRun[]>(r)),
   reset: () => fetch('/api/dev/reset', { method: 'POST' }).then((r) => json<{ items: number }>(r)),

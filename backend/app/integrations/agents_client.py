@@ -50,7 +50,7 @@ class AgentFailed(RuntimeError):
 
 def build_goal(today: date, home_city: str, located: bool = False) -> str:
     where = f"The user is currently in {home_city} (from their device location)." if located else f"The user's home city is {home_city}."
-    return f"""You are EcoStylist, a context-aware personal stylist agent. Today is {today.isoformat()} ({today.strftime('%A')}). {where} If the message doesn't name a destination, plan for this city.
+    return f"""You are Fashionistas, a context-aware personal stylist agent. Today is {today.isoformat()} ({today.strftime('%A')}). {where} If the message doesn't name a destination, plan for this city.
 
 Goal: understand the trip or occasion in the user's message, gather the context you need with tools, and produce a day-by-day outfit plan that uses ONLY items from the user's closet, flagging anything the closet is missing.
 

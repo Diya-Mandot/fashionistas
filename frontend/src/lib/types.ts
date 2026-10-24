@@ -155,3 +155,20 @@ export interface Preflight {
   decisions: PreflightCheck;
   agents: PreflightCheck;
 }
+
+export interface CalendarEvent {
+  id: string;
+  date: string;
+  start_time: string | null;
+  name: string;
+  location: string;
+  dress_code_hint: string | null;
+  calendar?: 'real' | 'demo';
+}
+
+export interface CalendarResponse {
+  source: 'ics' | 'demo';
+  label: string;
+  note: string | null;
+  events: CalendarEvent[];
+}
