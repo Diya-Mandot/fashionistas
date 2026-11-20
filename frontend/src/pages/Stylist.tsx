@@ -142,9 +142,9 @@ export function Stylist({ active = true }: { active?: boolean }) {
           <p className="type-micro mb-4 text-white/80">Your personal stylist</p>
           <h1 className="font-display text-[40px] font-bold leading-[44px] tracking-[-1px] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.45),0_4px_24px_rgba(0,0,0,0.55)] md:text-[56px] md:leading-[60px] md:tracking-[-1.4px]">
             Shop your own{' '}
-            <span className="font-script text-[1.5em] font-normal leading-none tracking-normal text-sand brightness-125">closet</span>.
+            <span className="font-script text-[1.5em] font-normal leading-none tracking-normal text-sand">closet</span>.
           </h1>
-          <p className="mt-2 font-display text-[24px] font-bold leading-[30px] tracking-[-0.3px] text-sand brightness-125 [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] md:text-[37px] md:leading-[43px] md:tracking-[-0.4px]">
+          <p className="mt-2 font-display text-[24px] font-bold leading-[30px] tracking-[-0.3px] text-sand [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] md:text-[37px] md:leading-[43px] md:tracking-[-0.4px]">
             Tell me where you’re headed.
           </p>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />

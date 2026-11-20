@@ -88,7 +88,7 @@ export function UpcomingEvents({ onStyle, busy }: { onStyle: (e: CalendarEvent) 
   };
 
   const disconnect = () => {
-    if (!window.confirm('Disconnect Google Calendar? Fashionistas will stop reading your events.')) return;
+    if (!window.confirm('Disconnect Google Calendar? Wearth will stop reading your events.')) return;
     api
       .disconnectGoogleCalendar()
       .then((g) => {

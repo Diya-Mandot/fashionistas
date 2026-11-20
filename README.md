@@ -1,4 +1,4 @@
-# Fashionistas: Context-Aware Stylist
+# Wearth: Context-Aware Stylist
 
 Hackathon **Track 1: Agents in Action**. Built on **Claude** (Anthropic Messages API): a tool-use agent loop plus structured-output scoring and classification.
 

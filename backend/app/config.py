@@ -12,7 +12,7 @@ ApiMode = Literal["live", "replay", "mock"]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore")
 
-    app_name: str = "Fashionistas"
+    app_name: str = "Wearth"
 
     # One Anthropic key powers both the stylist agent loop and the scoring/classification calls.
     anthropic_api_key: str = ""
