@@ -73,8 +73,12 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
     return () => clearTimeout(t);
   }, [toast]);
 
+  // Bumped on every start/reset so a check that finishes after Back is ignored.
+  const attempt = useRef(0);
+
   const start = useCallback(
     async (file: File) => {
+      const mine = ++attempt.current;
       setPhase('working');
       setError(null);
       setPaywall(null);
@@ -83,10 +87,12 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
       setPreview(previewUrl(file));
       try {
         const r = await api.buyCheck(file);
+        if (mine !== attempt.current) return;
         setRes(r);
         setPhase('done');
         navigate(`/buy?check=${r.check_id}`, { replace: true });
       } catch (e) {
+        if (mine !== attempt.current) return;
         if (e instanceof PaywallError) {
           setPaywall(e.paywall);
           setPhase('paywall');
@@ -100,6 +106,7 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
   );
 
   const reset = () => {
+    attempt.current++;
     setPhase('idle');
     setRes(null);
     setPreview(null);
@@ -128,8 +135,11 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
 
   const showResult = phase === 'done' && !!res && (allShown || trace.length === 0);
 
+  // Past the upload screen, Back returns to it; on the upload screen it leaves the page.
+  const onUploadScreen = phase === 'idle' && !urlCheck;
+
   return (
-    <PageShell>
+    <PageShell onBack={onUploadScreen ? undefined : reset}>
       <div className="mb-8">
         <p className="type-micro mb-2">Before you buy</p>
         <h1 className="type-display-lg">Should I buy this?</h1>
