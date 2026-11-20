@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useStylistPath } from '../lib/navMemory';
-import { IoCameraOutline, IoShirtOutline, IoSparklesOutline } from 'react-icons/io5';
+import { IoCameraOutline, IoShirtOutline, IoSparklesOutline, IoSunnyOutline } from 'react-icons/io5';
 import { ModeBadge } from './ModeBadge';
 import { Wordmark } from './Wordmark';
 
 const LINKS = [
   { to: '/', label: 'Stylist', icon: IoSparklesOutline },
+  { to: '/today', label: 'Today', icon: IoSunnyOutline },
   { to: '/closet', label: 'Closet', icon: IoShirtOutline },
   { to: '/scan', label: 'Scan', icon: IoCameraOutline },
 ];

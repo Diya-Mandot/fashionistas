@@ -14,8 +14,9 @@ from app.core.vision import vision_configured
 from app.services.calendar_source import describe as describe_calendar
 from app.db import engine, init_db
 from app.integrations.anthropic_client import key_configured
-from app.routers import buy_check, calendar, closet, dev, health, location, scan, shop, stylist
+from app.routers import buy_check, calendar, closet, daily, dev, health, location, scan, shop, stylist
 from app.seed import seed_if_empty
+from app.services.catalog import THRIFT_PATH, catalog_path
 
 settings = get_settings()
 UPLOADS_DIR = Path(settings.uploads_dir)
@@ -30,6 +31,8 @@ async def lifespan(_app: FastAPI):
     init_db()
     with Session(engine) as session:
         seed_if_empty(session)
+    if catalog_path() == THRIFT_PATH:
+        shop.warm_cache_in_background()
     yield
 
 
@@ -59,6 +62,7 @@ app.include_router(buy_check.router)
 app.include_router(shop.router)
 app.include_router(closet.router)
 app.include_router(calendar.router)
+app.include_router(daily.router)
 if settings.dev_endpoints:
     app.include_router(dev.router)
 

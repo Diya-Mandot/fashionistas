@@ -2,6 +2,8 @@ import type {
   AgentRun,
   BuyCheckResponse,
   CalendarResponse,
+  DailyRequest,
+  DailyResponse,
   DeviceLocation,
   GoogleCalendarStatus,
   Health,
@@ -91,6 +93,24 @@ export const api = {
     fetch('/api/dev/reset-buy-checks', { method: 'POST' }).then((r) =>
       json<{ checks_used: number; limit: number; pro: boolean }>(r),
     ),
+  daily: async (body: DailyRequest): Promise<DailyResponse> => {
+    const res = await fetch('/api/daily', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(await errorText(res));
+    return res.json() as Promise<DailyResponse>;
+  },
+  wearOutfit: async (date: string, itemIds: string[]): Promise<{ worn_item_ids: string[] }> => {
+    const res = await fetch('/api/daily/wear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, item_ids: itemIds }),
+    });
+    if (!res.ok) throw new Error(await errorText(res));
+    return res.json() as Promise<{ worn_item_ids: string[] }>;
+  },
   getBuyCheck: (id: string) => fetch(`/api/buy-check/${id}`).then((r) => json<BuyCheckResponse>(r)),
   keepBuyCheck: async (id: string): Promise<{ item: WardrobeItem }> => {
     const res = await fetch(`/api/buy-check/${id}/keep`, { method: 'POST' });

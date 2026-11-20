@@ -23,6 +23,8 @@ MAX_CANDIDATES = 18
 TOP_K = 3
 REPEAT_PENALTY = 0.07  # per item already chosen for an earlier event in this trip
 REWEARABLE = ("outerwear", "shoes", "bags")
+# In distinct mode these may repeat across options when nothing else is left; clothing never does.
+SHAREABLE = ("shoes", "bags", "accessories")
 LABELS = {"vibe": "vibe", "dress_code": "dress code", "weather": "weather", "color": "color harmony", "freshness": "freshness"}
 
 
@@ -62,12 +64,39 @@ def _hint(scores: dict[str, float]) -> str:
     return f"Strongest on {top}; weakest on {LABELS[weakest[0]]} ({weakest[1]:.2f})."
 
 
+def pick_distinct(cands: list, ids_of, by_id: dict[str, WardrobeItem], limit: int) -> list:
+    """Greedy, in the given (best-first) order: options that share no piece at all, then, if
+    still short, options that share only shoes/bags/accessories. Never repeats clothing, so it
+    may return fewer than `limit`."""
+    chosen: list = []
+    for strict in (True, False):
+        for c in cands:
+            if len(chosen) >= limit:
+                return chosen
+            if any(c is o for o in chosen):
+                continue
+            ids = set(ids_of(c))
+            if all(
+                not (shared := ids & set(ids_of(o)))
+                or (not strict and all(by_id[i].category in SHAREABLE for i in shared))
+                for o in chosen
+            ):
+                chosen.append(c)
+    return chosen
+
+
 def build_and_score_outfits(
     ctx: RunContext,
     event: dict[str, Any],
     vibe: str = "",
     weather: Optional[dict[str, Any]] = None,
+    top_k: int = TOP_K,
+    exclude: Optional[list[frozenset[str]]] = None,
+    distinct: bool = False,
 ) -> ToolOutput:
+    """`top_k`, `exclude` (item-id sets to skip, e.g. outfits already shown) and `distinct`
+    (options never share clothing; may return fewer than top_k) are for server-side callers
+    such as the daily outfit picker; the agent's tool schema omits them."""
     event = {"name": str(event.get("name") or "Outfit"), "dress_code_hint": event.get("dress_code_hint"), "date": event.get("date")}
     with Session(engine) as session:
         closet = list(session.exec(select(WardrobeItem)))
@@ -86,7 +115,14 @@ def build_and_score_outfits(
     seed = int(hashlib.sha256(f"{event['name']}{event['date']}".encode()).hexdigest()[:8], 16)
     filtered = gen.filter_for_weather(data, wctx)
     ranked_all = gen.generate_candidates(filtered, wctx, today=ctx.today, seed=seed)
-    if wctx.wants_outerwear:
+    if exclude:
+        ranked_all = [c for c in ranked_all if c.key not in exclude]
+    if distinct:
+        # Lead the shortlist with the largest non-overlapping set the closet allows, so Claude
+        # scores enough genuinely different looks; fill the rest with near-variants as usual.
+        spread = pick_distinct(ranked_all, lambda c: c.item_ids, by_id, MAX_CANDIDATES)
+        candidates = spread + gen.diversify([c for c in ranked_all if c not in spread], k=MAX_CANDIDATES - len(spread))
+    elif wctx.wants_outerwear:
         # Cold or wet: make sure layered outfits are well represented in the shortlist.
         layered = [c for c in ranked_all if any(by_id[i].category == "outerwear" for i in c.item_ids)]
         bare = [c for c in ranked_all if c not in layered]
@@ -134,9 +170,10 @@ def build_and_score_outfits(
     ekey = f"E{ctx.event_counter}"
     options = []
     refs = []
-    for rank, s in enumerate(ranked[:TOP_K]):
+    picks = pick_distinct(ranked, lambda s: candidates[s.index].item_ids, by_id, top_k) if distinct else ranked[:top_k]
+    for rank, s in enumerate(picks):
         cand = candidates[s.index]
-        ref = f"{ekey}-{'ABC'[rank]}"
+        ref = f"{ekey}-{chr(ord('A') + rank)}"
         scores = s.scores.model_dump()
         opt = OutfitOption(
             ref=ref, event_name=event["name"], event_date=event["date"], item_ids=cand.item_ids,

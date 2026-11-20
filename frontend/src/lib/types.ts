@@ -293,3 +293,55 @@ export interface PartnerPick {
   score: number;
   sponsored: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Today's outfit
+// ---------------------------------------------------------------------------
+
+export interface DailyWeather {
+  date: string;
+  high_f: number | null;
+  low_f: number | null;
+  precip_pct: number | null;
+  summary?: string | null;
+  snow?: boolean;
+}
+
+export interface DailyOutfit {
+  ref: string;
+  item_ids: string[];
+  scores: Scores;
+  /** Short look name, e.g. "Smart Casual Edge". */
+  title: string;
+  tip: string;
+  rationale: string;
+}
+
+export interface DailyResponse {
+  date: string;
+  city: string;
+  weather: DailyWeather | null;
+  weather_note: string | null;
+  weather_source: ApiSource;
+  calendar: { source: 'google' | 'ics' | 'none'; label: string; note: string | null };
+  events: CalendarEvent[];
+  /** The event today's outfits are dressed for; null = an everyday look. */
+  occasion: CalendarEvent | null;
+  outfits: DailyOutfit[];
+  items: WardrobeItem[];
+  worn_item_ids: string[] | null;
+  scored_by: string | null;
+  candidates_scored: number;
+  error: string | null;
+}
+
+export interface DailyRequest {
+  date: string;
+  lat?: number;
+  lon?: number;
+  city?: string;
+  /** A calendar event id, or "everyday". Omit to let the server pick the day's main occasion. */
+  event_id?: string;
+  exclude?: string[][];
+  refresh?: boolean;
+}

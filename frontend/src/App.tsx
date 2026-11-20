@@ -5,10 +5,12 @@ import { Closet } from './pages/Closet';
 import { Scan } from './pages/Scan';
 import { ShopGaps } from './pages/ShopGaps';
 import { Stylist } from './pages/Stylist';
+import { Today } from './pages/Today';
 
-type Tab = 'stylist' | 'closet' | 'scan' | 'buy' | 'shop';
+type Tab = 'stylist' | 'today' | 'closet' | 'scan' | 'buy' | 'shop';
 
 function tabFor(pathname: string): Tab {
+  if (pathname.startsWith('/today')) return 'today';
   if (pathname.startsWith('/closet')) return 'closet';
   if (pathname.startsWith('/scan')) return 'scan';
   if (pathname.startsWith('/buy')) return 'buy';
@@ -19,7 +21,7 @@ function tabFor(pathname: string): Tab {
 /** All tabs stay mounted so a running plan or scan keeps going while you look elsewhere. */
 function Tabs() {
   const tab = tabFor(useLocation().pathname);
-  const scroll = useRef<Record<Tab, number>>({ stylist: 0, closet: 0, scan: 0, buy: 0, shop: 0 });
+  const scroll = useRef<Record<Tab, number>>({ stylist: 0, today: 0, closet: 0, scan: 0, buy: 0, shop: 0 });
   const prev = useRef<Tab>(tab);
 
   useLayoutEffect(() => {
@@ -33,6 +35,9 @@ function Tabs() {
     <>
       <div hidden={tab !== 'stylist'}>
         <Stylist active={tab === 'stylist'} />
+      </div>
+      <div hidden={tab !== 'today'}>
+        <Today active={tab === 'today'} />
       </div>
       <div hidden={tab !== 'closet'}>
         <Closet active={tab === 'closet'} />
