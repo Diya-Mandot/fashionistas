@@ -44,10 +44,16 @@ def submit_plan(ctx: RunContext, **submission: Any) -> ToolOutput:
 TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
     "get_weather_forecast": (
         get_weather_forecast,
-        "Daily forecast (°F high/low, precipitation chance) for a city and date range. Real data.",
+        "Daily forecast (°F high/low, precipitation chance, snow) for a place and date range. Real data. "
+        "For outdoor plans pass the actual spot (e.g. 'Mount Timpanogos', 'Yosemite Valley'), not the nearest city: "
+        "mountains are far colder and snowier than the town below.",
         {
             "type": "object",
-            "properties": {"city": {"type": "string"}, "start_date": DATE, "end_date": DATE},
+            "properties": {
+                "city": {"type": "string", "description": "City, or a named outdoor place such as a mountain, park or trail"},
+                "start_date": DATE,
+                "end_date": DATE,
+            },
             "required": ["city", "start_date", "end_date"],
         },
     ),
@@ -98,7 +104,8 @@ TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
     ),
     "find_closet_gaps": (
         find_closet_gaps,
-        "Detect needs the closet can't meet for these events and forecast (e.g. rain and no waterproof layer). "
+        "Detect needs the closet can't meet for these events and forecast (e.g. rain and no waterproof layer, "
+        "snowy hike and no gloves or waterproof boots). Uses the forecast already fetched for those dates. "
         "Severity is rated by Claude.",
         {
             "type": "object",

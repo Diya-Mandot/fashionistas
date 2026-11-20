@@ -720,7 +720,7 @@ def _mock_gaps(gaps: list[GapIn], context: dict[str, Any]) -> dict[str, Any]:
     answers = []
     for i, g in enumerate(gaps):
         text = f"{g.need} {g.reason}".lower()
-        must = any(w in text for w in ("rain", "waterproof", "formal", "dressy", "cold", "no shoes", "missing footwear"))
+        must = any(w in text for w in ("rain", "snow", "waterproof", "formal", "dressy", "cold", "no shoes", "missing footwear", "gloves"))
         answers.append({"type": "score", "name": f"gap{i}", "score": 1.7 if must else 0.9, "confidence": 0.5})
     return {"answers": answers, "mock": True}
 
