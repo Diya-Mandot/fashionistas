@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IoAddOutline } from 'react-icons/io5';
+import { IoAddOutline, IoArrowForward, IoBagHandleOutline, IoStorefrontOutline } from 'react-icons/io5';
 import { Link, useLocation } from 'react-router-dom';
 import { FilterChip } from '../components/Chip';
 import { ItemCard } from '../components/ItemCard';
@@ -10,6 +10,11 @@ import type { WardrobeItem } from '../lib/types';
 
 const CATEGORY_FILTERS = ['all', 'tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'activewear', 'accessories', 'bags'];
 const FORMALITY_FILTERS = ['any', 'casual', 'smart casual', 'business', 'formal'];
+
+const SHOP_LINKS = [
+  { to: '/buy', title: 'Should I buy?', blurb: 'Check a piece against your closet', icon: IoBagHandleOutline },
+  { to: '/shop', title: 'Shop', blurb: 'Fill the gaps in your wardrobe', icon: IoStorefrontOutline },
+];
 
 export function Closet({ active = true }: { active?: boolean }) {
   const [items, setItems] = useState<WardrobeItem[] | null>(null);
@@ -48,13 +53,31 @@ export function Closet({ active = true }: { active?: boolean }) {
 
   return (
     <PageShell>
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="type-micro mb-2">Your closet</p>
           <h1 className="type-display-lg">
             {items ? `${items.length} pieces` : 'Loading…'}
           </h1>
           <p className="type-body-md mt-1">Everything the stylist agent can pick from.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {SHOP_LINKS.map(({ to, title, blurb, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className="group flex items-center gap-3 rounded-2xl border border-line-subtle bg-white/85 p-3 pr-4 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-forest text-white">
+                  <Icon size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-bold text-ink">{title}</span>
+                  <span className="block text-[12px] text-ink/60">{blurb}</span>
+                </span>
+                <IoArrowForward size={16} className="text-ink/50 transition group-hover:translate-x-0.5 group-hover:text-ink" />
+              </Link>
+            ))}
+          </div>
         </div>
         <Link
           to="/scan"

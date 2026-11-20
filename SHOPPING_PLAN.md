@@ -28,7 +28,7 @@ These change or sharpen the spec, based on what's already in the repo.
 3. **Split Scan into "analyze" and "save".** `POST /api/closet/scan` ([scan.py](backend/app/routers/scan.py)) saves the item right away. Move the Vision + classify steps into a service function, `analyze_photo()`, that both Scan and Should I Buy This? call. Should I Buy This? saves only when the user taps **I bought it**.
 4. **Use the app's vocabulary, not the spec sample's.** Use `"smart casual"`, not `smart_casual`. Categories come from `models.CATEGORIES`, color family from `gen.color_family()`, and season is a comma string that `gen.parse_seasons()` reads. The catalog JSON follows these rules.
 5. **The demo closet doesn't match the spec's examples.** The seed closet already has a *Stone Cotton Trench* and a *Grey Hooded Puffer* (neutral fall outerwear) and *White Canvas Sneakers*, so "Fills: neutral outerwear" and "no white sneakers" would never show. It also has only one black jacket (the blazer).
-   - **Recommendation:** keep the seed closet, since the Stylist rain-gap demo depends on it. Build the demo around gaps that really are empty, such as **waterproof outerwear** (this ties into the Stylist rain story), **tailored dark trousers**, and **formal outerwear**. Add one seed item, a *Black Cropped Bomber*, so the demo jacket can trigger "you own 2 similar black jackets."
+   - **Recommendation:** keep the seed closet, since the Stylist rain-gap demo depends on it. Build the demo around gaps that really are empty, such as **waterproof outerwear** (this ties into the Stylist rain story), **tailored dark trousers**, and **formal outerwear**. Add one seed item, a *Black Leather Biker Jacket*, so the demo jacket can trigger "you own 2 similar black jackets."
    - Confirm the final gaps in Phase 0 by running the gap detector against the real closet.
 6. **The user types the price.** Price lookup is out of scope. The result screen has an optional price field, and cost per wear is `price / est_wears_per_year`, computed in the browser.
 7. **Pro and the paywall are mocked.** Each check is stored as a row, so the monthly count is a `COUNT(*)`. Pro is a flag set by the "Start 7-day free trial" button. `make reset` clears both.
@@ -70,7 +70,7 @@ Frontend can start Phase 3 against a hard-coded copy of the response JSON (contr
 - [ ] Mark **2 items sponsored**: one that scores 70+ (shown with the "Sponsored" label) and one that scores under 70 (hidden; this proves the trust rule).
 - [ ] Get images for `backend/catalog/images/`. Use openly licensed Wikimedia Commons photos, like the seed set, and credit them in `backend/catalog/CREDITS.md`. If time runs short, the product card falls back to a color swatch, so missing images never block the build.
 - [ ] Mount `/media/catalog` in [main.py](backend/app/main.py), next to `/media/seed`.
-- [ ] Add the *Black Cropped Bomber* to the seed [manifest.json](backend/seed_images/photos/manifest.json) with a photo and credit.
+- [ ] Add the *Black Leather Biker Jacket* to the seed [manifest.json](backend/seed_images/photos/manifest.json) with a photo and credit.
 - [ ] Pick the demo jacket: a real jacket a teammate will scan on stage. Its verdict should come out **Maybe** (good outfit count, but it duplicates the black jackets).
 
 **Done when:** a test loads the catalog, checks that every field uses valid vocabulary and every image path exists, and checks that there are 25–40 items and at least one sponsored item on each side of 70.
@@ -117,7 +117,7 @@ Frontend can start Phase 3 against a hard-coded copy of the response JSON (contr
     "item": { "name": "Black Cropped Jacket", "category": "outerwear", "color": "black", "formality": "smart casual", "season": "fall, winter", "image_url": "…" },
     "result": {
       "score": 58, "verdict": "maybe", "outfit_count": 12,
-      "duplicates": [{ "item_id": "itm_…", "name": "Black Cropped Bomber", "reason": "similar black cropped jacket" }],
+      "duplicates": [{ "item_id": "itm_…", "name": "Black Leather Biker Jacket", "reason": "similar black leather jacket" }],
       "gap_filled": null,
       "calendar_matches": [{ "event": "Team dinner", "date": "2026-11-27" }],
       "est_wears_per_year": 30,
@@ -172,6 +172,25 @@ Frontend can start Phase 3 against a hard-coded copy of the response JSON (contr
 - [ ] `ProductCard` (new): photo (or color-swatch fallback), name, store, price, **"Unlocks 9 outfits"** in the most prominent spot, "Fills: neutral outerwear", and a "Sponsored" label.
 - [ ] A small footer line: "N items hidden because they don't fit your closet." This puts the trust rule on screen.
 
+**Partner picks on Stylist gap cards (a second B2B surface)**
+
+When a Stylist plan finds a gap, the gap card currently shows only secondhand search links (Depop, ThredUp, Poshmark, eBay) from [secondhand.py](backend/app/tools/secondhand.py). That's the moment the user has just been told "you need this for Tuesday," so it's the best place in the Stylist flow to sell.
+- [ ] Map each gap name from [gaps.py](backend/app/tools/gaps.py) to a catalog filter:
+
+  | Gap name | Catalog filter |
+  |---|---|
+  | `waterproof outer layer` | outerwear, waterproof |
+  | `water-resistant shoes` | shoes, waterproof |
+  | `warm winter coat` | outerwear coat, warm material |
+  | `formal evening outfit` | formal dresses |
+  | `workout clothes` | activewear |
+  | `shoes` | shoes |
+
+  Put the mapping in `services/catalog.py` as `partner_picks(gap_need, closet, limit=2)`. It reuses the Shop Your Gaps scoring and the **same 70+ trust rule**.
+- [ ] In [plan.py](backend/app/agent/plan.py), attach `partner_picks` to each `Gap` alongside the existing `suggestion`. This is deterministic and adds no Claude call. Add the field to `Gap` in [types.ts](frontend/src/lib/types.ts).
+- [ ] In [GapCard.tsx](frontend/src/components/GapCard.tsx), keep "Shop it secondhand" and add a "From partner stores" row: a mini product card with "Unlocks N outfits," the price, and a **Buy** button that opens the same `CommissionModal`.
+- [ ] Demo tie-in: the rainy-trip Stylist prompt flags "waterproof outer layer," and the card offers the Packable Rain Shell / Black Hooded Raincoat next to the secondhand links.
+
 ---
 
 ## Phase 5: Money surfaces (mocked)
@@ -186,7 +205,7 @@ Frontend can start Phase 3 against a hard-coded copy of the response JSON (contr
 ## Phase 6: Demo hardening (feature freeze at 2:15)
 
 - [ ] **Safety net:** run `make warmup` on the demo device with the actual demo-jacket photo. The recorder keys replays on the image hash, so the replay only works for that exact photo. Add the buy-check path to [warmup.py](backend/scripts/warmup.py). Also save a known-good `check_id` so `GET /api/buy-check/{id}` can show it instantly if everything else fails.
-- [ ] Make sure `make reset` restores the closet (including the bomber), clears checks, and resets Pro, so the 4th-check paywall fires the same way on every run.
+- [ ] Make sure `make reset` restores the closet (including the biker jacket), clears checks, and resets Pro, so the 4th-check paywall fires the same way on every run.
 - [ ] Run through the demo script twice in order: Problem → scan the jacket (Maybe, 12 outfits, 2 black jackets, calendar line) → Find something better → top card fills a gap → Buy → commission screen → 4th check → paywall.
 - [ ] After 2:15, fix only bugs on the demo path.
 
@@ -206,7 +225,7 @@ Frontend can start Phase 3 against a hard-coded copy of the response JSON (contr
 
 **New:** `backend/app/core/compatibility.py`, `backend/app/services/item_analysis.py`, `backend/app/services/catalog.py`, `backend/app/routers/buy_check.py`, `backend/app/routers/shop.py`, `backend/catalog/{catalog.json,images/,CREDITS.md}`, `backend/tests/test_{compatibility,buy_check,shop,catalog}.py`, `frontend/src/pages/{BuyCheck,ShopGaps}.tsx`, `frontend/src/components/{VerdictBadge,ProductCard,CommissionModal,PaywallModal}.tsx`
 
-**Changed:** `scan.py` (calls `analyze_photo`), `decisions_client.py` (`judge_purchase`), `models.py` (`BuyCheck`), `main.py` (routers, `/media/catalog`), `seed.py` (reset), `manifest.json` (bomber), `warmup.py`, `App.tsx`, `NavBar.tsx`, `Scan.tsx`, `Stylist.tsx`, `api.ts`, `types.ts`
+**Changed:** `scan.py` (calls `analyze_photo`), `decisions_client.py` (`judge_purchase`), `models.py` (`BuyCheck`), `main.py` (routers, `/media/catalog`), `seed.py` (reset), `manifest.json` (biker jacket), `warmup.py`, `agent/plan.py` (partner picks on gaps), `GapCard.tsx`, `App.tsx`, `NavBar.tsx`, `Scan.tsx`, `Stylist.tsx`, `api.ts`, `types.ts`
 
 ## Risks
 

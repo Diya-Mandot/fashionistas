@@ -72,6 +72,7 @@ export interface Gap {
   severity: 'must-have' | 'nice-to-have' | string;
   reason: string;
   suggestion: SecondhandSuggestion | null;
+  partner_picks?: PartnerPick[];
 }
 
 export interface Plan {
@@ -230,4 +231,60 @@ export interface Paywall {
   paywall: 'buy_check';
   used: number;
   limit: number;
+}
+
+// ---------------------------------------------------------------------------
+// Shop Your Gaps
+// ---------------------------------------------------------------------------
+export interface ShopProduct {
+  id: string;
+  name: string;
+  store: string;
+  price: number;
+  /** null until the catalog photo has been fetched; cards fall back to a color swatch. */
+  image: string | null;
+  category: string;
+  subcategory: string;
+  color: string | null;
+  formality: string;
+  season: string | null;
+  material: string | null;
+  waterproof: boolean;
+  sponsored: boolean;
+  outfit_count: number;
+  outfit_count_label: string;
+  fills: string[];
+  score: number;
+  verdict: Verdict;
+}
+
+export interface ShopGap {
+  label: string;
+  category: string;
+  status: 'empty' | 'thin';
+  count: number;
+  /** How many of the shown products fill it. */
+  products: number;
+}
+
+export interface ShopResponse {
+  gaps: ShopGap[];
+  products: ShopProduct[];
+  hidden_by_trust_rule: number;
+  categories: string[];
+  trust_min: number;
+}
+
+/** A partner product on a Stylist gap card. */
+export interface PartnerPick {
+  id: string;
+  name: string;
+  store: string;
+  price: number;
+  image: string | null;
+  color: string | null;
+  outfit_count: number;
+  outfit_count_label: string;
+  score: number;
+  sponsored: boolean;
 }

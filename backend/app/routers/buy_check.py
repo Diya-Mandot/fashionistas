@@ -8,7 +8,7 @@ Vision or Claude call.
 from __future__ import annotations
 
 import shutil
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -95,13 +95,6 @@ def _compact(item: WardrobeItem | compat.Piece) -> CandidateItem:
     )
 
 
-def _upcoming_events(today: date) -> list[dict[str, Any]]:
-    try:
-        return calendar_source.events_between(today, today + timedelta(days=compat.CALENDAR_WINDOW_DAYS)).events
-    except Exception:  # a broken calendar must never break a buy check
-        return []
-
-
 def _response(check: BuyCheck, session: Session) -> BuyCheckResponse:
     item = {k: v for k, v in check.attrs.items() if k != "scan_meta"}
     return BuyCheckResponse(
@@ -145,7 +138,7 @@ async def buy_check(file: UploadFile = File(...), session: Session = Depends(get
     closet = sorted(session.exec(select(WardrobeItem)), key=lambda i: i.id)
     pieces = [compat.as_piece(i) for i in closet]
     new = compat.as_piece({**attrs, "id": NEW_ITEM_ID})
-    events = _upcoming_events(today)
+    events = calendar_source.upcoming_events(today, compat.CALENDAR_WINDOW_DAYS)
     a = compat.assess(new, pieces, events, today)
     trace.append(
         TraceStep(

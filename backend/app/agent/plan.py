@@ -13,8 +13,10 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
+from app.core.compatibility import as_piece
 from app.db import engine
 from app.models import WardrobeItem
+from app.services.catalog import partner_picks
 from app.tools.context import RunContext
 from app.tools.secondhand import links_for
 
@@ -62,11 +64,27 @@ class SecondhandSuggestion(BaseModel):
     links: list[dict[str, str]]
 
 
+class PartnerPick(BaseModel):
+    """A partner-catalog product that fills the gap and passes the trust rule (score 70+)."""
+
+    id: str
+    name: str
+    store: str
+    price: float
+    image: Optional[str] = None
+    color: Optional[str] = None
+    outfit_count: int
+    outfit_count_label: str
+    score: int
+    sponsored: bool = False
+
+
 class Gap(BaseModel):
     need: str
     severity: str
     reason: str
     suggestion: Optional[SecondhandSuggestion] = None
+    partner_picks: list[PartnerPick] = Field(default_factory=list)
 
 
 class Trip(BaseModel):
@@ -159,7 +177,8 @@ def assemble_plan(ctx: RunContext, submission: dict[str, Any]) -> tuple[Plan, li
     """Map refs to real items and build the validated Plan. Returns (plan, warnings)."""
     warnings: list[str] = []
     with Session(engine) as session:
-        closet_ids = set(session.exec(select(WardrobeItem.id)))
+        closet_rows = list(session.exec(select(WardrobeItem)))
+    closet_ids = {i.id for i in closet_rows}
 
     def pick(ref: Optional[str], rationale: Optional[str] = None) -> Optional[OutfitPick]:
         if not ref:
@@ -204,6 +223,7 @@ def assemble_plan(ctx: RunContext, submission: dict[str, Any]) -> tuple[Plan, li
         days.append(PlanDay(date=day_date, weather=DayWeather(**{k: w.get(k) for k in ("high_f", "low_f", "precip_pct", "summary")}) if w else None, events=events))
 
     gaps: list[Gap] = []
+    closet = [as_piece(i) for i in closet_rows]  # for partner picks (rules only, no Claude call)
     for g in submission.get("gaps") or []:
         sug = None
         ref = g.get("suggestion_ref")
@@ -219,7 +239,11 @@ def assemble_plan(ctx: RunContext, submission: dict[str, Any]) -> tuple[Plan, li
                 sug = SecondhandSuggestion(description=match["description"], why=match["why"], links=match["links"])
             elif g.get("severity") == "must-have":
                 sug = SecondhandSuggestion(description=need, why=str(g.get("reason", "")), links=links_for(f"secondhand {need}"))
-        gaps.append(Gap(need=str(g.get("need", "")), severity=str(g.get("severity", "nice-to-have")), reason=str(g.get("reason", "")), suggestion=sug))
+        need = str(g.get("need", ""))
+        picks = [PartnerPick(**{k: p[k] for k in PartnerPick.model_fields if k in p})
+                 for p in partner_picks(need, closet, ctx.events_seen, ctx.today)]
+        gaps.append(Gap(need=need, severity=str(g.get("severity", "nice-to-have")), reason=str(g.get("reason", "")),
+                        suggestion=sug, partner_picks=picks))
 
     order = {iid: n for n, iid in enumerate(used)}
     packing = [PackingEntry(item_id=i, used_on=labels) for i, labels in sorted(used.items(), key=lambda kv: (-len(kv[1]), order[kv[0]]))]

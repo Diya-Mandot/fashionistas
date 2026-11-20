@@ -1,8 +1,14 @@
-import { IoAlertCircleOutline, IoOpenOutline, IoRefreshCircleOutline } from 'react-icons/io5';
-import type { Gap } from '../lib/types';
+import { IoAlertCircleOutline, IoOpenOutline, IoRefreshCircleOutline, IoStorefrontOutline } from 'react-icons/io5';
+import type { Gap, PartnerPick } from '../lib/types';
+import { MiniProductCard } from './ProductCard';
+import { useToast } from './Toast';
 
 export function GapCard({ gap }: { gap: Gap }) {
   const must = gap.severity === 'must-have';
+  const picks = gap.partner_picks ?? [];
+  const { toast, show } = useToast();
+  // Checkout is mocked; the commission screen arrives with the money surfaces (Phase 5).
+  const buy = (p: PartnerPick) => show(`Demo: no real checkout for ${p.name}`);
   return (
     <article className="rounded-hero border border-sand/40 bg-accent-light/90 p-5 shadow-[0_8px_28px_rgba(20,50,40,0.08)]">
       <div className="flex items-start gap-3">
@@ -38,6 +44,19 @@ export function GapCard({ gap }: { gap: Gap }) {
           </div>
         </div>
       )}
+      {picks.length > 0 && (
+        <div className="mt-3 rounded-2xl bg-white/60 p-3">
+          <p className="mb-2 flex items-center gap-1.5 px-1 text-[13px] font-bold text-forest">
+            <IoStorefrontOutline size={15} /> From partner stores
+          </p>
+          <div className="flex flex-col gap-2">
+            {picks.map((p) => (
+              <MiniProductCard key={p.id} pick={p} onBuy={buy} />
+            ))}
+          </div>
+        </div>
+      )}
+      {toast}
     </article>
   );
 }

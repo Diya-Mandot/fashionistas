@@ -178,3 +178,15 @@ def events_between(start: date, end: date, today: Optional[date] = None, refresh
         note="; ".join(notes) or None,
         extra={"real": len(real)},
     )
+
+
+def upcoming_events(today: date, days: int = 30) -> list[dict[str, Any]]:
+    """Events from today through `days` ahead; [] if the calendar can't be read.
+
+    For features (Should I Buy This?, Shop Your Gaps) where a broken calendar
+    must never break the page.
+    """
+    try:
+        return events_between(today, today + timedelta(days=days), today).events
+    except Exception:
+        return []

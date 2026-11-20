@@ -14,12 +14,13 @@ from app.core.vision import vision_configured
 from app.services.calendar_source import describe as describe_calendar
 from app.db import engine, init_db
 from app.integrations.anthropic_client import key_configured
-from app.routers import buy_check, calendar, closet, dev, health, location, scan, stylist
+from app.routers import buy_check, calendar, closet, dev, health, location, scan, shop, stylist
 from app.seed import seed_if_empty
 
 settings = get_settings()
 UPLOADS_DIR = Path(settings.uploads_dir)
 SEED_IMAGES_DIR = BACKEND_DIR / "seed_images"
+CATALOG_IMAGES_DIR = BACKEND_DIR / "catalog" / "images"
 
 
 @asynccontextmanager
@@ -55,6 +56,7 @@ app.include_router(health.router)
 app.include_router(location.router)
 app.include_router(scan.router)
 app.include_router(buy_check.router)
+app.include_router(shop.router)
 app.include_router(closet.router)
 app.include_router(calendar.router)
 if settings.dev_endpoints:
@@ -62,6 +64,8 @@ if settings.dev_endpoints:
 
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/media/seed", StaticFiles(directory=Path(SEED_IMAGES_DIR)), name="seed-images")
+CATALOG_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/media/catalog", StaticFiles(directory=CATALOG_IMAGES_DIR), name="catalog-images")
 app.mount("/media/uploads", StaticFiles(directory=Path(UPLOADS_DIR)), name="uploads")
 
 

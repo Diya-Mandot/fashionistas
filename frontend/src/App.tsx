@@ -3,21 +3,23 @@ import { BrowserRouter, useLocation } from 'react-router-dom';
 import { BuyCheck } from './pages/BuyCheck';
 import { Closet } from './pages/Closet';
 import { Scan } from './pages/Scan';
+import { ShopGaps } from './pages/ShopGaps';
 import { Stylist } from './pages/Stylist';
 
-type Tab = 'stylist' | 'closet' | 'scan' | 'buy';
+type Tab = 'stylist' | 'closet' | 'scan' | 'buy' | 'shop';
 
 function tabFor(pathname: string): Tab {
   if (pathname.startsWith('/closet')) return 'closet';
   if (pathname.startsWith('/scan')) return 'scan';
   if (pathname.startsWith('/buy')) return 'buy';
+  if (pathname.startsWith('/shop')) return 'shop';
   return 'stylist';
 }
 
 /** All tabs stay mounted so a running plan or scan keeps going while you look elsewhere. */
 function Tabs() {
   const tab = tabFor(useLocation().pathname);
-  const scroll = useRef<Record<Tab, number>>({ stylist: 0, closet: 0, scan: 0, buy: 0 });
+  const scroll = useRef<Record<Tab, number>>({ stylist: 0, closet: 0, scan: 0, buy: 0, shop: 0 });
   const prev = useRef<Tab>(tab);
 
   useLayoutEffect(() => {
@@ -40,6 +42,9 @@ function Tabs() {
       </div>
       <div hidden={tab !== 'buy'}>
         <BuyCheck active={tab === 'buy'} />
+      </div>
+      <div hidden={tab !== 'shop'}>
+        <ShopGaps active={tab === 'shop'} />
       </div>
     </>
   );

@@ -15,6 +15,7 @@ import { GlassPanel } from '../components/GlassPanel';
 import { PageShell } from '../components/PageShell';
 import { PhotoDrop, previewUrl } from '../components/PhotoDrop';
 import { StepList, useStepReveal } from '../components/StepList';
+import { useToast } from '../components/Toast';
 import { VerdictBadge, verdictLabel } from '../components/VerdictBadge';
 import { api, PaywallError } from '../lib/api';
 import type { BuyCheckResponse, BuyCheckResult, Paywall, TraceStep, WardrobeItem } from '../lib/types';
@@ -41,7 +42,7 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [paywall, setPaywall] = useState<Paywall | null>(null);
   const [kept, setKept] = useState<WardrobeItem | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const { toast, show: setToast } = useToast();
   const trace: TraceStep[] = res?.trace ?? [];
   const { shown, allShown, pending } = useStepReveal(trace, phase === 'working', PENDING_STEPS);
 
@@ -66,12 +67,6 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
         setPhase('error');
       });
   }, [active, urlCheck]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3200);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   // Bumped on every start/reset so a check that finishes after Back is ignored.
   const attempt = useRef(0);
@@ -205,14 +200,7 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
         </div>
       </div>
 
-      {toast && (
-        <div
-          role="status"
-          className="fixed inset-x-4 bottom-6 z-30 mx-auto w-fit max-w-[calc(100%-32px)] animate-[fadeUp_.25s_ease-out] rounded-full bg-forest px-5 py-3 text-center text-[13px] font-semibold text-white shadow-lg"
-        >
-          {toast}
-        </div>
-      )}
+      {toast}
     </PageShell>
   );
 }
