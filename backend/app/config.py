@@ -37,10 +37,23 @@ class Settings(BaseSettings):
     # Also include the seeded demo trips (Seattle/NYC/new job). Defaults to on only
     # when no real calendar is configured.
     calendar_include_demo: Optional[bool] = None
-    uploads_dir: str = str(BACKEND_DIR / "uploads")
-    database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"
+    # Where runtime state lives (database, uploads, recordings, logs). Defaults to backend/.
+    # On Railway, set DATA_DIR to the volume's mount path (e.g. /data) so state survives
+    # redeploys. An explicit UPLOADS_DIR / DATABASE_URL / RECORDINGS_DIR / LOGS_DIR still wins.
+    data_dir: str = ""
+    uploads_dir: str = ""
+    database_url: str = ""
+    recordings_dir: str = ""
+    logs_dir: str = ""
     frontend_origin: str = "http://localhost:5173"
     dev_endpoints: bool = True
+
+    def model_post_init(self, _context: object) -> None:
+        base = Path(self.data_dir) if self.data_dir else BACKEND_DIR
+        self.uploads_dir = self.uploads_dir or str(base / "uploads")
+        self.database_url = self.database_url or f"sqlite:///{base / 'ecostylist.db'}"
+        self.recordings_dir = self.recordings_dir or str(base / "recordings")
+        self.logs_dir = self.logs_dir or str(base / "logs")
 
 
 @lru_cache

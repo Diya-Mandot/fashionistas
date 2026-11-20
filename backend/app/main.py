@@ -25,7 +25,7 @@ SEED_IMAGES_DIR = BACKEND_DIR / "seed_images"
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    (BACKEND_DIR / "logs").mkdir(exist_ok=True)
+    Path(settings.logs_dir).mkdir(parents=True, exist_ok=True)
     init_db()
     with Session(engine) as session:
         seed_if_empty(session)
