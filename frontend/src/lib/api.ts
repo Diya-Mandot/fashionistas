@@ -81,10 +81,9 @@ export const api = {
     if (!res.ok) throw new Error(await errorText(res));
     return res.json() as Promise<BuyCheckResponse>;
   },
-  shop: (category?: string | null, maxPrice?: number | null) => {
+  shop: (category?: string | null) => {
     const q = new URLSearchParams();
     if (category) q.set('category', category);
-    if (maxPrice) q.set('max_price', String(maxPrice));
     return fetch(`/api/shop${q.size ? `?${q}` : ''}`).then((r) => json<ShopResponse>(r));
   },
   /** Dev/testing override: restores the free Should I Buy checks; the limit applies again after. */

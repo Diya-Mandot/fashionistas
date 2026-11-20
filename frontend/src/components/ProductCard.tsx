@@ -1,5 +1,5 @@
 import { IoBagHandleOutline, IoExtensionPuzzleOutline } from 'react-icons/io5';
-import type { PartnerPick, ShopProduct } from '../lib/types';
+import type { ShopProduct } from '../lib/types';
 
 // Swatch colors for products without a photo yet. Matched in order, so
 // "navy" wins over "blue" and "off-white" over "white".
@@ -34,65 +34,60 @@ function Sponsored() {
 
 const money = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
 
-export function ProductCard({ product, onBuy }: { product: ShopProduct; onBuy: (p: ShopProduct) => void }) {
+export function ProductCard({
+  product,
+  onBuy,
+  focused = false,
+}: {
+  product: ShopProduct;
+  onBuy: (p: ShopProduct) => void;
+  /** Opened from a Stylist gap: highlight it. */
+  focused?: boolean;
+}) {
   const unlocks = product.outfit_count_label;
   return (
-    <article className="flex flex-col overflow-hidden rounded-card bg-white/80 shadow-[0_8px_28px_rgba(20,50,40,0.08)] ring-1 ring-white/60">
+    <article
+      id={`product-${product.id}`}
+      className={`flex scroll-mt-24 flex-col overflow-hidden rounded-card bg-white/80 shadow-[0_8px_28px_rgba(20,50,40,0.08)] ${
+        focused ? 'ring-2 ring-emerald' : 'ring-1 ring-white/60'
+      }`}
+    >
       <div className="relative">
-        <ProductImage image={product.image} color={product.color} name={product.name} className="aspect-[5/6] w-full bg-sand-100" />
+        <ProductImage image={product.image} color={product.color} name={product.name} className="aspect-square w-full bg-sand-100" />
         {product.sponsored && (
           <span className="absolute right-2 top-2">
             <Sponsored />
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-3.5">
-        <p className="font-display text-[20px] font-bold leading-6 text-forest">
+      <div className="flex flex-1 flex-col p-2.5">
+        <p className="font-display text-[15px] font-bold leading-5 text-forest">
           Unlocks {unlocks} outfit{product.outfit_count === 1 ? '' : 's'}
         </p>
         {product.fills.length > 0 && (
-          <p className="mt-1 flex items-start gap-1 text-[12px] font-semibold leading-4 text-forest-mid">
-            <IoExtensionPuzzleOutline size={13} className="mt-px shrink-0" /> Fills: {product.fills.join(', ')}
+          <p className="mt-0.5 flex items-start gap-1 text-[11px] font-semibold leading-4 text-forest-mid">
+            <IoExtensionPuzzleOutline size={12} className="mt-0.5 shrink-0" /> Fills: {product.fills.join(', ')}
           </p>
         )}
-        <h3 className="type-label-medium mt-2 leading-5">{product.name}</h3>
-        <p className="type-body-sm">{product.store}</p>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="text-[16px] font-bold tabular-nums text-ink">{money(product.price)}</span>
+        <h3 className="mt-1.5 line-clamp-2 text-[13px] font-semibold leading-[18px] text-ink">{product.name}</h3>
+        <p className="mt-0.5 truncate text-[11px] leading-4 text-ink/80">
+          {product.store}
+          {product.store_location && <span className="text-muted"> · {product.store_location}</span>}
+        </p>
+        {product.sizes && product.sizes.length > 0 && (
+          <p className="truncate text-[11px] leading-4 text-muted">Size {product.sizes.join(', ')}</p>
+        )}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <span className="text-[14px] font-bold tabular-nums text-ink">{money(product.price)}</span>
           <button
             type="button"
             onClick={() => onBuy(product)}
-            className="flex items-center gap-1 rounded-full bg-forest px-3.5 py-1.5 text-[12px] font-bold text-white hover:opacity-90"
+            className="flex items-center gap-1 rounded-full bg-forest px-2.5 py-1 text-[11px] font-bold text-white hover:opacity-90"
           >
-            <IoBagHandleOutline size={14} /> Buy
+            <IoBagHandleOutline size={12} /> {product.url ? 'View' : 'Buy'}
           </button>
         </div>
       </div>
     </article>
-  );
-}
-
-/** Compact row for a Stylist gap card. */
-export function MiniProductCard({ pick, onBuy }: { pick: PartnerPick; onBuy: (p: PartnerPick) => void }) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white/85 p-2.5">
-      <ProductImage image={pick.image} color={pick.color} name={pick.name} className="h-16 w-14 shrink-0 rounded-xl bg-sand-100" />
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-bold leading-4 text-forest">
-          Unlocks {pick.outfit_count_label} outfit{pick.outfit_count === 1 ? '' : 's'}
-        </p>
-        <p className="mt-0.5 truncate text-[13px] font-medium text-ink">{pick.name}</p>
-        <p className="flex items-center gap-1.5 truncate text-[12px] text-muted">
-          {pick.store} · {money(pick.price)} {pick.sponsored && <Sponsored />}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={() => onBuy(pick)}
-        className="shrink-0 rounded-full bg-forest px-3.5 py-1.5 text-[12px] font-bold text-white hover:opacity-90"
-      >
-        Buy
-      </button>
-    </div>
   );
 }

@@ -61,17 +61,12 @@ export interface PlanDay {
   events: PlanEvent[];
 }
 
-export interface SecondhandSuggestion {
-  description: string;
-  why: string;
-  links: { site: string; url: string }[];
-}
-
 export interface Gap {
   need: string;
   severity: 'must-have' | 'nice-to-have' | string;
   reason: string;
-  suggestion: SecondhandSuggestion | null;
+  /** Shop page category to browse for this gap. */
+  shop_category?: string | null;
   partner_picks?: PartnerPick[];
 }
 
@@ -251,6 +246,12 @@ export interface ShopProduct {
   material: string | null;
   waterproof: boolean;
   sponsored: boolean;
+  /** The listing on the store's own site (thrift catalog only). */
+  url?: string | null;
+  store_location?: string | null;
+  /** In-stock sizes. */
+  sizes?: string[] | null;
+  secondhand?: boolean | null;
   outfit_count: number;
   outfit_count_label: string;
   fills: string[];
@@ -273,6 +274,9 @@ export interface ShopResponse {
   hidden_by_trust_rule: number;
   categories: string[];
   trust_min: number;
+  /** thrift = live Utah thrift-store inventory; mock = the demo partner catalog. */
+  source?: 'thrift' | 'mock';
+  stores?: string[];
 }
 
 /** A partner product on a Stylist gap card. */
@@ -281,6 +285,7 @@ export interface PartnerPick {
   name: string;
   store: string;
   price: number;
+  category?: string | null;
   image: string | null;
   color: string | null;
   outfit_count: number;
