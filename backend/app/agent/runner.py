@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import threading
 from datetime import date, datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 import anthropic
@@ -13,7 +14,7 @@ from sqlmodel import Session, select
 from app.agent.plan import fallback_submission
 from app.config import get_settings
 from app.core.outfit_generator import normalize_color
-from app.core.vision import ValidatedImage
+from app.core.vision import InvalidImageError, ValidatedImage, load_profile_photo
 from app.db import engine
 from app.integrations.agents_client import build_goal, run_agent
 from app.integrations.anthropic_client import ApiNotConfigured
@@ -90,6 +91,15 @@ def wait(run_id: str, timeout: float = 240) -> None:
 
 def _prepare_palette(ctx: RunContext, portrait: Optional[ValidatedImage]) -> None:
     manual = sorted(ctx.preferred_colors)
+    configured_path = get_settings().stylist_profile_photo_path.strip()
+    if portrait is None and configured_path:
+        try:
+            portrait = load_profile_photo(Path(configured_path))
+        except (InvalidImageError, OSError):
+            ctx.emit(TraceStep(
+                kind="fallback", tool="personal_palette", title="Profile photo unavailable",
+                detail="The stylist could not read the configured profile photo.", source="local",
+            ))
     if portrait is None:
         if manual:
             ctx.emit(TraceStep(

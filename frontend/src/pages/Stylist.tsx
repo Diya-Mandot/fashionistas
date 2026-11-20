@@ -17,15 +17,6 @@ import { useDeviceLocation } from '../lib/useDeviceLocation';
 import { HERO_IMAGE } from '../theme/brand';
 
 const POLL_MS = 700;
-const PALETTE_KEY = 'fashionistas.preferred-colors';
-
-function readPalette() {
-  try {
-    return window.localStorage.getItem(PALETTE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
 
 export function Stylist({ active = true }: { active?: boolean }) {
   const navigate = useNavigate();
@@ -34,8 +25,6 @@ export function Stylist({ active = true }: { active?: boolean }) {
   const [runId, setRunId] = useState<string | null>(active ? urlRun : null);
   const [view, setView] = useState<'home' | 'plan'>(active && urlRun ? 'plan' : 'home');
   const [message, setMessage] = useState('');
-  const [palette, setPalette] = useState(readPalette);
-  const [photo, setPhoto] = useState<File | null>(null);
   const [run, setRun] = useState<AgentRun | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [closet, setCloset] = useState<WardrobeItem[]>([]);
@@ -95,23 +84,13 @@ export function Stylist({ active = true }: { active?: boolean }) {
 
   const [styling, setStyling] = useState<string | null>(null);
 
-  const updatePalette = (value: string) => {
-    setPalette(value);
-    try {
-      window.localStorage.setItem(PALETTE_KEY, value);
-    } catch {
-      // The current session can still use the palette if storage is unavailable.
-    }
-  };
-
   const startWith = async (text: string) => {
     if (!text.trim()) return;
     setError(null);
     setDay(0);
     setRun(null);
     try {
-      const preferredColors = [...new Set(palette.split(',').map((color) => color.trim().slice(0, 40)).filter(Boolean))];
-      const { run_id } = await api.startPlan(text.trim(), geo.location, preferredColors.slice(0, 12), photo);
+      const { run_id } = await api.startPlan(text.trim(), geo.location);
       setRunId(run_id);
       navigate(`/?run=${run_id}`);
     } catch (err) {
@@ -168,7 +147,6 @@ export function Stylist({ active = true }: { active?: boolean }) {
           </h1>
           <PromptBox
             message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo}
-            palette={palette} setPalette={updatePalette} photo={photo} setPhoto={setPhoto}
           />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
           <UpcomingEvents onStyle={styleEvent} busy={styling} />
@@ -190,7 +168,6 @@ export function Stylist({ active = true }: { active?: boolean }) {
           <PromptBox
             message={message} setMessage={setMessage} onSubmit={onSubmit}
             compact busy={run?.status === 'running'} geo={geo}
-            palette={palette} setPalette={updatePalette} photo={photo} setPhoto={setPhoto}
           />
           {error && <p className="type-body-sm mt-2" role="alert">{error}</p>}
 
@@ -258,10 +235,6 @@ function PromptBox({
   compact = false,
   busy = false,
   geo,
-  palette,
-  setPalette,
-  photo,
-  setPhoto,
 }: {
   message: string;
   setMessage: (s: string) => void;
@@ -270,10 +243,6 @@ function PromptBox({
   compact?: boolean;
   busy?: boolean;
   geo: { location: DeviceLocation | null; status: string; locate: () => void; clear: () => void };
-  palette: string;
-  setPalette: (value: string) => void;
-  photo: File | null;
-  setPhoto: (file: File | null) => void;
 }) {
   return (
     <GlassPanel radius="hero" className={compact ? 'p-2.5' : 'mt-10 p-3 md:p-4'}>
@@ -316,48 +285,6 @@ function PromptBox({
           </button>
         </div>
       </form>
-      <details className="mt-3 rounded-card bg-white/85 px-4 py-2.5 text-ink">
-        <summary className="cursor-pointer text-sm font-semibold">
-          Colors that suit me{photo && ' · Photo selected'}
-        </summary>
-        <label htmlFor="preferred-colors" className="type-body-sm mt-2 block">
-          Enter up to 12 colors you like near your face. Use commas between colors.
-        </label>
-        <input
-          id="preferred-colors"
-          value={palette}
-          onChange={(event) => setPalette(event.target.value)}
-          maxLength={300}
-          placeholder="Navy, olive, burgundy"
-          className="mt-2 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald/60"
-        />
-        <div className="mt-3 border-t border-line pt-3">
-          <label htmlFor={photo ? undefined : 'palette-photo'} className="block text-sm font-semibold">
-            Profile photo (optional)
-          </label>
-          <p id="palette-photo-help" className="type-body-sm mt-1">
-            Use a clear photo of yourself in daylight. Planning sends the photo to Claude for color suggestions.
-            Fashionistas saves the color summary in the Agent Trace.
-          </p>
-          {photo ? (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="min-w-0 break-all text-sm">{photo.name}</span>
-              <button type="button" onClick={() => setPhoto(null)} className="text-sm font-semibold text-forest underline">
-                Remove photo
-              </button>
-            </div>
-          ) : (
-            <input
-              id="palette-photo"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-              aria-describedby="palette-photo-help"
-              onChange={(event) => setPhoto(event.target.files?.[0] ?? null)}
-              className="mt-2 block w-full text-sm file:mr-2 file:rounded-full file:border-0 file:bg-forest file:px-3 file:py-1.5 file:font-semibold file:text-white"
-            />
-          )}
-        </div>
-      </details>
     </GlassPanel>
   );
 }

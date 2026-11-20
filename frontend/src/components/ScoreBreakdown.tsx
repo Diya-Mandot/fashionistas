@@ -6,7 +6,7 @@ const CRITERIA: { key: keyof Omit<Scores, 'overall'>; label: string; meaning: st
   { key: 'dress_code', label: 'Dress code', meaning: 'Fit for the event and its dress code' },
   { key: 'weather', label: 'Weather', meaning: 'Comfort for the temperature and rain chance' },
   { key: 'color', label: 'Color harmony', meaning: 'How well the colors work together' },
-  { key: 'palette', label: 'Personal colors', meaning: 'Share of labeled garments near your face that match your palette' },
+  { key: 'palette', label: 'Palette match', meaning: 'Share of labeled garments near your face that match your palette' },
   { key: 'freshness', label: 'Freshness', meaning: 'Rotation: how recently these pieces were worn' },
 ];
 
@@ -27,13 +27,16 @@ export function ScoreBreakdown({ scores, compact = false }: { scores: Scores; co
             onMouseEnter={() => setHover(key)}
             onMouseLeave={() => setHover(null)}
           >
-            <span role="rowheader" className={`${compact ? 'text-[12px]' : 'text-[13px]'} font-medium text-ink`}>
+            <span
+              role="rowheader"
+              className={`font-medium ${key === 'palette' ? 'pl-3 text-[12px] text-muted' : compact ? 'text-[12px] text-ink' : 'text-[13px] text-ink'}`}
+            >
               {label}
             </span>
             <span role="cell" className="relative h-5">
               <span className="absolute inset-y-[6px] left-0 right-0 rounded-[4px] bg-sand-100" />
               <span
-                className="absolute inset-y-[4px] left-0 rounded-r-[4px] bg-emerald-deep transition-[width] duration-500"
+                className={`absolute inset-y-[4px] left-0 rounded-r-[4px] transition-[width] duration-500 ${key === 'palette' ? 'bg-emerald-deep/70' : 'bg-emerald-deep'}`}
                 style={{ width: `${v * 100}%`, maxHeight: 12 }}
               />
             </span>

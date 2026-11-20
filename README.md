@@ -38,15 +38,13 @@ One `ANTHROPIC_API_KEY` covers both the agent and the scoring calls. Create it a
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
-### Personal colors
+### Color harmony and profile photos
 
-Open **Colors that suit me** in the stylist. Enter colors you like near your face, then run a plan. The stylist gives a small ranking boost to outfits with a matching top, dress, or jacket. The outfit card shows the matching shades. Your browser saves the list, and each new plan sends it to the backend for ranking.
+For a single-user backend with an existing profile photo, set `STYLIST_PROFILE_PHOTO_PATH` in `backend/.env` to the absolute path to that file. Use a private path outside the app's public media directories. Restart the backend after changing the setting. An integration can also pass a photo per run through `POST /api/stylist/plan/photo`.
 
-Color harmony measures how garments work together. Your preferred colors are a separate input. The ranker uses the closet's color labels, so accurate labels matter.
+When you start a plan, Fashionistas sends the resized portrait, closet color labels, and research summaries to Claude. The **Agent Trace** stores the color assessment. This option needs an Anthropic API key and `DECISIONS_MODE=live`. If Claude cannot assess the photo with moderate confidence, the stylist still returns the outfit plan and its garment color harmony score.
 
-The **Personal colors** row shows the share of labeled tops, dresses, and jackets that match the palette. The ranker adds up to 0.08 to an outfit's ranking score. It uses this addition alongside the existing score and repeat penalty. The Agent Trace shows the exact addition.
-
-You can also select a **Profile photo** under **Colors that suit me**. Use a clear photo in daylight. When you start a plan, Fashionistas sends the resized photo, your preferred colors, closet color labels, and research summaries to Claude. The photo stays selected until you remove it or reload the page. Fashionistas saves the color assessment in the **Agent Trace** and does not save the photo. This option needs an Anthropic API key and `DECISIONS_MODE=live`. If Claude cannot assess the photo with moderate confidence, the stylist uses your manually entered colors.
+**Palette match** appears under **Color harmony** when there is a palette and the outfit has labeled garments near the face. It shows the share of those garments that match the palette. The ranker adds up to 0.08 to the outfit's ranking score. The Agent Trace shows the exact addition.
 
 - [Clothing Aesthetics](https://journals.sagepub.com/doi/10.1177/20416695211053361) tested simulated clothing colors against 12 faces of White women. It supports testing color near the face and has limited coverage of skin tones.
 - The photo prompt uses two CC BY 4.0 data summaries. It counts the cool-hue column by face group for Experiment 1 in [Perrett and Sprengelmeyer's trial data](https://doi.org/10.6084/m9.figshare.14596905.v1). It also averages the Experiment 2 warmth columns by eye-color group, across participants, tasks, and hair conditions, in [Perrett's participant means](https://doi.org/10.6084/m9.figshare.20795986.v1).

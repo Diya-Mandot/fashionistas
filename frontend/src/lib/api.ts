@@ -25,24 +25,12 @@ export const api = {
       body: JSON.stringify(patch),
     }).then((r) => json<WardrobeItem>(r)),
   deleteItem: (id: string) => fetch(`/api/closet/${id}`, { method: 'DELETE' }),
-  startPlan: (message: string, location?: DeviceLocation | null, preferredColors: string[] = [], photo?: File | null) => {
-    const plan = JSON.stringify({
-      message,
-      location: location ? { lat: location.lat, lon: location.lon, city: location.city } : null,
-      preferred_colors: preferredColors,
-    });
-    if (photo) {
-      const body = new FormData();
-      body.append('plan', plan);
-      body.append('photo', photo);
-      return fetch('/api/stylist/plan/photo', { method: 'POST', body }).then((r) => json<{ run_id: string }>(r));
-    }
-    return fetch('/api/stylist/plan', {
+  startPlan: (message: string, location?: DeviceLocation | null) =>
+    fetch('/api/stylist/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: plan,
-    }).then((r) => json<{ run_id: string }>(r));
-  },
+      body: JSON.stringify({ message, location: location ? { lat: location.lat, lon: location.lon, city: location.city } : null }),
+    }).then((r) => json<{ run_id: string }>(r)),
   reverseGeocode: (lat: number, lon: number) =>
     fetch(`/api/location/reverse?lat=${lat}&lon=${lon}`).then((r) => json<DeviceLocation>(r)),
   run: (id: string) => fetch(`/api/stylist/runs/${id}`).then((r) => json<AgentRun>(r)),

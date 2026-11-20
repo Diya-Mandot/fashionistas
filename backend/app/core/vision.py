@@ -66,14 +66,14 @@ def is_heif(content: bytes) -> bool:
     return len(content) >= 12 and content[4:8] == b"ftyp" and content[8:12] in _HEIF_BRANDS
 
 
-def _validate_image_bytes(content: bytes, *, declared_content_type: str, filename: str) -> ValidatedImage:
+def _validate_image_bytes(content: bytes, *, declared_content_type: str | None, filename: str) -> ValidatedImage:
     """Check that image bytes really are the type they claim, and within limits."""
     s = get_settings()
     if not content:
         raise InvalidImageError("The image is empty.")
     if len(content) > s.scan_max_image_bytes:
         raise InvalidImageError("The image is too large.")
-    if declared_content_type.lower() not in ALLOWED_UPLOAD_TYPES:
+    if declared_content_type is not None and declared_content_type.lower() not in ALLOWED_UPLOAD_TYPES:
         raise InvalidImageError("Use a JPG, PNG, or WEBP image.")
     try:
         with Image.open(BytesIO(content)) as image:
@@ -82,8 +82,10 @@ def _validate_image_bytes(content: bytes, *, declared_content_type: str, filenam
             image.verify()
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise InvalidImageError("The file is not a valid image.") from exc
-    if detected_type != declared_content_type.lower():
+    if declared_content_type is not None and detected_type != declared_content_type.lower():
         raise InvalidImageError("The image content does not match its file type.")
+    if detected_type is None:
+        raise InvalidImageError(UNSUPPORTED_TYPE_MESSAGE)
     if width <= 0 or height <= 0 or width * height > s.scan_max_image_pixels:
         raise InvalidImageError("The image dimensions are too large.")
     suffix = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}[detected_type]
@@ -129,6 +131,20 @@ async def validate_upload(file: UploadFile) -> ValidatedImage:
     elif declared_type not in ALLOWED_UPLOAD_TYPES:
         raise InvalidImageError(UNSUPPORTED_TYPE_MESSAGE)
     return _validate_image_bytes(content, declared_content_type=declared_type, filename=filename)
+
+
+def load_profile_photo(path: Path) -> ValidatedImage:
+    """Read an existing server-side portrait with the same limits as an upload."""
+    max_bytes = get_settings().scan_max_image_bytes
+    if not path.is_file():
+        raise InvalidImageError("The configured profile photo is unavailable.")
+    with path.open("rb") as file:
+        content = file.read(max_bytes + 1)
+    if len(content) > max_bytes:
+        raise InvalidImageError("The image is too large.")
+    if is_heif(content):
+        content = heif_to_jpeg(content)
+    return _validate_image_bytes(content, declared_content_type=None, filename=path.name)
 
 
 def to_data_url(image: ValidatedImage, max_side: int = 768) -> str:

@@ -43,9 +43,6 @@ export function OutfitCard({ event, items }: { event: PlanEvent; items: Map<stri
 
           <div className="px-5 pb-5 pt-4">
             <p className="type-body-md text-ink/80">{pick.rationale}</p>
-            {!!pick.palette_matches?.length && (
-              <p className="type-body-sm mt-1 text-forest">Your colors near the face · {pick.palette_matches.join(', ')}</p>
-            )}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 type="button"
