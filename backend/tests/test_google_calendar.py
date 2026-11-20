@@ -25,7 +25,6 @@ def google(monkeypatch, tmp_path):
     monkeypatch.setattr(s, "google_token_file", str(tmp_path / "tok.json"))
     monkeypatch.setattr(s, "google_calendar_ids", "primary")
     monkeypatch.setattr(s, "calendar_ics_url", "")
-    monkeypatch.setattr(s, "calendar_include_demo", False)
     gc._events_cache.clear()
     gc._pending.clear()
     yield s
@@ -93,7 +92,7 @@ def test_expired_access_token_is_refreshed(google):
     assert gc.load_token()["refresh_token"] == "rt1"
 
 
-def test_revoked_grant_disconnects_and_falls_back_to_demo(google):
+def test_revoked_grant_disconnects_and_returns_no_events(google):
     _connect()
     tok = gc.load_token()
     tok["expires_at"] = 0
@@ -101,16 +100,16 @@ def test_revoked_grant_disconnects_and_falls_back_to_demo(google):
     with respx.mock:
         respx.post(gc.TOKEN_URL).mock(return_value=httpx.Response(400, json={"error": "invalid_grant"}))
         cal = calendar_source.events_between(date(2026, 10, 24), date(2026, 10, 31), date(2026, 10, 24))
-    assert cal.source == "demo" and "Reconnect" in cal.note
+    assert cal.source == "none" and "Reconnect" in cal.note and cal.events == []
     assert not gc.connected()
 
 
-def test_api_error_falls_back_to_demo(google):
+def test_api_error_returns_no_events(google):
     _connect()
     with respx.mock:
         respx.get(f"{gc.API_URL}/calendars/primary/events").mock(return_value=httpx.Response(500, json={"error": {"message": "boom"}}))
         cal = calendar_source.events_between(date(2026, 10, 24), date(2026, 10, 31), date(2026, 10, 24))
-    assert cal.source == "demo" and "Couldn't read your Google Calendar" in cal.note
+    assert cal.source == "none" and "Couldn't read your Google Calendar" in cal.note
 
 
 def test_refuses_when_calendar_scope_unticked(google):

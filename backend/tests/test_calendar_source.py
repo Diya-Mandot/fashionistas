@@ -29,7 +29,6 @@ def test_reads_real_ics_with_recurrence_and_hints(tmp_path, monkeypatch):
     f.write_text(ICS)
     calendar_source._cache.clear()
     monkeypatch.setattr(get_settings(), "calendar_ics_url", str(f))
-    monkeypatch.setattr(get_settings(), "calendar_include_demo", False)
     cal = calendar_source.events_between(date(2026, 10, 26), date(2026, 11, 10))
     assert cal.source == "ics" and cal.label == "Your calendar"
     names = [(e["date"], e["name"], e["dress_code_hint"]) for e in cal.events]
@@ -40,15 +39,15 @@ def test_reads_real_ics_with_recurrence_and_hints(tmp_path, monkeypatch):
     assert dinner["start_time"] is not None
 
 
-def test_broken_feed_falls_back_to_demo(monkeypatch):
+def test_broken_feed_returns_no_events(monkeypatch):
     calendar_source._cache.clear()
     monkeypatch.setattr(get_settings(), "calendar_ics_url", "/nonexistent/calendar.ics")
     cal = calendar_source.events_between(date(2026, 10, 24), date(2026, 10, 31), date(2026, 10, 24))
-    assert cal.source == "demo" and "Couldn't read your calendar" in cal.note
-    assert any(e["name"] == "Team Dinner at Canlis" for e in cal.events)
+    assert cal.source == "none" and "Couldn't read your calendar" in cal.note
+    assert cal.events == []
 
 
-def test_demo_calendar_when_not_configured(monkeypatch):
+def test_no_events_when_not_configured(monkeypatch):
     monkeypatch.setattr(get_settings(), "calendar_ics_url", "")
     cal = calendar_source.events_between(date(2026, 10, 24), date(2026, 10, 31), date(2026, 10, 24))
-    assert cal.source == "demo" and cal.note is None and cal.events
+    assert cal.source == "none" and cal.note is None and cal.events == []

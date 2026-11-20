@@ -102,8 +102,7 @@ def test_plan_endpoint_end_to_end_mock(client):
     assert body["status"] == "completed"
     plan = body["plan"]
     assert plan["trip"]["city"] == "Seattle"
-    names = [e["name"] for d in plan["days"] for e in d["events"]]
-    assert "Team Dinner at Canlis" in names
+    assert any(d["events"] for d in plan["days"])  # no calendar: planned from the message
     closet_ids = {i["id"] for i in client.get("/api/closet").json()}
     for d in plan["days"]:
         for e in d["events"]:

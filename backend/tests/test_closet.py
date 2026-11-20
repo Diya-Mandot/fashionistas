@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.seed import calendar_events, closet_items
+from app.seed import closet_items
 
 
 def test_seed_has_no_waterproof_outerwear():
@@ -8,14 +8,6 @@ def test_seed_has_no_waterproof_outerwear():
     assert len(items) >= 20
     assert all(i.image_url.startswith("/media/seed/photos/") for i in items)
     assert not any(i.waterproof for i in items if i.category == "outerwear")
-
-
-def test_calendar_is_relative_to_today():
-    events = calendar_events(date(2026, 10, 24))  # a Saturday
-    names = {e["name"]: e["date"] for e in events}
-    assert names["Team Dinner at Canlis"] == "2026-10-27"  # next Tuesday
-    assert names["Networking Brunch"] == "2026-10-24"  # this Saturday
-    assert all(e["date"] >= "2026-10-24" for e in events)
 
 
 def test_closet_filters_and_crud(client):

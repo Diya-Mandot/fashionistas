@@ -37,9 +37,6 @@ class Settings(BaseSettings):
     # Real calendar: a private iCal (.ics) URL or file path. Google Calendar:
     # Settings -> your calendar -> "Secret address in iCal format".
     calendar_ics_url: str = ""
-    # Also include the seeded demo trips (Seattle/NYC/new job). Defaults to on only
-    # when no real calendar is configured.
-    calendar_include_demo: Optional[bool] = None
     # Google Calendar sync (OAuth). Create a "Web application" OAuth client in Google Cloud
     # Console and register google_oauth_redirect_uri as an authorized redirect URI.
     google_oauth_client_id: str = ""

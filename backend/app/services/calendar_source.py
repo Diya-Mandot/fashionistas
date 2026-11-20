@@ -1,6 +1,6 @@
 """Calendar events for the agent, from (in order of preference) a connected Google Calendar
-(OAuth, see google_calendar.py), a real iCal feed (CALENDAR_ICS_URL), or the seeded demo calendar.
-Never fails: if every real source breaks, it falls back to the demo events with a note."""
+(OAuth, see google_calendar.py) or a real iCal feed (CALENDAR_ICS_URL). Never fails: with no
+calendar connected, or if every source breaks, it returns no events (with a note on failure)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ from typing import Any, Callable, Optional
 import httpx
 
 from app.config import get_settings
-from app.seed import events_between as demo_events_between
 from app.services import google_calendar
 from app.text_rules import has_word
 
@@ -34,7 +33,7 @@ _DRESS_HINTS: list[tuple[tuple[str, ...], str]] = [
 @dataclass
 class CalendarResult:
     events: list[dict[str, Any]]
-    source: str  # "google" | "ics" | "demo"
+    source: str  # "google" | "ics" | "none"
     label: str
     note: Optional[str] = None
     extra: dict[str, Any] = field(default_factory=dict)
@@ -53,12 +52,7 @@ def describe() -> str:
     if google_calendar.connected():
         email = (google_calendar.load_token() or {}).get("email")
         return f"Google Calendar ({email})" if email else "Google Calendar"
-    return "your calendar (iCal)" if ics_configured() else "demo calendar"
-
-
-def _include_demo() -> bool:
-    flag = get_settings().calendar_include_demo
-    return (not calendar_configured()) if flag is None else flag
+    return "your calendar (iCal)" if ics_configured() else "no calendar connected"
 
 
 def _fetch(url: str, force: bool = False) -> bytes:
@@ -150,16 +144,13 @@ def _finish(raw: list[dict[str, Any]], start: date, end: date) -> list[dict[str,
 
 
 def events_between(start: date, end: date, today: Optional[date] = None, refresh: bool = False) -> CalendarResult:
-    def demo() -> list[dict[str, Any]]:
-        return [dict(e, calendar="demo") for e in demo_events_between(start, end, today)]
-
     readers: list[tuple[str, str, Callable[[], list[dict[str, Any]]]]] = []
     if google_calendar.connected():
         readers.append(("google", "Google Calendar", lambda: google_calendar.fetch_events(start, end, force=refresh)))
     if ics_configured():
         readers.append(("ics", "calendar feed", lambda: _ics_raw(start, end, force=refresh)))
     if not readers:
-        return CalendarResult(events=demo(), source="demo", label="Demo calendar")
+        return CalendarResult(events=[], source="none", label="No calendar connected")
 
     real: list[dict[str, Any]] = []
     ok: list[str] = []
@@ -174,18 +165,16 @@ def events_between(start: date, end: date, today: Optional[date] = None, refresh
             notes.append(f"Couldn't read your {name} ({type(exc).__name__})")
 
     if not ok:
-        return CalendarResult(events=demo(), source="demo", label="Demo calendar", note=f"{'; '.join(notes)}; used the demo calendar")
+        return CalendarResult(events=[], source="none", label="No calendar", note="; ".join(notes))
 
     real.sort(key=lambda e: (e["date"], e["start_time"] or ""))
     for n, e in enumerate(real, 1):
         e["id"] = f"cal_{n:02d}"
-    extra_demo = demo() if _include_demo() else []
-    events = sorted(real + extra_demo, key=lambda e: (e["date"], e.get("start_time") or ""))
-    label = ("Your Google Calendar" if ok == ["google"] else "Your calendar") + (" + demo trips" if extra_demo else "")
+    label = "Your Google Calendar" if ok == ["google"] else "Your calendar"
     return CalendarResult(
-        events=events,
+        events=real,
         source="google" if "google" in ok else "ics",
         label=label,
         note="; ".join(notes) or None,
-        extra={"real": len(real), "demo": len(extra_demo)},
+        extra={"real": len(real)},
     )

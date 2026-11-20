@@ -163,11 +163,11 @@ export interface CalendarEvent {
   name: string;
   location: string;
   dress_code_hint: string | null;
-  calendar?: 'real' | 'demo';
+  calendar?: 'real';
 }
 
 export interface CalendarResponse {
-  source: 'google' | 'ics' | 'demo';
+  source: 'google' | 'ics' | 'none';
   label: string;
   note: string | null;
   events: CalendarEvent[];
