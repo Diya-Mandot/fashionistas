@@ -1,14 +1,14 @@
-import { Children, useCallback, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
+import { Children, useCallback, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
-const CARD = 'min(calc(100vw - 112px), 440px)';
+const CARD = 'min(calc(100vw - 72px), 440px)';
 const SWIPE_PX = 50; // mouse drag distance that counts as a swipe
 const CLICK_SLOP_PX = 6; // movement beyond this is a drag, not a click
 
 /**
- * Horizontally swipeable cards, one centred at a time with neighbours peeking.
+ * Horizontally swipeable cards, laid out from the left edge; as many as fit are visible.
  * Touch and trackpad use native scroll-snap; mouse users can drag, use the arrows, the dots,
- * or ← / → when the deck is focused. Tapping a side card brings it to the centre.
+ * or ← / → when the deck is focused.
  * Give it a new React `key` to start again from the first card (e.g. when a new batch loads).
  */
 export function SwipeDeck({ children, label }: { children: ReactNode; label: string }) {
@@ -16,6 +16,7 @@ export function SwipeDeck({ children, label }: { children: ReactNode; label: str
   const count = cards.length;
   const ref = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  const [atEnd, setAtEnd] = useState(false);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ x: number; scroll: number; moved: number; id: number } | null>(null);
   const suppressClick = useRef(false);
@@ -26,22 +27,26 @@ export function SwipeDeck({ children, label }: { children: ReactNode; label: str
       const target = Math.max(0, Math.min(count - 1, i));
       const card = el?.children[target] as HTMLElement | undefined;
       if (!el || !card) return;
-      el.scrollTo({ left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+      el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' });
       setIndex(target);
     },
     [count],
   );
 
-
+  // The current card is the one nearest the left edge; at the far end, the last one.
   const onScroll = () => {
     const el = ref.current;
     if (!el || drag.current) return;
-    const center = el.scrollLeft + el.clientWidth / 2;
+    const end = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+    setAtEnd(end);
+    if (end) {
+      setIndex(count - 1);
+      return;
+    }
     let best = 0;
     let bestDist = Infinity;
     Array.from(el.children).forEach((c, i) => {
-      const card = c as HTMLElement;
-      const d = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
+      const d = Math.abs((c as HTMLElement).offsetLeft - el.scrollLeft);
       if (d < bestDist) {
         bestDist = d;
         best = i;
@@ -79,8 +84,6 @@ export function SwipeDeck({ children, label }: { children: ReactNode; label: str
     else if (Math.abs(d.moved) > CLICK_SLOP_PX) go(index);
   };
 
-  const style = { '--card': CARD, paddingInline: `calc(50% - ${CARD} / 2)` } as CSSProperties;
-
   return (
     <div role="region" aria-roledescription="carousel" aria-label={label}>
       <div
@@ -101,7 +104,6 @@ export function SwipeDeck({ children, label }: { children: ReactNode; label: str
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onDragStart={(e) => e.preventDefault()}
-        style={style}
         className={`no-scrollbar relative flex gap-4 overflow-x-auto py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60 ${
           dragging ? 'cursor-grabbing select-none' : 'snap-x snap-mandatory cursor-grab'
         }`}
@@ -116,16 +118,10 @@ export function SwipeDeck({ children, label }: { children: ReactNode; label: str
               if (suppressClick.current) {
                 e.preventDefault();
                 e.stopPropagation();
-              } else if (i !== index) {
-                e.preventDefault();
-                e.stopPropagation();
-                go(i);
               }
             }}
-            className={`flex shrink-0 snap-center transition-[opacity,transform] duration-300 ${
-              i === index ? '' : 'scale-[0.95] opacity-55'
-            }`}
-            style={{ width: 'var(--card)' }}
+            className="flex shrink-0 snap-start"
+            style={{ width: CARD }}
           >
             {card}
           </div>
@@ -149,7 +145,7 @@ export function SwipeDeck({ children, label }: { children: ReactNode; label: str
               />
             ))}
           </div>
-          <DeckArrow label="Next" onClick={() => go(index + 1)} disabled={index === count - 1}>
+          <DeckArrow label="Next" onClick={() => go(index + 1)} disabled={index === count - 1 || atEnd}>
             <IoChevronForward size={18} />
           </DeckArrow>
         </div>

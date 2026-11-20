@@ -327,7 +327,9 @@ export interface DailyResponse {
   weather_source: ApiSource;
   calendar: { source: 'google' | 'ics' | 'none'; label: string; note: string | null };
   events: CalendarEvent[];
-  /** The event today's outfits are dressed for; null = an everyday look. */
+  /** Occasions that are always on offer (Work, Gym, …), calendar or not. */
+  presets: { id: string; name: string }[];
+  /** The event or preset today's outfits are dressed for; null = an everyday look. */
   occasion: CalendarEvent | null;
   outfits: DailyOutfit[];
   items: WardrobeItem[];

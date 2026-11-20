@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
+  IoBarbellOutline,
+  IoBriefcaseOutline,
   IoCalendarOutline,
   IoCheckmarkCircle,
   IoChevronDown,
+  IoHeartOutline,
   IoCloudOutline,
   IoRainyOutline,
   IoRefreshOutline,
+  IoShirtOutline,
   IoShuffleOutline,
+  IoSparklesOutline,
   IoSnowOutline,
   IoSunnyOutline,
+  IoWineOutline,
 } from 'react-icons/io5';
 import { MicroChip } from '../components/Chip';
 import { GlassPanel } from '../components/GlassPanel';
@@ -18,10 +24,17 @@ import { ScoreBreakdown, ScorePill } from '../components/ScoreBreakdown';
 import { SwipeDeck } from '../components/SwipeDeck';
 import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
-import type { DailyOutfit, DailyResponse, DailyWeather, GoogleCalendarStatus, WardrobeItem } from '../lib/types';
+import type { DailyOutfit, DailyResponse, DailyWeather, WardrobeItem } from '../lib/types';
 import { useDeviceLocation } from '../lib/useDeviceLocation';
 
 const EVERYDAY = 'everyday';
+
+const PRESET_ICONS: Record<string, ReactNode> = {
+  'preset:work': <IoBriefcaseOutline size={16} />,
+  'preset:gym': <IoBarbellOutline size={16} />,
+  'preset:date-night': <IoHeartOutline size={16} />,
+  'preset:going-out': <IoWineOutline size={16} />,
+};
 
 function isoDay(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -53,7 +66,6 @@ export function Today({ active = true }: { active?: boolean }) {
   const [seen, setSeen] = useState<string[][]>([]);
   const [worn, setWorn] = useState<string[] | null>(null);
   const [wearing, setWearing] = useState<string | null>(null);
-  const [google, setGoogle] = useState<GoogleCalendarStatus | null>(null);
   const { toast, show } = useToast();
   const attempt = useRef(0);
 
@@ -91,7 +103,6 @@ export function Today({ active = true }: { active?: boolean }) {
     loadedFor.current = key;
     setSeen([]);
     load({ eventId });
-    api.googleCalendarStatus().then(setGoogle).catch(() => setGoogle(null));
   }, [active, geo.location, load, eventId]);
 
   const items = useMemo(() => new Map<string, WardrobeItem>((data?.items ?? []).map((i) => [i.id, i])), [data]);
@@ -124,112 +135,83 @@ export function Today({ active = true }: { active?: boolean }) {
     }
   };
 
-  const connect = () => {
-    window.location.href = api.googleCalendarConnectUrl(window.location.origin + window.location.pathname);
-  };
-
   const dateLabel = new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   const w = data?.weather ?? null;
+  const weatherTitle = data
+    ? [
+        w?.summary ?? 'No forecast',
+        w?.high_f != null ? `High ${w.high_f}°F` : null,
+        w?.low_f != null ? `Low ${w.low_f}°F` : null,
+        w?.precip_pct != null ? `${w.precip_pct}% rain` : null,
+        data.city,
+        data.weather_note,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : 'Loading weather';
 
   return (
     <PageShell>
-      <header className="mb-6">
-        <p className="type-micro mb-2">{dateLabel}</p>
-        <h1 className="type-display-lg">Today’s outfit</h1>
-        <p className="type-body-lg mt-1">Five looks from your closet for today’s weather and what’s on your calendar. Pick one to wear.</p>
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="type-micro mb-2">{dateLabel}</p>
+          <h1 className="type-display-lg">Today’s outfit</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Weather, compact: details on hover / long-press via the title. */}
+          <span
+            title={weatherTitle}
+            aria-label={weatherTitle}
+            className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[13px] font-bold text-ink ring-1 ring-line"
+          >
+            <span className="text-forest">
+              <WeatherIcon w={w} size={18} />
+            </span>
+            <span className="tabular-nums">{w?.high_f != null ? `${w.high_f}°` : data ? '—' : '…'}</span>
+          </span>
+          <LocationChip location={geo.location} status={geo.status} onLocate={geo.locate} onClear={geo.clear} dark={false} />
+        </div>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-        {/* Weather */}
-        <GlassPanel radius="hero" className="flex flex-col gap-3 p-5">
-          <p className="type-micro">Weather</p>
-          {data ? (
-            <div className="flex items-center gap-4">
-              <span className="text-forest">
-                <WeatherIcon w={w} size={40} />
-              </span>
-              <div>
-                <p className="type-display-md tabular-nums">
-                  {w?.high_f != null ? `${w.high_f}°` : '—'}
-                  <span className="type-body-lg ml-1">{w?.low_f != null ? `/ ${w.low_f}°F` : ''}</span>
-                </p>
-                <p className="type-body-md capitalize">
-                  {w?.summary ?? 'No forecast'}
-                  {w?.precip_pct != null ? ` · ${w.precip_pct}% rain` : ''} · {data.city}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="h-12 animate-pulse rounded-2xl bg-white/60" />
-          )}
-          {data?.weather_note && <p className="type-body-sm">{data.weather_note}</p>}
-          <div>
-            <LocationChip location={geo.location} status={geo.status} onLocate={geo.locate} onClear={geo.clear} dark={false} />
-          </div>
-        </GlassPanel>
-
-        {/* Occasion */}
-        <GlassPanel radius="hero" className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between gap-2">
-            <p className="type-micro">Dressing for</p>
-            {data && (
-              <span className="flex items-center gap-1 text-[12px] font-semibold text-muted">
-                <IoCalendarOutline size={13} /> {data.calendar.label}
-              </span>
-            )}
-          </div>
-          {data ? (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {data.events.map((e) => (
-                  <OccasionButton key={e.id} active={occasionId === e.id} onClick={() => pickOccasion(e.id)} disabled={loading}>
-                    <span className="font-bold">{e.name}</span>
-                    <span className="opacity-70">
-                      {time12(e.start_time)}
-                      {e.dress_code_hint ? ` · ${e.dress_code_hint}` : ''}
-                    </span>
-                  </OccasionButton>
-                ))}
-                <OccasionButton active={occasionId === EVERYDAY} onClick={() => pickOccasion(EVERYDAY)} disabled={loading}>
-                  <span className="font-bold">Everyday</span>
-                  <span className="opacity-70">no occasion</span>
-                </OccasionButton>
-              </div>
-              {data.events.length === 0 && data.calendar.source !== 'none' && (
-                <p className="type-body-sm">Nothing on your calendar today, so these are everyday looks.</p>
-              )}
-              {data.calendar.note && <p className="type-body-sm">{data.calendar.note}</p>}
-              {data.calendar.source === 'none' && google?.configured && !google.connected && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="type-body-sm">Connect Google Calendar to dress for today’s events.</p>
-                  <button
-                    type="button"
-                    onClick={connect}
-                    className="flex items-center gap-1.5 rounded-full bg-forest px-4 py-2 text-[13px] font-bold text-white hover:opacity-90"
-                  >
-                    <IoCalendarOutline size={15} /> Connect Google Calendar
-                  </button>
-                </div>
-              )}
-              {data.calendar.source === 'none' && !google?.configured && (
-                <p className="type-body-sm">No calendar connected, so these are everyday looks.</p>
-              )}
-            </>
-          ) : (
-            <div className="h-12 animate-pulse rounded-2xl bg-white/60" />
-          )}
-        </GlassPanel>
+      {/* Occasion filter: everyday and presets always, then today's calendar events. Scrolls sideways on phones. */}
+      <div className="no-scrollbar -mx-1 mb-6 overflow-x-auto px-1 py-1">
+        <div role="group" aria-label="Dress for" className="flex w-max gap-2">
+          <OccasionButton
+            icon={<IoShirtOutline size={16} />}
+            active={occasionId === EVERYDAY}
+            onClick={() => pickOccasion(EVERYDAY)}
+            disabled={loading || !data}
+          >
+            Everyday
+          </OccasionButton>
+          {data?.presets.map((p) => (
+            <OccasionButton
+              key={p.id}
+              icon={PRESET_ICONS[p.id] ?? <IoSparklesOutline size={16} />}
+              active={occasionId === p.id}
+              onClick={() => pickOccasion(p.id)}
+              disabled={loading}
+            >
+              {p.name}
+            </OccasionButton>
+          ))}
+          {data?.events.map((e) => (
+            <OccasionButton
+              key={e.id}
+              icon={<IoCalendarOutline size={16} />}
+              active={occasionId === e.id}
+              onClick={() => pickOccasion(e.id)}
+              disabled={loading}
+              detail={time12(e.start_time)}
+            >
+              {e.name}
+            </OccasionButton>
+          ))}
+        </div>
       </div>
 
-      <div className="mb-4 mt-8 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="type-display-md">{data?.occasion ? `For ${data.occasion.name}` : 'Your everyday options'}</h2>
-          {data?.scored_by && (
-            <p className="type-body-sm mt-0.5">
-              {data.candidates_scored} combinations scored by {data.scored_by}
-            </p>
-          )}
-        </div>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <h2 className="type-display-md">{data?.occasion ? `${data.occasion.name} looks` : 'Your everyday options'}</h2>
         <div className="flex gap-2">
           <button
             type="button"
@@ -258,8 +240,8 @@ export function Today({ active = true }: { active?: boolean }) {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-3" aria-busy="true">
-          <div className="glass w-[min(calc(100vw-112px),440px)] rounded-hero p-5">
+        <div className="flex py-3" aria-busy="true">
+          <div className="glass w-[min(calc(100vw-72px),440px)] rounded-hero p-5">
             <div className="h-3 w-16 animate-pulse rounded bg-white/70" />
             <div className="mt-2 h-5 w-48 animate-pulse rounded bg-white/70" />
             <div className="mt-4 grid grid-cols-4 gap-2">
@@ -281,7 +263,7 @@ export function Today({ active = true }: { active?: boolean }) {
       ) : (
         <>
           {data && data.outfits.length < 5 && (
-            <p className="type-body-sm mb-1 text-center">
+            <p className="type-body-sm mb-1">
               Only {data.outfits.length} truly different look{data.outfits.length === 1 ? '' : 's'} from your closet fit today, so no repeats.
             </p>
           )}
@@ -306,14 +288,18 @@ export function Today({ active = true }: { active?: boolean }) {
 }
 
 function OccasionButton({
+  icon,
   active,
   onClick,
   disabled,
+  detail,
   children,
 }: {
+  icon: ReactNode;
   active: boolean;
   onClick: () => void;
   disabled?: boolean;
+  detail?: string;
   children: ReactNode;
 }) {
   return (
@@ -322,11 +308,20 @@ function OccasionButton({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={active}
-      className={`flex flex-col items-start rounded-2xl px-3.5 py-2 text-left text-[12px] leading-4 transition disabled:cursor-wait ${
-        active ? 'bg-forest text-white' : 'bg-white/75 text-ink ring-1 ring-line hover:bg-white'
+      className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full py-2 pl-3 pr-4 text-[13px] font-semibold transition-all duration-200 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60 ${
+        active
+          ? 'bg-forest text-white shadow-[0_6px_18px_-6px_rgba(26,50,38,0.55)]'
+          : 'bg-white/70 text-ink/80 ring-1 ring-white/70 backdrop-blur-md hover:-translate-y-px hover:bg-white hover:text-ink hover:shadow-sm'
       }`}
     >
+      <span
+        aria-hidden="true"
+        className={`flex h-6 w-6 items-center justify-center rounded-full ${active ? 'bg-white/15' : 'bg-sage-100 text-forest'}`}
+      >
+        {icon}
+      </span>
       {children}
+      {detail && <span className={`text-[12px] font-medium ${active ? 'text-white/70' : 'text-muted'}`}>{detail}</span>}
     </button>
   );
 }

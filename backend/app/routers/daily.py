@@ -43,6 +43,15 @@ _HINT_RANK = {
     "comfortable, travel-friendly": 1,
 }
 
+# Occasions you can always dress for, calendar or not. The name/hint drive the same closet
+# filter calendar events use (athletic -> activewear only; business/dressy -> no casual pieces).
+PRESETS: dict[str, dict[str, str]] = {
+    "preset:work": {"name": "Work", "dress_code_hint": "business casual"},
+    "preset:gym": {"name": "Gym", "dress_code_hint": "athletic"},
+    "preset:date-night": {"name": "Date night", "dress_code_hint": "dressy-casual evening"},
+    "preset:going-out": {"name": "Going out", "dress_code_hint": "smart casual night out"},
+}
+
 _cache: dict[str, tuple[float, dict[str, Any]]] = {}
 Day = date  # field below is named `date`; keep the type reachable under another name
 
@@ -52,7 +61,7 @@ class DailyRequest(BaseModel):
     lat: Optional[float] = Field(default=None, ge=-90, le=90)
     lon: Optional[float] = Field(default=None, ge=-180, le=180)
     city: Optional[str] = Field(default=None, max_length=120)
-    # A calendar event id from today's events, or "everyday" for no occasion. Omit to auto-pick.
+    # A calendar event id from today's events, a PRESETS id, or "everyday" for no occasion. Omit to auto-pick.
     event_id: Optional[str] = Field(default=None, max_length=40)
     # Outfits already shown (lists of item ids) to skip, for "show me different ones".
     exclude: list[list[str]] = Field(default_factory=list, max_length=50)
@@ -115,6 +124,9 @@ def daily_outfits(body: DailyRequest, session: Session = Depends(get_session)) -
 
     if body.event_id == EVERYDAY:
         occasion = None
+    elif body.event_id in PRESETS:
+        occasion = {"id": body.event_id, **PRESETS[body.event_id], "date": day.isoformat(),
+                    "start_time": None, "location": ""}
     elif body.event_id:
         occasion = next((e for e in events if e.get("id") == body.event_id), None) or main_occasion(events)
     else:
@@ -139,6 +151,7 @@ def daily_outfits(body: DailyRequest, session: Session = Depends(get_session)) -
         "date": day.isoformat(),
         "calendar": {"source": cal_source, "label": cal_label, "note": cal_note},
         "events": events,
+        "presets": [{"id": k, "name": v["name"]} for k, v in PRESETS.items()],
         "occasion": occasion,
         "worn_item_ids": _worn(session, day),
     }

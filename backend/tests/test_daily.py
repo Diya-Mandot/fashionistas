@@ -138,3 +138,15 @@ def test_wear_marks_items_and_repicking_replaces(client):
 def test_wear_rejects_unknown_items(client):
     res = client.post("/api/daily/wear", json={"item_ids": ["itm_nope"]})
     assert res.status_code == 404
+
+
+def test_preset_occasion_filters_the_closet(client):
+    _reset()
+    body = _post(client, event_id="preset:gym").json()
+    assert body["occasion"]["id"] == "preset:gym" and body["occasion"]["name"] == "Gym"
+    assert {p["id"] for p in body["presets"]} >= {"preset:work", "preset:gym"}
+    items = {i["id"]: i for i in body["items"]}
+    for o in body["outfits"]:
+        clothes = [items[i] for i in o["item_ids"] if items[i]["category"] in ("tops", "bottoms", "activewear")]
+        assert all(i["style"] == "sporty" or i["category"] == "activewear" or i["subcategory"] in ("t-shirt", "tank top")
+                   for i in clothes)
