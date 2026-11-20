@@ -38,6 +38,37 @@ One `ANTHROPIC_API_KEY` covers both the agent and the scoring calls. Create it a
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
+### Import clothing purchases
+
+**MCP.** Run Fashionistas as a local stdio MCP server from the backend directory. The app and server must use the same `DATABASE_URL` or `DATA_DIR`. An MCP client can use `list_closet` and `import_purchase`. An email workflow with access to both tools can pass a confirmed receipt to `import_purchase`.
+
+```json
+{
+  "mcpServers": {
+    "fashionistas": {
+      "command": "/absolute/path/to/fashionistas/backend/.venv/bin/python",
+      "args": ["-m", "app.mcp_server"],
+      "cwd": "/absolute/path/to/fashionistas/backend"
+    }
+  }
+}
+```
+
+If your MCP client has no `cwd` field, use a launcher that changes to the backend directory before it runs Python. A sample `import_purchase` argument is:
+
+```json
+{"receipt":{"merchant":"Example Shop","order_number":"A-123","items":[{"name":"Navy cotton shirt","category":"tops","color":"navy","quantity":1}]}}
+```
+
+**Automatic Gmail import.** This runs in the backend and works without an MCP client.
+
+1. Enable Gmail API in your Google Cloud project. Create a **Desktop app** OAuth client and download its JSON file. If the consent screen is in testing, add your Gmail account as a test user.
+2. Create a label named `Fashionistas/Receipts` in Gmail. Set up filters to label order confirmations from the stores you trust. Label a test receipt to check the setup.
+3. From the backend directory, run `uv run python -m scripts.connect_gmail_receipts /path/to/google-desktop-client.json`. Sign in to Google and grant read-only access. The script stores the token under `backend/private_email/` by default.
+4. Set `GMAIL_RECEIPTS_ENABLED=true` and `ANTHROPIC_API_KEY` in `backend/.env`. Restart the backend. It checks the label at startup and every five minutes by default.
+
+The Gmail permission grants read access. Fashionistas fetches only messages with the selected label from the configured lookback window, which defaults to 14 days. It sends the subject, sender, and capped message text to Claude, which extracts clothing items. Fashionistas stores the closet items and import identifiers. It does not store the email body, open links, or fetch attachments. The importer skips ambiguous orders, non-clothing purchases, and recognized cancellations. It deduplicates imports by merchant and order number. The closet marks imported garments **From receipt**.
+
 ## Deploy (Railway)
 
 One Railway service runs everything: the [Dockerfile](Dockerfile) builds the frontend and serves it and the API from uvicorn, the same as `make start`. Every push to the connected branch redeploys.
