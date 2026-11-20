@@ -16,7 +16,7 @@ const PENDING_STEPS = ['Checking photo…', 'Google Vision is looking at it…',
 
 type Phase = 'idle' | 'working' | 'done' | 'undone' | 'error';
 
-export function Scan({ active = true }: { active?: boolean }) {
+export function Scan({ active = true, onClosetChange }: { active?: boolean; onClosetChange: (scanId: string | null) => void }) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [preview, setPreview] = useState<string | null>(null);
   const [trace, setTrace] = useState<TraceStep[]>([]);
@@ -71,11 +71,12 @@ export function Scan({ active = true }: { active?: boolean }) {
       setTrace(res.trace);
       setItem(res.item);
       setPhase('done');
+      onClosetChange(res.item.id);
     } catch (e) {
       setError(e instanceof Error ? e.message.replace(/^\d+ /, '') : String(e));
       setPhase('error');
     }
-  }, []);
+  }, [onClosetChange]);
 
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -88,12 +89,14 @@ export function Scan({ active = true }: { active?: boolean }) {
     if (!item) return;
     await api.deleteItem(item.id);
     setPhase('undone');
+    onClosetChange(null);
   };
 
   const saveEdit = async (patch: Partial<WardrobeItem>) => {
     if (!item) return;
     setItem(await api.updateItem(item.id, patch));
     setEditing(false);
+    onClosetChange(item.id);
   };
 
   const reset = () => {
@@ -203,7 +206,7 @@ export function Scan({ active = true }: { active?: boolean }) {
             </ol>
           </GlassPanel>
 
-          {allShown && item && (
+          {phase === 'done' && item && (
             <GlassPanel radius="hero" className="animate-[fadeUp_.35s_ease-out] p-5">
               {editing ? (
                 <EditForm item={item} onSave={saveEdit} onCancel={() => setEditing(false)} />
@@ -211,7 +214,7 @@ export function Scan({ active = true }: { active?: boolean }) {
                 <>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="type-micro mb-1 text-forest-mid">Saved to closet</p>
+                      <p className="type-micro mb-1 text-forest-mid" role="status">Saved to closet</p>
                       <h2 className="type-display-sm">{item.name}</h2>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         <MicroChip>{item.category}</MicroChip>

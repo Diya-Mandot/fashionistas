@@ -5,8 +5,7 @@ const MAX_PHOTO_SIDE = 1600;
 const primary = 'inline-flex items-center justify-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50';
 const secondary = 'rounded-full border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink hover:bg-sand-50';
 
-type CameraView = 'closed' | 'opening' | 'live' | 'review';
-type Photo = { file: File; url: string };
+type CameraView = 'closed' | 'opening' | 'live';
 
 function cameraError(error: unknown): string {
   if (error instanceof DOMException) {
@@ -25,7 +24,6 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
   const [view, setView] = useState<CameraView>('closed');
   const [ready, setReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
-  const [photo, setPhoto] = useState<Photo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -39,20 +37,15 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
   }, []);
 
   useEffect(() => stopCamera, [stopCamera]);
-  useEffect(() => {
-    if (photo) return () => URL.revokeObjectURL(photo.url);
-  }, [photo]);
 
   const closeCamera = () => {
     stopCamera();
     setView('closed');
-    setPhoto(null);
     setCapturing(false);
   };
 
   const openCamera = async () => {
     setError(null);
-    setPhoto(null);
     setReady(false);
     if (!navigator.mediaDevices?.getUserMedia) {
       setError('Open this page over HTTPS or localhost to use the camera. You can also upload a photo.');
@@ -118,8 +111,7 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
       }
       const file = new File([blob], 'garment-camera.jpg', { type: blob.type });
       stopCamera();
-      setPhoto({ file, url: URL.createObjectURL(file) });
-      setView('review');
+      onScan(file);
     }, 'image/jpeg', 0.9);
   };
 
@@ -150,21 +142,14 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
             className="h-full w-full bg-ink object-contain"
           />
         )}
-        {photo && <img src={photo.url} alt="Captured garment" className="h-full w-full object-contain" />}
       </div>
       {view === 'live' && <p className="type-body-sm">Hold one garment in frame. Keep its color and shape visible.</p>}
       {error && <p className="type-body-sm text-error" role="alert">{error}</p>}
       <div className="flex flex-wrap gap-2">
         {view === 'live' && (
           <button type="button" className={primary} disabled={!ready || capturing} onClick={takePhoto}>
-            <IoCameraOutline size={18} aria-hidden="true" /> Take photo
+            <IoCameraOutline size={18} aria-hidden="true" /> {capturing ? 'Capturing…' : 'Take photo and save'}
           </button>
-        )}
-        {photo && (
-          <>
-            <button type="button" className={primary} onClick={() => onScan(photo.file)}>Scan and save</button>
-            <button type="button" className={secondary} onClick={() => void openCamera()}>Retake</button>
-          </>
         )}
         <button type="button" className={secondary} onClick={closeCamera}>Cancel</button>
       </div>

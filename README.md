@@ -169,7 +169,7 @@ Demo closet photos are stored in the repo under `backend/seed_images/photos/`, s
 
 ## 2-minute demo script
 
-**Laptop camera scan.** Open the app in a browser over HTTPS or on localhost. Go to **Scan → Use camera** and allow camera access. Hold one garment in the frame, select **Take photo**, and check the preview. Select **Scan and save** to add the item to the closet. You can still upload a photo from the laptop if the camera is unavailable.
+**Laptop camera scan.** Open the app in a browser over HTTPS or on localhost. Go to **Scan → Use camera** and allow camera access. Check the live frame, then select **Take photo and save**. After **Saved to closet** appears, select **View closet** to see the new item. You can also upload a photo from the laptop.
 
 1. *"Our capstone, EcoStylist, generated outfits from hardcoded rules. Watch what happens with a real request."* Paste the Seattle prompt (below) and click **Plan my outfits**.
 2. **Point at the trace.** The agent chose to check the weather, read the calendar and query the closet. That's the API input and the agent's tasks, each with its exact request and response.
