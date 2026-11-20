@@ -131,7 +131,7 @@ export function Stylist({ active = true }: { active?: boolean }) {
           className={
             started
               ? 'absolute inset-0 bg-gradient-to-b from-[rgba(250,249,246,0.55)] via-[rgba(250,249,246,0.85)] to-paper'
-              : 'absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/65'
+              : 'absolute inset-0 bg-gradient-to-b from-black/65 via-black/45 to-black/75'
           }
         />
       </div>

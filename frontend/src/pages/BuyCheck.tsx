@@ -11,6 +11,7 @@ import {
 } from 'react-icons/io5';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MicroChip } from '../components/Chip';
+import { GarmentCamera } from '../components/GarmentCamera';
 import { GlassPanel } from '../components/GlassPanel';
 import { PageShell } from '../components/PageShell';
 import { PhotoDrop, previewUrl } from '../components/PhotoDrop';
@@ -149,7 +150,16 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
         <div className="flex min-w-0 flex-col gap-4">
           <GlassPanel radius="hero" className="p-4">
             {phase === 'idle' || phase === 'error' || phase === 'paywall' ? (
-              <PhotoDrop onFile={start} error={phase === 'error' ? error : null} label="Drop the item you are thinking about" />
+              // Only mounted while this tab is showing, so a hidden tab never holds the webcam.
+              active && (
+                <GarmentCamera
+                  onScan={start}
+                  captureLabel="Take photo and check"
+                  hint="Hold the item in frame. Keep its color and shape visible."
+                >
+                  <PhotoDrop onFile={start} error={phase === 'error' ? error : null} label="Or drop a photo or screenshot" />
+                </GarmentCamera>
+              )
             ) : (
               <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-sand-100 lg:aspect-[5/6]">
                 {(preview || res?.item.image_url) && (

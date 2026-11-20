@@ -7,6 +7,20 @@ const secondary = 'rounded-full border border-line bg-white px-4 py-2.5 text-sm 
 
 type CameraView = 'closed' | 'opening' | 'live';
 
+/**
+ * Phones and tablets (iOS and Android) get the native camera app through a
+ * `capture` file input: it works in every mobile browser, needs no HTTPS, and
+ * gives full-quality photos. iPadOS reports a desktop Mac user agent, so it is
+ * detected by touch support. Laptops and desktops ignore `capture`, so they get
+ * the in-page webcam preview instead.
+ */
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/Android|iPhone|iPad|iPod|Mobi/i.test(ua)) return true;
+  return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
 function cameraError(error: unknown): string {
   if (error instanceof DOMException) {
     if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
@@ -20,7 +34,23 @@ function cameraError(error: unknown): string {
   return 'The camera could not start. Try again or upload a photo.';
 }
 
-export function GarmentCamera({ children, onScan }: { children: ReactNode; onScan: (file: File) => void }) {
+export function GarmentCamera({
+  children,
+  onScan,
+  openLabel = 'Use camera',
+  captureLabel = 'Take photo and save',
+  hint = 'Hold one garment in frame. Keep its color and shape visible.',
+}: {
+  children: ReactNode;
+  onScan: (file: File) => void;
+  /** Button that opens the camera. */
+  openLabel?: string;
+  /** Shutter button on the laptop webcam preview. */
+  captureLabel?: string;
+  /** Tip shown under the laptop webcam preview. */
+  hint?: string;
+}) {
+  const [mobile] = useState(isMobileDevice);
   const [view, setView] = useState<CameraView>('closed');
   const [ready, setReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
@@ -57,7 +87,8 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { width: { ideal: 1280 }, height: { ideal: 960 } },
+        // Prefer the rear camera where there is one (tablets, convertibles); laptops fall back to their webcam.
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } },
       });
       if (current !== attempt.current) {
         stream.getTracks().forEach((track) => track.stop());
@@ -115,11 +146,33 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
     }, 'image/jpeg', 0.9);
   };
 
+  if (mobile) {
+    return (
+      <div className="space-y-3">
+        <label className={`${primary} w-full cursor-pointer focus-within:ring-2 focus-within:ring-emerald`}>
+          <IoCameraOutline size={18} aria-hidden="true" /> {openLabel}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = ''; // let the same photo be taken again
+              if (f) onScan(f);
+            }}
+          />
+        </label>
+        {children}
+      </div>
+    );
+  }
+
   if (view === 'closed') {
     return (
       <div className="space-y-3">
         <button type="button" className={`${primary} w-full`} onClick={() => void openCamera()}>
-          <IoCameraOutline size={18} aria-hidden="true" /> Use camera
+          <IoCameraOutline size={18} aria-hidden="true" /> {openLabel}
         </button>
         {error && <p className="type-body-sm text-error" role="alert">{error}</p>}
         {children}
@@ -143,12 +196,12 @@ export function GarmentCamera({ children, onScan }: { children: ReactNode; onSca
           />
         )}
       </div>
-      {view === 'live' && <p className="type-body-sm">Hold one garment in frame. Keep its color and shape visible.</p>}
+      {view === 'live' && <p className="type-body-sm">{hint}</p>}
       {error && <p className="type-body-sm text-error" role="alert">{error}</p>}
       <div className="flex flex-wrap gap-2">
         {view === 'live' && (
           <button type="button" className={primary} disabled={!ready || capturing} onClick={takePhoto}>
-            <IoCameraOutline size={18} aria-hidden="true" /> {capturing ? 'Capturing…' : 'Take photo and save'}
+            <IoCameraOutline size={18} aria-hidden="true" /> {capturing ? 'Capturing…' : captureLabel}
           </button>
         )}
         <button type="button" className={secondary} onClick={closeCamera}>Cancel</button>
