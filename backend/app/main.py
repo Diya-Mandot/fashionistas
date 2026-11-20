@@ -1,7 +1,8 @@
-from contextlib import asynccontextmanager
-from pathlib import Path
-
+import asyncio
 import logging
+from contextlib import asynccontextmanager, suppress
+from pathlib import Path
+from threading import Event
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -16,10 +17,25 @@ from app.db import engine, init_db
 from app.integrations.anthropic_client import key_configured
 from app.routers import calendar, closet, dev, health, location, scan, stylist
 from app.seed import seed_if_empty
+from app.services.gmail_receipts import ReceiptSyncUnavailable, sync_gmail_receipts
 
 settings = get_settings()
 UPLOADS_DIR = Path(settings.uploads_dir)
 SEED_IMAGES_DIR = BACKEND_DIR / "seed_images"
+
+
+async def _poll_receipts(stop: Event) -> None:
+    logger = logging.getLogger("uvicorn.error")
+    while not stop.is_set():
+        try:
+            imported = await asyncio.to_thread(sync_gmail_receipts, stop)
+            if imported:
+                logger.info("Imported %s Gmail receipts into the closet", imported)
+        except ReceiptSyncUnavailable as exc:
+            logger.warning("%s", exc)
+        except Exception as exc:
+            logger.warning("Gmail receipt sync failed (%s)", type(exc).__name__)
+        await asyncio.sleep(settings.gmail_receipts_poll_seconds)
 
 
 @asynccontextmanager
@@ -29,7 +45,16 @@ async def lifespan(_app: FastAPI):
     init_db()
     with Session(engine) as session:
         seed_if_empty(session)
-    yield
+    stop = Event()
+    task = asyncio.create_task(_poll_receipts(stop)) if settings.gmail_receipts_enabled else None
+    try:
+        yield
+    finally:
+        if task:
+            stop.set()
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
 
 app = FastAPI(title=f"{settings.app_name} API", lifespan=lifespan)

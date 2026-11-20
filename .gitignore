@@ -21,3 +21,4 @@ backend/recordings/*
 
 # Private calendar exports (personal data)
 backend/private_calendar/
+backend/private_email/

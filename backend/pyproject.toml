@@ -16,6 +16,8 @@ dependencies = [
   "icalendar>=7.3.0",
   "recurring-ical-events>=3.8.2",
   "anthropic>=1",
+  "mcp>=1.26,<2",
+  "google-auth-oauthlib>=1.2,<2",
 ]
 
 [dependency-groups]

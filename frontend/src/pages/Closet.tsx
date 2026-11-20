@@ -19,7 +19,27 @@ export function Closet({ active = true }: { active?: boolean }) {
   const [selected, setSelected] = useState<WardrobeItem | null>(null);
 
   useEffect(() => {
-    if (active) api.closet().then(setItems).catch((e: Error) => setError(e.message));
+    if (!active) return;
+    let stopped = false;
+    const refresh = async () => {
+      try {
+        const closet = await api.closet();
+        if (!stopped) {
+          setItems(closet);
+          setError(null);
+        }
+      } catch (e) {
+        if (!stopped) setError(e instanceof Error ? e.message : String(e));
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refresh();
+    }, 30_000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
   }, [active]);
 
   const visible = useMemo(

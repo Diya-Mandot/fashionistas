@@ -38,7 +38,7 @@ export function ItemDrawer({
       <button type="button" aria-label="Close" className="absolute inset-0 bg-black/30" onClick={onClose} />
       <aside className="relative flex h-full w-full max-w-[440px] flex-col overflow-y-auto bg-paper shadow-2xl">
         <div className="relative aspect-[5/6] w-full bg-sand-100">
-          <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+          {item.image_url && <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />}
           <button
             type="button"
             onClick={onClose}
