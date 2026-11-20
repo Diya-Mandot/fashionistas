@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     scan_max_image_pixels: int = 50_000_000
     google_application_credentials: str = ""
 
+    # Shop catalog: "thrift" = live Utah thrift-store inventory (catalog/thrift.json, refreshed by
+    # scripts/sync_thrift.py; falls back to mock until the first sync), "mock" = the demo partner catalog.
+    catalog_source: Literal["thrift", "mock"] = "thrift"
+
     home_city: str = "San Francisco"
     # Real calendar: a private iCal (.ics) URL or file path. Google Calendar:
     # Settings -> your calendar -> "Secret address in iCal format".

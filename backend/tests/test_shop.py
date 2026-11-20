@@ -97,7 +97,8 @@ def test_shop_endpoint(client):
     res = client.get("/api/shop", params={"category": "outerwear"})
     assert res.status_code == 200
     body = res.json()
-    assert set(body) == {"gaps", "products", "hidden_by_trust_rule", "categories", "trust_min"}
+    assert set(body) == {"gaps", "products", "hidden_by_trust_rule", "categories", "trust_min", "source", "stores"}
+    assert body["source"] == "mock"
     assert body["products"] and all(p["category"] == "outerwear" for p in body["products"])
     p = body["products"][0]
     assert {"outfit_count", "outfit_count_label", "fills", "score", "verdict", "sponsored", "store", "price"} <= set(p)

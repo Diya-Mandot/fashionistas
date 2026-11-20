@@ -15,6 +15,7 @@ os.environ["GOOGLE_OAUTH_CLIENT_ID"] = ""
 os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = ""
 os.environ["GOOGLE_TOKEN_FILE"] = f"{_tmp}/google_token.json"  # never touch the real Google token
 os.environ["HOME_CITY"] = "San Francisco"
+os.environ["CATALOG_SOURCE"] = "mock"  # tests are stacked against the demo catalog, not live thrift stock
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

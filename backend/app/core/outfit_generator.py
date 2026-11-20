@@ -22,6 +22,7 @@ Templates
 
 from __future__ import annotations
 
+import functools
 import itertools
 import random
 import re
@@ -319,10 +320,17 @@ def parse_seasons(season: Optional[str]) -> Optional[set[str]]:
     """Return set of seasons, {'all'} for all-season, or None when unknown."""
     if not season:
         return None
+    found = _parse_seasons(season)
+    return set(found) if found is not None else None
+
+
+@functools.lru_cache(maxsize=512)
+def _parse_seasons(season: str) -> Optional[frozenset[str]]:
+    # Memoized: scoring a large catalog calls this tens of thousands of times on a few strings.
     text = season.strip().lower()
     if any(re.search(rf"\b{w}\b", text) for w in _ALL_SEASON_WORDS):
-        return {"all"}
-    found = {canon for word, canon in _SEASON_WORDS.items() if re.search(rf"\b{word}\b", text)}
+        return frozenset({"all"})
+    found = frozenset(canon for word, canon in _SEASON_WORDS.items() if re.search(rf"\b{word}\b", text))
     return found or None
 
 
