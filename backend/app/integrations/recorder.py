@@ -16,12 +16,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Optional
 
-from app.config import BACKEND_DIR
+from app.config import get_settings
 
 Source = Literal["live", "replay", "mock", "rule", "local"]
 
-LOG_PATH = BACKEND_DIR / "logs" / "api_calls.jsonl"
-RECORDINGS_DIR = BACKEND_DIR / "recordings"
+LOG_PATH = Path(get_settings().logs_dir) / "api_calls.jsonl"
+RECORDINGS_DIR = Path(get_settings().recordings_dir)
 _lock = threading.Lock()
 _SECRET_RE = re.compile(r"(sk-[A-Za-z0-9_\-]{8,}|AIza[0-9A-Za-z_\-]{20,})")
 

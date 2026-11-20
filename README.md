@@ -38,6 +38,17 @@ One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
+## Deploy (Railway)
+
+One Railway service runs everything: the [Dockerfile](Dockerfile) builds the frontend and serves it and the API from uvicorn, the same as `make start`. Every push to the connected branch redeploys.
+
+1. In Railway: **New Project → Deploy from GitHub repo**, then pick this repo. Railway reads [railway.json](railway.json) and builds the Dockerfile. In the service's **Settings → Source**, set the branch to `main`.
+2. **Add a volume** (right-click the service → Attach volume) mounted at `/data`. Without it, the closet, scans and recordings are wiped on every deploy.
+3. **Variables:** `DATA_DIR=/data`, `OPENAI_API_KEY`, `DEV_ENDPOINTS=false` (otherwise anyone can reset the closet), and optionally `GOOGLE_VISION_API_KEY`, `CALENDAR_ICS_URL` and `HOME_CITY`.
+4. **Settings → Networking → Generate Domain** to get a public `*.up.railway.app` URL.
+
+Keep it to one replica, since SQLite and in-progress plan runs live on that one machine. There's no login, so anyone with the URL can run plans on your OpenAI credits. Replay recordings are gitignored, so the deployed app starts with none; replay only works for calls it has made live itself.
+
 ## Calendar and location
 
 - **Calendar.** Set `CALENDAR_ICS_URL` in `backend/.env` to your calendar's private iCal address, or to a folder holding an unzipped Google Calendar export (`backend/private_calendar/`, which is git-ignored; exports are a snapshot that doesn't update). In Google Calendar that's Settings → your calendar → *Integrate calendar* → **Secret address in iCal format**; Apple and Outlook ICS links work too. The agent's `read_calendar` tool then reads your real events, including recurring ones, and infers dress-code hints from titles or a "Dress code: …" line in the description. Without the URL, or if the feed fails, it uses the seeded demo calendar and says so in the trace. To show the demo trips alongside your events, set `CALENDAR_INCLUDE_DEMO=true`. Event titles and locations are sent to the Agents API as part of the plan.
