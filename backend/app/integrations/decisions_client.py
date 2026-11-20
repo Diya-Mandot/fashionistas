@@ -1,4 +1,9 @@
-"""Adapter for the OpenAI Decisions API (POST /v1/decisions, model gpt-6-luna).
+"""Structured judgments on Claude: outfit scoring, item classification and gap rating.
+
+Each operation is described as a list of "questions" (score on levels / pick a
+choice / yes-no predicate). _create() turns those into one Claude Messages call with
+a JSON-schema structured output and returns {"answers": [...]} in a stable shape, so
+parsing, mocks and recordings don't depend on the provider.
 
 The rest of the app only sees the Pydantic types below. Each public function
 tries the configured mode and falls back in order live -> replay -> mock, and
@@ -12,6 +17,8 @@ quoted data with an explicit instruction to ignore any instructions inside it.
 
 from __future__ import annotations
 
+import base64
+import json
 import time
 from datetime import date
 from typing import Any, Callable, Optional
@@ -21,7 +28,7 @@ from pydantic import BaseModel, Field
 from app.config import get_settings
 from app.core import outfit_generator as gen
 from app.integrations import recorder
-from app.integrations.openai_client import ApiNotConfigured, get_client, short_error
+from app.integrations.anthropic_client import ApiNotConfigured, fallback_kwargs, get_client, short_error
 from app.text_rules import is_athletic
 
 API = "decisions"
@@ -165,12 +172,12 @@ def _run(
         except Exception as exc:  # network, auth, 4xx/5xx after SDK retries
             ms = int((time.perf_counter() - start) * 1000)
             recorder.log_call(API, operation, source="live", request=request_body, error=short_error(exc), duration_ms=ms)
-            notes.append(f"Live Decisions call failed ({short_error(exc)})")
+            notes.append(f"Live Claude call failed ({short_error(exc)})")
 
     if mode in ("live", "replay"):
         rec = recorder.load_recording(API, fp)
         if rec:
-            note = f"Replayed a real Decisions response recorded {recorder.recorded_at_label(rec)}"
+            note = f"Replayed a real Claude response recorded {recorder.recorded_at_label(rec)}"
             notes.append(note)
             recorder.log_call(API, operation, source="replay", request=request_body, response=rec["response"])
             return rec["response"], DecisionMeta(source="replay", note="; ".join(notes), questions=n_questions)
@@ -184,9 +191,116 @@ def _run(
     return response, DecisionMeta(source="mock", note="; ".join(notes), questions=n_questions, duration_ms=ms)
 
 
+class DecisionFailed(RuntimeError):
+    pass
+
+
+def _image_block(url: str) -> dict[str, Any]:
+    if url.startswith("data:"):
+        header, _, data = url.partition(",")
+        media_type = header[5:].split(";")[0] or "image/jpeg"
+        if ";base64" not in header:
+            data = base64.standard_b64encode(data.encode()).decode()
+        return {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": data}}
+    return {"type": "image", "source": {"type": "url", "url": url}}
+
+
+def _to_claude_content(parts: Any) -> list[dict[str, Any]]:
+    if isinstance(parts, str):
+        return [{"type": "text", "text": parts}]
+    out: list[dict[str, Any]] = []
+    for p in parts:
+        t = p.get("type")
+        if t == "input_text":
+            out.append({"type": "text", "text": p["text"]})
+        elif t == "input_json":
+            out.append({"type": "text", "text": json.dumps(p["data"], default=str, sort_keys=True)})
+        elif t == "input_image":
+            out.append(_image_block(p["image_url"]))
+    return out
+
+
+def _question_schema(q: dict[str, Any]) -> dict[str, Any]:
+    conf = {"type": "number", "description": "Your confidence in this answer, 0 to 1"}
+    if q["type"] == "score":
+        props = {"level": {"type": "integer", "enum": list(range(len(q["levels"])))}, "confidence": conf}
+    elif q["type"] == "choice":
+        props = {"choice": {"type": "string", "enum": [c["value"] for c in q["choices"]]}, "confidence": conf}
+    elif q["type"] == "predicate":
+        props = {"answer": {"type": "boolean"}, "confidence": conf}
+    else:
+        raise ValueError(f"Unknown question type {q['type']}")
+    return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
+
+
+def _question_text(q: dict[str, Any]) -> str:
+    lines = [f"- `{q['name']}`: {q['instructions']}"]
+    if q["type"] == "score":
+        lines += [f"    level {n} = {lv['label']}: {lv['description']}" for n, lv in enumerate(q["levels"])]
+    elif q["type"] == "choice":
+        lines += [f"    {c['value']}" + (f": {c['description']}" if c.get("description") and c["description"] != c["value"] else "")
+                  for c in q["choices"]]
+    else:
+        lines.append("    answer true or false")
+    return "\n".join(lines)
+
+
 def _create(body: dict[str, Any]) -> dict[str, Any]:
-    decision = get_client().decisions.create(**body)
-    return decision.model_dump(mode="json")
+    """Answer body["questions"] about body["input"] with one structured Claude call."""
+    s = get_settings()
+    client = get_client()
+    system_parts: list[str] = []
+    user_content: list[dict[str, Any]] = []
+    inp = body["input"]
+    for msg in [{"role": "user", "content": inp}] if isinstance(inp, str) else inp:
+        content = _to_claude_content(msg["content"])
+        if msg["role"] in ("developer", "system"):
+            system_parts += [c["text"] for c in content if c["type"] == "text"]
+        else:
+            user_content += content
+    questions = body["questions"]
+    user_content.append({
+        "type": "text",
+        "text": "Answer every question below. For score questions pick the level number that fits best.\n\n"
+        + "\n".join(_question_text(q) for q in questions),
+    })
+    schema = {
+        "type": "object",
+        "properties": {q["name"]: _question_schema(q) for q in questions},
+        "required": [q["name"] for q in questions],
+        "additionalProperties": False,
+    }
+    kwargs: dict[str, Any] = {}
+    if system_parts:
+        kwargs["system"] = "\n\n".join(system_parts)
+    response = client.beta.messages.create(
+        model=body.get("model") or s.decisions_model,
+        max_tokens=16000,
+        messages=[{"role": "user", "content": user_content}],
+        output_config={"effort": s.decisions_effort, "format": {"type": "json_schema", "schema": schema}},
+        **kwargs,
+        **fallback_kwargs(),
+    )
+    if response.stop_reason == "refusal":
+        raise DecisionFailed("Claude declined the request (refusal)")
+    if response.stop_reason == "max_tokens":
+        raise DecisionFailed("Claude hit max_tokens before finishing the answers")
+    text = next((b.text for b in response.content if b.type == "text"), "")
+    data = json.loads(text)
+
+    answers: list[dict[str, Any]] = []
+    for q in questions:
+        a = data.get(q["name"]) or {}
+        conf = round(max(0.0, min(1.0, float(a.get("confidence", 0.5)))), 3)
+        if q["type"] == "score":
+            answers.append({"type": "score", "name": q["name"], "score": float(a.get("level", 0)), "confidence": conf})
+        elif q["type"] == "choice":
+            answers.append({"type": "choice", "name": q["name"], "choice": a.get("choice"), "confidence": conf})
+        else:
+            yes = bool(a.get("answer"))
+            answers.append({"type": "predicate", "name": q["name"], "probability": conf if yes else round(1 - conf, 3)})
+    return {"answers": answers, "model": response.model,
+            "usage": {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens}}
 
 
 def _answers_by_name(raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -288,8 +402,7 @@ def _scoring_body(req: OutfitScoringRequest) -> dict[str, Any]:
             },
         ],
         "questions": questions,
-        "prompt_cache_key": "fashionistas-outfit-scoring",
-    }
+            }
 
 
 def _overall(parts: dict[str, float]) -> float:

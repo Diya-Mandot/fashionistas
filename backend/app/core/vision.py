@@ -132,7 +132,7 @@ async def validate_upload(file: UploadFile) -> ValidatedImage:
 
 
 def to_data_url(image: ValidatedImage, max_side: int = 768) -> str:
-    """Downscaled JPEG data URL for sending the photo to the Decisions API."""
+    """Downscaled JPEG data URL for sending the photo to Claude."""
     with Image.open(BytesIO(image.content)) as im:
         im = im.convert("RGB")
         im.thumbnail((max_side, max_side))

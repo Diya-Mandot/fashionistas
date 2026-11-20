@@ -11,7 +11,7 @@ import { api } from '../lib/api';
 import type { TraceStep, WardrobeItem } from '../lib/types';
 
 const UNDO_SECONDS = 10;
-const PENDING_STEPS = ['Checking photo…', 'Google Vision is looking at it…', 'Decisions API is classifying…', 'Saving to closet…'];
+const PENDING_STEPS = ['Checking photo…', 'Google Vision is looking at it…', 'Claude is classifying…', 'Saving to closet…'];
 
 type Phase = 'idle' | 'working' | 'done' | 'undone' | 'error';
 
@@ -106,7 +106,7 @@ export function Scan() {
         <p className="type-micro mb-2">Agentic closet scan</p>
         <h1 className="type-display-lg">Digital closet</h1>
         <p className="type-body-md mt-1 max-w-[560px]">
-          Upload a photo of any piece, even a messy one. Google Vision reads it, the Decisions API classifies it,
+          Upload a photo of any piece, even a messy one. Google Vision reads it, Claude classifies it,
           and it lands in your closet with zero typing.
         </p>
       </div>
@@ -159,7 +159,7 @@ export function Scan() {
           <GlassPanel radius="hero" className="p-5">
             <p className="type-micro mb-4">Agent trace</p>
             {phase === 'idle' && (
-              <p className="type-body-md">Steps will appear here as the scan runs: Vision → Decisions → saved.</p>
+              <p className="type-body-md">Steps will appear here as the scan runs: Vision → Claude → saved.</p>
             )}
             <ol className="flex flex-col gap-3">
               {trace.slice(0, shown).map((s, i) => (

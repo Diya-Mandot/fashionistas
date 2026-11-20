@@ -55,7 +55,7 @@ export function OutfitCard({ event, items }: { event: PlanEvent; items: Map<stri
             </div>
             {showWhy && (
               <div className="mt-3 rounded-2xl bg-white/75 p-4">
-                <p className="type-micro mb-3">Scored by the Decisions API</p>
+                <p className="type-micro mb-3">Scored by Claude</p>
                 <ScoreBreakdown scores={pick.scores} />
               </div>
             )}
