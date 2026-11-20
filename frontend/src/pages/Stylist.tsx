@@ -165,7 +165,11 @@ export function Stylist({ active = true }: { active?: boolean }) {
               <span className="text-[12px] text-muted">Keeps running if you switch tabs</span>
             )}
           </div>
-          <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} compact busy={run?.status === 'running'} geo={geo} />
+          <PromptBox
+            message={message} setMessage={setMessage} onSubmit={onSubmit}
+            compact busy={run?.status === 'running'} geo={geo}
+          />
+          {error && <p className="type-body-sm mt-2" role="alert">{error}</p>}
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)]">
             {/* Left: plan */}

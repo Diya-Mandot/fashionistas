@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     decisions_effort: str = "low"
     agents_mode: ApiMode = "live"
     decisions_mode: ApiMode = "live"
+    llamapress_palette_url: str = ""
+    stylist_profile_photo_path: str = ""
 
     api_timeout_s: float = 90.0
     api_max_retries: int = 3

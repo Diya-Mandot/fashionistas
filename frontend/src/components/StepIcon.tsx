@@ -20,6 +20,7 @@ import {
 import type { TraceStep } from '../lib/types';
 
 const BY_TOOL: Record<string, IconType> = {
+  personal_palette: IoCameraOutline,
   get_weather_forecast: IoPartlySunnyOutline,
   read_calendar: IoCalendarOutline,
   query_closet: IoShirtOutline,
