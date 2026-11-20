@@ -14,7 +14,7 @@ from app.core.vision import vision_configured
 from app.services.calendar_source import describe as describe_calendar
 from app.db import engine, init_db
 from app.integrations.anthropic_client import key_configured
-from app.routers import calendar, closet, dev, health, location, scan, stylist
+from app.routers import buy_check, calendar, closet, dev, health, location, scan, stylist
 from app.seed import seed_if_empty
 
 settings = get_settings()
@@ -54,6 +54,7 @@ app.include_router(stylist.router)
 app.include_router(health.router)
 app.include_router(location.router)
 app.include_router(scan.router)
+app.include_router(buy_check.router)
 app.include_router(closet.router)
 app.include_router(calendar.router)
 if settings.dev_endpoints:

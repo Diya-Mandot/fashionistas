@@ -13,7 +13,8 @@ from typing import Any
 
 from sqlmodel import Session, delete, select
 
-from app.models import AgentRunRecord, WardrobeItem
+from app.config import get_settings
+from app.models import AgentRunRecord, AppFlag, BuyCheck, WardrobeItem
 
 PHOTO_MANIFEST = Path(__file__).resolve().parent.parent / "seed_images" / "photos" / "manifest.json"
 _PHOTO_FIELDS = ("name", "category", "subcategory", "color", "style", "formality", "season", "material", "brand", "waterproof", "is_favorite")
@@ -67,9 +68,14 @@ def seed_if_empty(session: Session) -> None:
 
 
 def reset(session: Session) -> int:
-    """Restore the seed closet and clear runs. Returns the item count."""
+    """Restore the seed closet; clear runs, buy checks and the mock Pro flag. Returns the item count."""
     session.exec(delete(WardrobeItem))
     session.exec(delete(AgentRunRecord))
+    session.exec(delete(BuyCheck))
+    session.exec(delete(AppFlag))
+    pending = Path(get_settings().uploads_dir) / "pending"
+    for photo in pending.glob("chk_*") if pending.is_dir() else ():
+        photo.unlink(missing_ok=True)
     items = closet_items()
     session.add_all(items)
     session.commit()
