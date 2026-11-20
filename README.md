@@ -56,7 +56,7 @@ Keep it to one replica, since SQLite and in-progress plan runs live on that one 
 
 ## The demo closet
 
-The closet is 22 real product photos in `backend/seed_images/photos/`, labelled in `manifest.json` (no wear history yet: every piece starts as never worn). A fresh clone starts with this closet; add more in the **Scan** tab or with the importer. The local set deliberately has **no waterproof outerwear and no shoes**, so the agent flags both as closet gaps on a rainy trip.
+The closet is 41 real product photos in `backend/seed_images/photos/` (tops, bottoms, dresses, outerwear, shoes, activewear, accessories and bags), labelled in `manifest.json` (no wear history yet: every piece starts as never worn). The photos are openly licensed from Wikimedia Commons; see `CREDITS.md` in the same folder. A fresh clone starts with this closet; add more in the **Scan** tab or with the importer. The local set deliberately has **no waterproof outerwear**, so the agent flags it as a closet gap on a rainy trip.
 
 ```bash
 make import-photos DIR=~/Desktop/more-clothes   # JPG/PNG/WEBP/HEIC

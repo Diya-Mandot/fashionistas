@@ -1,58 +1,68 @@
 [
  {
   "id": "itm_photo01",
-  "file": "01-olive-crew-tee.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.23.54\u202fPM.png",
-  "name": "Olive Organic Crew Tee",
+  "file": "01-heather-grey-graphic-tee.jpg",
+  "source_file": "GlobeTeeGray.jpg",
+  "name": "Heather Grey Graphic Tee",
   "category": "tops",
   "subcategory": "t-shirt",
-  "color": "olive",
+  "color": "heather grey",
   "style": "casual",
   "formality": "casual",
   "season": "all season",
-  "material": "organic cotton",
+  "material": "cotton",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
-  "is_favorite": false,
+  "is_favorite": true,
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Daniel Furon under contract for the Wikimedia Foundation",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:GlobeTeeGray.jpg"
   }
  },
  {
   "id": "itm_photo02",
-  "file": "02-black-crew-tee.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.23.56\u202fPM.png",
-  "name": "Black Crew Tee",
+  "file": "02-cobalt-graphic-tee.jpg",
+  "source_file": "GlobeTeeFront-i0427clb.png",
+  "name": "Cobalt Blue Graphic Tee",
   "category": "tops",
   "subcategory": "t-shirt",
-  "color": "black",
+  "color": "cobalt blue",
   "style": "casual",
   "formality": "casual",
-  "season": "all season",
+  "season": "spring, summer",
   "material": "cotton",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
-  "is_favorite": true,
+  "is_favorite": false,
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Daniel Furon under contract for the Wikimedia Foundation",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:GlobeTeeFront-i0427clb.png"
   }
  },
  {
   "id": "itm_photo03",
-  "file": "03-navy-polka-dot-dress.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.24.06\u202fPM.png",
-  "name": "Navy Polka-Dot Mini Dress",
-  "category": "dresses",
-  "subcategory": "dress",
-  "color": "navy polka dot",
-  "style": "vintage",
+  "file": "03-navy-breton-stripe-top.jpg",
+  "source_file": "Marini\u00e8re de la Marine nationale.JPG",
+  "name": "Navy Breton Stripe Top",
+  "category": "tops",
+  "subcategory": "t-shirt",
+  "color": "navy and white stripe",
+  "style": "smart casual",
   "formality": "smart casual",
-  "season": "spring, summer, fall",
-  "material": "crepe",
+  "season": "all season",
+  "material": "cotton",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -60,20 +70,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Claude TRUONG-NGOC",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Marini%C3%A8re_de_la_Marine_nationale.JPG"
   }
  },
  {
   "id": "itm_photo04",
-  "file": "04-pink-pointelle-cardigan.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.24.08\u202fPM.png",
-  "name": "Pink Pointelle Cardigan",
+  "file": "04-embroidered-peasant-blouse.jpg",
+  "source_file": "Blouse MET 41.64 B.jpg",
+  "name": "Embroidered Peasant Blouse",
   "category": "tops",
-  "subcategory": "cardigan",
-  "color": "pink",
-  "style": "smart casual",
+  "subcategory": "blouse",
+  "color": "cream",
+  "style": "bohemian",
   "formality": "smart casual",
-  "season": "spring, fall",
-  "material": "knit",
+  "season": "spring, summer",
+  "material": "linen",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -81,62 +96,77 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "unknown",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Blouse_MET_41.64_B.jpg"
   }
  },
  {
   "id": "itm_photo05",
-  "file": "05-olive-straight-trousers.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.24.25\u202fPM.png",
-  "name": "Olive Straight-Leg Trousers",
-  "category": "bottoms",
-  "subcategory": "trousers",
-  "color": "olive",
-  "style": "casual",
+  "file": "05-oatmeal-knit-turtleneck.jpg",
+  "source_file": "Jersei-coll-alt.jpg",
+  "name": "Oatmeal Knit Turtleneck",
+  "category": "tops",
+  "subcategory": "sweater",
+  "color": "oatmeal",
+  "style": "smart casual",
   "formality": "smart casual",
   "season": "fall, winter",
-  "material": "cotton twill",
+  "material": "wool",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
-  "is_favorite": false,
+  "is_favorite": true,
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Joan Rocaguinard",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Jersei-coll-alt.jpg"
   }
  },
  {
   "id": "itm_photo06",
-  "file": "06-red-wide-leg-trousers.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.24.27\u202fPM.png",
-  "name": "Red Wide-Leg Trousers",
-  "category": "bottoms",
-  "subcategory": "trousers",
+  "file": "06-red-college-hoodie.jpg",
+  "source_file": "Sonoma Raceway hoodie - June 2023 - Sarah Stierch.jpg",
+  "name": "Red College Hoodie",
+  "category": "tops",
+  "subcategory": "hoodie",
   "color": "red",
   "style": "streetwear",
-  "formality": "smart casual",
-  "season": "all season",
-  "material": "wool blend",
+  "formality": "casual",
+  "season": "fall, winter",
+  "material": "cotton",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
-  "is_favorite": true,
+  "is_favorite": false,
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Missvain",
+   "license": "CC BY 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Sonoma_Raceway_hoodie_-_June_2023_-_Sarah_Stierch.jpg"
   }
  },
  {
   "id": "itm_photo07",
-  "file": "07-oatmeal-pintuck-trousers.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.24.31\u202fPM.png",
-  "name": "Oatmeal Pintuck Trousers",
-  "category": "bottoms",
-  "subcategory": "trousers",
-  "color": "oatmeal beige",
-  "style": "smart casual",
-  "formality": "business",
+  "file": "07-black-graphic-hoodie.jpg",
+  "source_file": "Hoodie m7agar.jpg",
+  "name": "Black Graphic Hoodie",
+  "category": "tops",
+  "subcategory": "hoodie",
+  "color": "black",
+  "style": "streetwear",
+  "formality": "casual",
   "season": "fall, winter",
-  "material": "wool",
+  "material": "cotton",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -144,20 +174,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "YoussefTahoun",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Hoodie_m7agar.jpg"
   }
  },
  {
   "id": "itm_photo08",
-  "file": "08-black-wide-leg-trousers.jpg",
-  "source_file": "Screenshot 2026-10-20 at 10.24.34\u202fPM.png",
-  "name": "Black Wide-Leg Trousers",
+  "file": "08-mid-wash-straight-jeans.jpg",
+  "source_file": "Blauwe jeans, merk Tommy Hilfiger, maat 3334, objectnr 86975-2(1).JPG",
+  "name": "Mid-Wash Straight Jeans",
   "category": "bottoms",
-  "subcategory": "trousers",
-  "color": "black",
-  "style": "formal",
-  "formality": "business",
+  "subcategory": "jeans",
+  "color": "mid blue",
+  "style": "casual",
+  "formality": "casual",
   "season": "all season",
-  "material": "crepe",
+  "material": "denim",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -165,18 +200,49 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Tommy Hilfiger",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Blauwe_jeans,_merk_Tommy_Hilfiger,_maat_3334,_objectnr_86975-2(1).JPG"
   }
  },
  {
   "id": "itm_photo09",
-  "file": "09-blue-fair-isle-sweater.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.39.33\u202fAM.png",
-  "name": "Blue Fair Isle Sweater",
-  "category": "tops",
-  "subcategory": "sweater",
-  "color": "light blue",
-  "style": "casual",
-  "formality": "casual",
+  "file": "09-khaki-chinos.jpg",
+  "source_file": "Chino pants.jpg",
+  "name": "Khaki Chinos",
+  "category": "bottoms",
+  "subcategory": "trousers",
+  "color": "khaki",
+  "style": "smart casual",
+  "formality": "business",
+  "season": "all season",
+  "material": "cotton",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Kuha455405",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Chino_pants.jpg"
+  }
+ },
+ {
+  "id": "itm_photo10",
+  "file": "10-charcoal-pleated-mini-skirt.jpg",
+  "source_file": "Skirt, pleated (AM 1999.107.242-6).jpg",
+  "name": "Charcoal Pleated Mini Skirt",
+  "category": "bottoms",
+  "subcategory": "skirt",
+  "color": "charcoal",
+  "style": "smart casual",
+  "formality": "smart casual",
   "season": "fall, winter",
   "material": "wool",
   "waterproof": false,
@@ -186,20 +252,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "MP Sportswear",
+   "license": "CC BY 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Skirt,_pleated_(AM_1999.107.242-6).jpg"
   }
  },
  {
-  "id": "itm_photo10",
-  "file": "10-pink-crewneck-sweatshirt.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.40.08\u202fAM.png",
-  "name": "Pink Crewneck Sweatshirt",
-  "category": "tops",
-  "subcategory": "sweatshirt",
-  "color": "pink",
+  "id": "itm_photo11",
+  "file": "11-light-wash-denim-shorts.jpg",
+  "source_file": "Jorts, back view.jpg",
+  "name": "Light-Wash Denim Shorts",
+  "category": "bottoms",
+  "subcategory": "shorts",
+  "color": "light blue",
   "style": "casual",
   "formality": "casual",
-  "season": "fall, winter, spring",
-  "material": "cotton fleece",
+  "season": "spring, summer",
+  "material": "denim",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -207,20 +278,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Collabratude",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Jorts,_back_view.jpg"
   }
  },
  {
-  "id": "itm_photo11",
-  "file": "11-brown-shearling-collar-jacket.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.40.48\u202fAM.png",
-  "name": "Brown Fleece Jacket with Shearling Collar",
-  "category": "outerwear",
-  "subcategory": "jacket",
-  "color": "brown",
-  "style": "streetwear",
-  "formality": "casual",
-  "season": "fall, winter",
-  "material": "fleece",
+  "id": "itm_photo12",
+  "file": "12-black-pleated-shift-dress.jpg",
+  "source_file": "2007 Isabel Toledo for Anne Klein little black dress, pleated wool 04.jpg",
+  "name": "Black Pleated Shift Dress",
+  "category": "dresses",
+  "subcategory": "dress",
+  "color": "black",
+  "style": "smart casual",
+  "formality": "smart casual",
+  "season": "all season",
+  "material": "synthetic",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -228,20 +304,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Staff photographer, Rhode Island School of Design Museum of Art",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:2007_Isabel_Toledo_for_Anne_Klein_little_black_dress,_pleated_wool_04.jpg"
   }
  },
  {
-  "id": "itm_photo12",
-  "file": "12-black-pressed-wide-leg-trousers.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.41.24\u202fAM.png",
-  "name": "Black Pressed Wide-Leg Trousers",
-  "category": "bottoms",
-  "subcategory": "trousers",
+  "id": "itm_photo13",
+  "file": "13-black-strapless-ruffle-dress.jpg",
+  "source_file": "Spring-Summer 1951 Jacques Griffe cocktail dress with trumpet hem.jpg",
+  "name": "Black Strapless Ruffle Dress",
+  "category": "dresses",
+  "subcategory": "dress",
   "color": "black",
   "style": "formal",
   "formality": "formal",
-  "season": "all season",
-  "material": "wool",
+  "season": "spring, summer, fall",
+  "material": "silk",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -249,18 +330,127 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Staff photographer, Rhode Island School of Design Museum of Art",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Spring-Summer_1951_Jacques_Griffe_cocktail_dress_with_trumpet_hem.jpg"
   }
  },
  {
-  "id": "itm_photo13",
-  "file": "13-khaki-pull-on-trousers.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.41.38\u202fAM.png",
-  "name": "Khaki Pull-On Trousers",
-  "category": "bottoms",
-  "subcategory": "trousers",
-  "color": "khaki",
+  "id": "itm_photo14",
+  "file": "14-black-floral-skater-dress.jpg",
+  "source_file": "Floral Dress with Back Cutouts (17250719865).jpg",
+  "name": "Black Floral Skater Dress",
+  "category": "dresses",
+  "subcategory": "dress",
+  "color": "black floral",
+  "style": "vintage",
+  "formality": "smart casual",
+  "season": "spring, summer",
+  "material": "synthetic",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Jamie",
+   "license": "CC BY-SA 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Floral_Dress_with_Back_Cutouts_(17250719865).jpg"
+  }
+ },
+ {
+  "id": "itm_photo15",
+  "file": "15-peach-satin-jumpsuit.jpg",
+  "source_file": "Gaultier pink jumpsuit (24158).jpg",
+  "name": "Peach Satin Jumpsuit",
+  "category": "dresses",
+  "subcategory": "jumpsuit",
+  "color": "peach",
+  "style": "formal",
+  "formality": "formal",
+  "season": "spring, summer",
+  "material": "satin",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Rhododendrites",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Gaultier_pink_jumpsuit_(24158).jpg"
+  }
+ },
+ {
+  "id": "itm_photo16",
+  "file": "16-classic-denim-jacket.jpg",
+  "source_file": "Denim Jacket (51079649933).jpg",
+  "name": "Classic Denim Jacket",
+  "category": "outerwear",
+  "subcategory": "jacket",
+  "color": "light blue",
   "style": "casual",
   "formality": "casual",
+  "season": "spring, fall",
+  "material": "denim",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": true,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "ajay_suresh",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Denim_Jacket_(51079649933).jpg"
+  }
+ },
+ {
+  "id": "itm_photo17",
+  "file": "17-distressed-leather-jacket.jpg",
+  "source_file": "Leather jacket golden era.jpg",
+  "name": "Distressed Leather Moto Jacket",
+  "category": "outerwear",
+  "subcategory": "jacket",
+  "color": "dark brown",
+  "style": "streetwear",
+  "formality": "smart casual",
+  "season": "spring, fall",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "kreativgarasch",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Leather_jacket_golden_era.jpg"
+  }
+ },
+ {
+  "id": "itm_photo18",
+  "file": "18-stone-cotton-trench.jpg",
+  "source_file": "Trench coat for male ball-jointed doll.JPG",
+  "name": "Stone Cotton Trench",
+  "category": "outerwear",
+  "subcategory": "coat",
+  "color": "stone",
+  "style": "smart casual",
+  "formality": "business",
   "season": "spring, fall",
   "material": "cotton",
   "waterproof": false,
@@ -270,19 +460,50 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Anna Frodesiak",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Trench_coat_for_male_ball-jointed_doll.JPG"
   }
  },
  {
-  "id": "itm_photo14",
-  "file": "14-camel-tailored-trousers.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.41.47\u202fAM.png",
-  "name": "Camel Tailored Trousers",
-  "category": "bottoms",
-  "subcategory": "trousers",
-  "color": "camel",
+  "id": "itm_photo19",
+  "file": "19-navy-wool-overcoat.jpg",
+  "source_file": "Overcoat MET 64.37 CP2.jpg",
+  "name": "Navy Wool Overcoat",
+  "category": "outerwear",
+  "subcategory": "coat",
+  "color": "navy",
+  "style": "formal",
+  "formality": "business",
+  "season": "fall, winter",
+  "material": "wool",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Jeanne Lanvin / Lanvin",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Overcoat_MET_64.37_CP2.jpg"
+  }
+ },
+ {
+  "id": "itm_photo20",
+  "file": "20-cobalt-tailored-blazer.jpg",
+  "source_file": "Navy Blazer (51011161195).jpg",
+  "name": "Cobalt Tailored Blazer",
+  "category": "outerwear",
+  "subcategory": "blazer",
+  "color": "cobalt blue",
   "style": "smart casual",
   "formality": "business",
-  "season": "fall, spring",
+  "season": "all season",
   "material": "wool",
   "waterproof": false,
   "days_since_worn": null,
@@ -291,40 +512,50 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "ajay_suresh",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Navy_Blazer_(51011161195).jpg"
   }
  },
  {
-  "id": "itm_photo15",
-  "file": "15-navy-tailored-shorts.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.42.07\u202fAM.png",
-  "name": "Navy Tailored Shorts",
-  "category": "bottoms",
-  "subcategory": "shorts",
-  "color": "navy",
-  "style": "smart casual",
-  "formality": "smart casual",
-  "season": "spring, summer",
-  "material": "wool",
+  "id": "itm_photo21",
+  "file": "21-black-single-button-blazer.jpg",
+  "source_file": "Blazer (139219706).jpg",
+  "name": "Black Single-Button Blazer",
+  "category": "outerwear",
+  "subcategory": "blazer",
+  "color": "black",
+  "style": "formal",
+  "formality": "business",
+  "season": "all season",
+  "material": "synthetic",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
-  "is_favorite": false,
+  "is_favorite": true,
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "hobvias sudoneighm from Seattle, United States of America",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Blazer_(139219706).jpg"
   }
  },
  {
-  "id": "itm_photo16",
-  "file": "16-pink-running-shorts.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.42.23\u202fAM.png",
-  "name": "Pink Running Shorts",
-  "category": "activewear",
-  "subcategory": "shorts",
-  "color": "pink",
-  "style": "sporty",
+  "id": "itm_photo22",
+  "file": "22-grey-hooded-puffer.jpg",
+  "source_file": "OutDoor 2018, Friedrichshafen (1X7A0285).jpg",
+  "name": "Grey Hooded Puffer",
+  "category": "outerwear",
+  "subcategory": "jacket",
+  "color": "grey",
+  "style": "casual",
   "formality": "casual",
-  "season": "spring, summer, fall",
+  "season": "fall, winter",
   "material": "nylon",
   "waterproof": false,
   "days_since_worn": null,
@@ -333,18 +564,335 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Matti Blume",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:OutDoor_2018,_Friedrichshafen_(1X7A0285).jpg"
   }
  },
  {
-  "id": "itm_photo17",
-  "file": "17-brown-pleated-mini-skirt.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.42.41\u202fAM.png",
-  "name": "Brown Pleated Mini Skirt",
-  "category": "bottoms",
-  "subcategory": "skirt",
-  "color": "brown",
-  "style": "vintage",
+  "id": "itm_photo23",
+  "file": "23-white-canvas-sneakers.jpg",
+  "source_file": "Superga Cotu Classic Sneaker 2750 Canvas wei\u00df (1).jpg",
+  "name": "White Canvas Sneakers",
+  "category": "shoes",
+  "subcategory": "sneakers",
+  "color": "white",
+  "style": "casual",
+  "formality": "casual",
+  "season": "all season",
+  "material": "cotton",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": true,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "SPERA.de Designerschuhe, Taschen und Accessoires",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Superga_Cotu_Classic_Sneaker_2750_Canvas_wei%C3%9F_(1).jpg"
+  }
+ },
+ {
+  "id": "itm_photo24",
+  "file": "24-navy-canvas-sneakers.jpg",
+  "source_file": "Superga Cotu Classic Sneaker 2750 Canvas blau (1).jpg",
+  "name": "Navy Canvas Sneakers",
+  "category": "shoes",
+  "subcategory": "sneakers",
+  "color": "navy",
+  "style": "casual",
+  "formality": "casual",
+  "season": "spring, summer",
+  "material": "cotton",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "SPERA.de Designerschuhe, Taschen und Accessoires",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Superga_Cotu_Classic_Sneaker_2750_Canvas_blau_(1).jpg"
+  }
+ },
+ {
+  "id": "itm_photo25",
+  "file": "25-black-leather-chelsea-boots.jpg",
+  "source_file": "Web CBO right 1024x1024.jpg",
+  "name": "Black Leather Chelsea Boots",
+  "category": "shoes",
+  "subcategory": "boots",
+  "color": "black",
+  "style": "smart casual",
   "formality": "smart casual",
+  "season": "fall, winter",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": true,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Justin Schneider",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Web_CBO_right_1024x1024.jpg"
+  }
+ },
+ {
+  "id": "itm_photo26",
+  "file": "26-brown-suede-chelsea-boots.jpg",
+  "source_file": "Chelsea boot, brown suede.jpg",
+  "name": "Brown Suede Chelsea Boots",
+  "category": "shoes",
+  "subcategory": "boots",
+  "color": "brown",
+  "style": "smart casual",
+  "formality": "smart casual",
+  "season": "fall, winter",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Reinthal",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Chelsea_boot,_brown_suede.jpg"
+  }
+ },
+ {
+  "id": "itm_photo27",
+  "file": "27-black-patent-peep-toe-pumps.jpg",
+  "source_file": "Michael Kors Keegan Pump Peep-Toe High Heel mit Korkabsatz 40S4KEMP1A Lackleder schwarz (1) (15850170683).jpg",
+  "name": "Black Patent Peep-Toe Pumps",
+  "category": "shoes",
+  "subcategory": "heels",
+  "color": "black",
+  "style": "formal",
+  "formality": "formal",
+  "season": "all season",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "SPERA.de Designerschuhe, Taschen und Accessoires from Deutschland",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Michael_Kors_Keegan_Pump_Peep-Toe_High_Heel_mit_Korkabsatz_40S4KEMP1A_Lackleder_schwarz_(1)_(15850170683).jpg"
+  }
+ },
+ {
+  "id": "itm_photo28",
+  "file": "28-cognac-penny-loafers.jpg",
+  "source_file": "A Penny Loafer.jpg",
+  "name": "Cognac Penny Loafers",
+  "category": "shoes",
+  "subcategory": "loafers",
+  "color": "cognac",
+  "style": "smart casual",
+  "formality": "business",
+  "season": "all season",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Wikipedia-ce",
+   "license": "CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:A_Penny_Loafer.jpg"
+  }
+ },
+ {
+  "id": "itm_photo29",
+  "file": "29-black-strappy-sandals.jpg",
+  "source_file": "Cr\u00e9atif 2014 35.JPG",
+  "name": "Black Strappy Sandals",
+  "category": "shoes",
+  "subcategory": "sandals",
+  "color": "black",
+  "style": "casual",
+  "formality": "casual",
+  "season": "spring, summer",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Touzrimounir",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Cr%C3%A9atif_2014_35.JPG"
+  }
+ },
+ {
+  "id": "itm_photo30",
+  "file": "30-navy-running-shoes.jpg",
+  "source_file": "Asics Gel-Cumulus 22.jpg",
+  "name": "Navy Running Shoes",
+  "category": "shoes",
+  "subcategory": "sneakers",
+  "color": "navy",
+  "style": "sporty",
+  "formality": "casual",
+  "season": "all season",
+  "material": "synthetic",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Petar Milo\u0161evi\u0107",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Asics_Gel-Cumulus_22.jpg"
+  }
+ },
+ {
+  "id": "itm_photo31",
+  "file": "31-black-performance-leggings.jpg",
+  "source_file": "Leggings clothing back view.png",
+  "name": "Black Performance Leggings",
+  "category": "activewear",
+  "subcategory": "leggings",
+  "color": "black",
+  "style": "sporty",
+  "formality": "casual",
+  "season": "all season",
+  "material": "synthetic",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": true,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Leirarieleira",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Leggings_clothing_back_view.png"
+  }
+ },
+ {
+  "id": "itm_photo32",
+  "file": "32-black-racerback-sports-bra.jpg",
+  "source_file": "Sports Bra (front).jpg",
+  "name": "Black Racerback Sports Bra",
+  "category": "activewear",
+  "subcategory": "other",
+  "color": "black",
+  "style": "sporty",
+  "formality": "casual",
+  "season": "all season",
+  "material": "synthetic",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Breeze0715",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Sports_Bra_(front).jpg"
+  }
+ },
+ {
+  "id": "itm_photo33",
+  "file": "33-black-gold-track-jacket.jpg",
+  "source_file": "Tracksuit jacket.jpg",
+  "name": "Black & Gold Track Jacket",
+  "category": "activewear",
+  "subcategory": "jacket",
+  "color": "black and gold",
+  "style": "sporty",
+  "formality": "casual",
+  "season": "spring, fall",
+  "material": "synthetic",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "RyanDiller",
+   "license": "CC BY 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Tracksuit_jacket.jpg"
+  }
+ },
+ {
+  "id": "itm_photo34",
+  "file": "34-black-tapered-track-pants.jpg",
+  "source_file": "Tracksuit bottoms.jpg",
+  "name": "Black Tapered Track Pants",
+  "category": "activewear",
+  "subcategory": "trousers",
+  "color": "black",
+  "style": "sporty",
+  "formality": "casual",
+  "season": "all season",
+  "material": "synthetic",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "RyanDiller",
+   "license": "CC BY 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Tracksuit_bottoms.jpg"
+  }
+ },
+ {
+  "id": "itm_photo35",
+  "file": "35-blue-wool-scarf.jpg",
+  "source_file": "100% Kaschmir Wolle vonk kaschmirprodukte.de.jpg",
+  "name": "Blue Wool Scarf",
+  "category": "accessories",
+  "subcategory": "scarf",
+  "color": "denim blue",
+  "style": "casual",
+  "formality": "casual",
   "season": "fall, winter",
   "material": "wool",
   "waterproof": false,
@@ -354,20 +902,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "https://www.kaschmirprodukte.de",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:100%25_Kaschmir_Wolle_vonk_kaschmirprodukte.de.jpg"
   }
  },
  {
-  "id": "itm_photo18",
-  "file": "18-black-floral-pleated-skirt.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.43.08\u202fAM.png",
-  "name": "Black Floral Pleated Midi Skirt",
-  "category": "bottoms",
-  "subcategory": "skirt",
-  "color": "black floral",
-  "style": "bohemian",
-  "formality": "smart casual",
-  "season": "spring, fall",
-  "material": "chiffon",
+  "id": "itm_photo36",
+  "file": "36-navy-baseball-cap.jpg",
+  "source_file": "Baseball cap.jpg",
+  "name": "Navy Baseball Cap",
+  "category": "accessories",
+  "subcategory": "hat",
+  "color": "navy",
+  "style": "sporty",
+  "formality": "casual",
+  "season": "spring, summer",
+  "material": "cotton",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -375,20 +928,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "TexasRebel",
+   "license": "Public domain",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Baseball_cap.jpg"
   }
  },
  {
-  "id": "itm_photo19",
-  "file": "19-navy-pleated-mini-skirt.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.43.43\u202fAM.png",
-  "name": "Navy Pleated Mini Skirt",
-  "category": "bottoms",
-  "subcategory": "skirt",
-  "color": "navy",
+  "id": "itm_photo37",
+  "file": "37-gold-rimless-sunglasses.jpg",
+  "source_file": "Women's sunglasses VERSACE Violet Gradient (Creative Commons).jpg",
+  "name": "Gold Rimless Sunglasses",
+  "category": "accessories",
+  "subcategory": "other",
+  "color": "gold",
   "style": "smart casual",
   "formality": "smart casual",
-  "season": "fall, spring",
-  "material": "wool",
+  "season": "spring, summer",
+  "material": "other",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -396,20 +954,51 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Ossa Kolo",
+   "license": "CC BY 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Women%27s_sunglasses_VERSACE_Violet_Gradient_(Creative_Commons).jpg"
   }
  },
  {
-  "id": "itm_photo20",
-  "file": "20-black-bustier-cami.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.48.48\u202fAM.png",
-  "name": "Black Bustier Cami",
-  "category": "tops",
-  "subcategory": "camisole",
+  "id": "itm_photo38",
+  "file": "38-black-leather-belt.jpg",
+  "source_file": "Belt-clothing.jpg",
+  "name": "Black Leather Belt",
+  "category": "accessories",
+  "subcategory": "belt",
   "color": "black",
-  "style": "formal",
-  "formality": "formal",
-  "season": "spring, summer, fall",
-  "material": "stretch satin",
+  "style": "smart casual",
+  "formality": "business",
+  "season": "all season",
+  "material": "leather",
+  "waterproof": false,
+  "days_since_worn": null,
+  "times_worn": 0,
+  "is_favorite": false,
+  "classified_by": {
+   "vision": null,
+   "decisions": "manual"
+  },
+  "credit": {
+   "author": "Evan-Amos",
+   "license": "Public domain",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Belt-clothing.jpg"
+  }
+ },
+ {
+  "id": "itm_photo39",
+  "file": "39-tan-leather-satchel.jpg",
+  "source_file": "Leather handbag by Les cuirs d'Agathe (DSC07738).jpg",
+  "name": "Tan Leather Satchel",
+  "category": "bags",
+  "subcategory": "handbag",
+  "color": "tan",
+  "style": "vintage",
+  "formality": "smart casual",
+  "season": "all season",
+  "material": "leather",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -417,20 +1006,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Trougnouf (Benoit Brummer), Les cuirs d'Agathe",
+   "license": "CC BY 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Leather_handbag_by_Les_cuirs_d%27Agathe_(DSC07738).jpg"
   }
  },
  {
-  "id": "itm_photo21",
-  "file": "21-black-lace-trim-cami.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.49.01\u202fAM.png",
-  "name": "Black Lace-Trim Camisole",
-  "category": "tops",
-  "subcategory": "camisole",
-  "color": "black",
-  "style": "vintage",
-  "formality": "smart casual",
-  "season": "spring, summer, fall",
-  "material": "satin",
+  "id": "itm_photo40",
+  "file": "40-striped-knit-tote.jpg",
+  "source_file": "Knitted & Felted Tote Bag.JPG",
+  "name": "Striped Knit Tote",
+  "category": "bags",
+  "subcategory": "tote",
+  "color": "pink and blue",
+  "style": "bohemian",
+  "formality": "casual",
+  "season": "spring, summer",
+  "material": "knit",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -438,20 +1032,25 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "ChesPal (Debra Heaphy)",
+   "license": "CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Knitted_%26_Felted_Tote_Bag.JPG"
   }
  },
  {
-  "id": "itm_photo22",
-  "file": "22-black-lace-v-neck-cami.jpg",
-  "source_file": "Screenshot 2026-10-23 at 9.49.11\u202fAM.png",
-  "name": "Black Lace V-Neck Cami",
-  "category": "tops",
-  "subcategory": "camisole",
+  "id": "itm_photo41",
+  "file": "41-black-canvas-backpack.jpg",
+  "source_file": "OutDoor 2018, Friedrichshafen (1X7A0437).jpg",
+  "name": "Black Canvas Backpack",
+  "category": "bags",
+  "subcategory": "backpack",
   "color": "black",
-  "style": "smart casual",
-  "formality": "smart casual",
-  "season": "spring, summer, fall",
-  "material": "satin",
+  "style": "casual",
+  "formality": "casual",
+  "season": "all season",
+  "material": "synthetic",
   "waterproof": false,
   "days_since_worn": null,
   "times_worn": 0,
@@ -459,6 +1058,11 @@
   "classified_by": {
    "vision": null,
    "decisions": "manual"
+  },
+  "credit": {
+   "author": "Matti Blume",
+   "license": "CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:OutDoor_2018,_Friedrichshafen_(1X7A0437).jpg"
   }
  }
 ]

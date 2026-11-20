@@ -110,7 +110,7 @@ def test_plan_endpoint_end_to_end_mock(client):
             assert set(e["outfit"]["item_ids"]) <= closet_ids
             assert 0 <= e["outfit"]["scores"]["overall"] <= 1
     gaps = {g["need"]: g for g in plan["gaps"]}
-    assert "waterproof outer layer" in gaps and "shoes" in gaps  # demo closet has neither
+    assert "waterproof outer layer" in gaps and "shoes" not in gaps  # demo closet has shoes but no rain layer
     assert gaps["waterproof outer layer"]["suggestion"]["links"][0]["url"].startswith("https://www.depop.com/search/?q=")
     tools = [s["tool"] for s in body["trace"] if s["kind"] in ("tool_call", "decision", "validation")]
     assert tools[:3] == ["get_weather_forecast", "read_calendar", "query_closet"]
