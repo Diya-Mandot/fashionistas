@@ -33,7 +33,7 @@ export function ModeBadge({ light }: { light: boolean }) {
         type="button"
         onClick={() => setOpen(!open)}
         className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${
-          live ? (light ? 'bg-white/20 text-white' : 'bg-sage-100 text-forest-mid') : 'bg-accent-light text-[#8A6236] ring-1 ring-sand/60'
+          live ? (light ? 'bg-black/35 text-white ring-1 ring-white/20 backdrop-blur-xl' : 'bg-sage-100 text-forest-mid') : 'bg-accent-light text-[#8A6236] ring-1 ring-sand/60'
         }`}
       >
         <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-emerald' : 'bg-sand'}`} />
