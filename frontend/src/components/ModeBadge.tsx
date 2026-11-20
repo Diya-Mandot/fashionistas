@@ -75,7 +75,7 @@ export function ModeBadge({ light }: { light: boolean }) {
               </li>
               <li className="flex justify-between">
                 <span className="font-semibold text-ink">Calendar</span>
-                <span className="text-muted">{health.calendar ?? 'demo calendar'}</span>
+                <span className="text-muted">{health.calendar ?? 'no calendar connected'}</span>
               </li>
               <li className="flex justify-between">
                 <span className="font-semibold text-ink">Google Vision</span>

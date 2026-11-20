@@ -176,11 +176,6 @@ export function UpcomingEvents({ onStyle, busy }: { onStyle: (e: CalendarEvent) 
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-x-2">
                   <span className="truncate text-[14px] font-semibold text-ink">{e.name}</span>
-                  {e.calendar === 'demo' && (
-                    <span className="rounded-full bg-sand-100 px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-[1.2px] text-muted">
-                      Demo
-                    </span>
-                  )}
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[12px] text-muted">
                   <span>{time12(e.start_time) ?? 'All day'}</span>
