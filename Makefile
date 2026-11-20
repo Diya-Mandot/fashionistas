@@ -1,4 +1,4 @@
-.PHONY: dev start backend frontend install test preflight warmup reset import-photos
+.PHONY: dev start backend frontend install test preflight warmup reset import-photos sync-thrift
 
 install:
 	cd backend && uv sync
@@ -40,3 +40,7 @@ reset:
 # Import a folder of real clothing photos: make import-photos DIR=~/Desktop/closet-photos
 import-photos:
 	cd backend && uv run python scripts/import_photos.py "$(DIR)"
+
+# Pull live inventory from the Utah thrift stores (Thrifthood, ThriftJam) into backend/catalog/thrift.json.
+sync-thrift:
+	cd backend && uv run python scripts/sync_thrift.py

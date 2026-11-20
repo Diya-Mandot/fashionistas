@@ -15,7 +15,6 @@ from app.tools.closet_tool import query_closet
 from app.tools.context import RunContext, ToolOutput
 from app.tools.gaps import find_closet_gaps
 from app.tools.outfits import build_and_score_outfits
-from app.tools.secondhand import suggest_secondhand_item
 from app.tools.weather import get_weather_forecast
 from app.trace import Timer, TraceStep, truncate
 
@@ -44,10 +43,16 @@ def submit_plan(ctx: RunContext, **submission: Any) -> ToolOutput:
 TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
     "get_weather_forecast": (
         get_weather_forecast,
-        "Daily forecast (°F high/low, precipitation chance) for a city and date range. Real data.",
+        "Daily forecast (°F high/low, precipitation chance, snow) for a place and date range. Real data. "
+        "For outdoor plans pass the actual spot (e.g. 'Mount Timpanogos', 'Yosemite Valley'), not the nearest city: "
+        "mountains are far colder and snowier than the town below.",
         {
             "type": "object",
-            "properties": {"city": {"type": "string"}, "start_date": DATE, "end_date": DATE},
+            "properties": {
+                "city": {"type": "string", "description": "City, or a named outdoor place such as a mountain, park or trail"},
+                "start_date": DATE,
+                "end_date": DATE,
+            },
             "required": ["city", "start_date", "end_date"],
         },
     ),
@@ -98,7 +103,8 @@ TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
     ),
     "find_closet_gaps": (
         find_closet_gaps,
-        "Detect needs the closet can't meet for these events and forecast (e.g. rain and no waterproof layer). "
+        "Detect needs the closet can't meet for these events and forecast (e.g. rain and no waterproof layer, "
+        "snowy hike and no gloves or waterproof boots). Uses the forecast already fetched for those dates. "
         "Severity is rated by Claude.",
         {
             "type": "object",
@@ -108,22 +114,9 @@ TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
             },
         },
     ),
-    "suggest_secondhand_item": (
-        suggest_secondhand_item,
-        "Suggest a secondhand item to fill a closet gap. Returns a suggestion_ref and marketplace search links.",
-        {
-            "type": "object",
-            "properties": {
-                "description": {"type": "string", "description": "e.g. 'black trench coat'"},
-                "why": {"type": "string"},
-                "size": {"type": "string"},
-            },
-            "required": ["description"],
-        },
-    ),
     "submit_plan": (
         submit_plan,
-        "Submit the final day-by-day plan. Reference outfits ONLY by outfit_ref and suggestions by suggestion_ref. "
+        "Submit the final day-by-day plan. Reference outfits ONLY by outfit_ref. Gaps are linked to partner-shop products by the server. "
         "The server validates every ref and returns warnings you should fix.",
         SUBMIT_PLAN_SCHEMA,
     ),

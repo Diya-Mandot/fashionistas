@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useStylistPath } from '../lib/navMemory';
-import { IoCameraOutline, IoShirtOutline, IoSparklesOutline } from 'react-icons/io5';
+import { IoCameraOutline, IoShirtOutline, IoSparklesOutline, IoSunnyOutline } from 'react-icons/io5';
 import { ModeBadge } from './ModeBadge';
 import { Wordmark } from './Wordmark';
 
 const LINKS = [
   { to: '/', label: 'Stylist', icon: IoSparklesOutline },
+  { to: '/today', label: 'Today', icon: IoSunnyOutline },
   { to: '/closet', label: 'Closet', icon: IoShirtOutline },
   { to: '/scan', label: 'Scan', icon: IoCameraOutline },
 ];
@@ -39,7 +40,7 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
               className={({ isActive: active }) => {
                 const isActive = to === '/' ? pathname === '/' : active;
                 return (
-                `flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors ${
+                `flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[13px] font-semibold transition-colors sm:px-3.5 ${
                   isActive
                     ? 'bg-forest text-white'
                     : light

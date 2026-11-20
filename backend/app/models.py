@@ -41,7 +41,7 @@ class WardrobeItem(WardrobeItemBase, table=True):
     __tablename__ = "wardrobe_items"
 
     id: str = Field(default_factory=lambda: new_id("itm"), primary_key=True)
-    source: str = "seed"  # seed | scan | manual | receipt
+    source: str = "seed"  # seed | scan | manual | buy_check | receipt
     scan_meta: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -72,3 +72,27 @@ class AgentRunRecord(SQLModel, table=True):
     error: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     finished_at: Optional[datetime] = None
+
+
+class BuyCheck(SQLModel, table=True):
+    """One Should I Buy This? check. Rows this month count toward the free limit."""
+
+    __tablename__ = "buy_checks"
+
+    id: str = Field(default_factory=lambda: new_id("chk"), primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
+    attrs: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    result: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    trace: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    image_path: str = ""  # under uploads/pending/ until the user keeps the item
+    kept: bool = False
+    item_id: Optional[str] = None  # the WardrobeItem created by "I bought it"
+
+
+class AppFlag(SQLModel, table=True):
+    """Small key/value settings, such as the mock Pro flag."""
+
+    __tablename__ = "app_flags"
+
+    key: str = Field(primary_key=True)
+    value: str = ""

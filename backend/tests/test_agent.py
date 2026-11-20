@@ -87,7 +87,9 @@ def test_plan_validation_drops_unknown_refs_and_ids(client):
     assert any("itm_fake" in w for w in warnings)
     assert any("no longer in the closet" in w for w in warnings)
     assert any("S7" in w for w in warnings)
-    assert plan.gaps[0].suggestion is not None  # must-have gaps always get search links
+    assert plan.gaps[0].shop_category == "outerwear"  # gaps link to our shop, never outside marketplaces
+    assert all(p.category == "outerwear" for p in plan.gaps[0].partner_picks)
+    assert "suggestion" not in plan.gaps[0].model_dump()
     assert {p.item_id for p in plan.packing_list} == {"itm_photo03", "itm_photo08"}
 
 
@@ -110,7 +112,10 @@ def test_plan_endpoint_end_to_end_mock(client):
             assert 0 <= e["outfit"]["scores"]["overall"] <= 1
     gaps = {g["need"]: g for g in plan["gaps"]}
     assert "waterproof outer layer" in gaps and "shoes" not in gaps  # demo closet has shoes but no rain layer
-    assert gaps["waterproof outer layer"]["suggestion"]["links"][0]["url"].startswith("https://www.depop.com/search/?q=")
+    assert "suggestion" not in gaps["waterproof outer layer"]  # no outside marketplace links
+    picks = gaps["waterproof outer layer"]["partner_picks"]
+    assert 1 <= len(picks) <= 4 and all(p["score"] >= 70 for p in picks)
+    assert "suggest_secondhand_item" not in str(body["trace"])
     tools = [s["tool"] for s in body["trace"] if s["kind"] in ("tool_call", "decision", "validation")]
     assert tools[:3] == ["get_weather_forecast", "read_calendar", "query_closet"]
     assert "build_and_score_outfits" in tools and tools[-1] == "submit_plan"

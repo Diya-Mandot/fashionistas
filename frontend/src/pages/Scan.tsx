@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react';
-import { IoArrowUndoOutline, IoCloudUploadOutline, IoCreateOutline, IoRefreshOutline } from 'react-icons/io5';
+import { useCallback, useEffect, useState } from 'react';
+import { IoArrowUndoOutline, IoCreateOutline, IoHelpCircleOutline, IoRefreshOutline, IoShirtOutline } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import { MicroChip } from '../components/Chip';
 import { GarmentCamera } from '../components/GarmentCamera';
 import { GlassPanel } from '../components/GlassPanel';
-import { JsonBlock } from '../components/JsonBlock';
 import { PageShell } from '../components/PageShell';
-import { SourceBadge } from '../components/SourceBadge';
-import { StepIcon } from '../components/StepIcon';
+import { PhotoDrop, previewUrl } from '../components/PhotoDrop';
+import { StepList, useStepReveal } from '../components/StepList';
+import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
 import type { TraceStep, WardrobeItem } from '../lib/types';
 
@@ -20,52 +20,39 @@ export function Scan({ active = true, onClosetChange }: { active?: boolean; onCl
   const [phase, setPhase] = useState<Phase>('idle');
   const [preview, setPreview] = useState<string | null>(null);
   const [trace, setTrace] = useState<TraceStep[]>([]);
-  const [shown, setShown] = useState(0);
-  const [pendingIdx, setPendingIdx] = useState(0);
   const [item, setItem] = useState<WardrobeItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(UNDO_SECONDS);
   const [editing, setEditing] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [openStep, setOpenStep] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { shown, allShown: traceShown, pending } = useStepReveal(trace, phase === 'working', PENDING_STEPS);
+  const allShown = traceShown && phase === 'done';
+  const { toast, show: showToast } = useToast();
+
+  // Daily outfit log: placeholder until the backend can pick out each worn piece.
+  const logOutfit = (file: File) => {
+    showToast(`Outfit photo received (${file.name}). Daily logging is coming soon.`);
+  };
 
   useEffect(() => {
     if (preview) return () => URL.revokeObjectURL(preview);
   }, [preview]);
 
-  // Cycle the "in progress" label while the request runs.
-  useEffect(() => {
-    if (phase !== 'working') return;
-    const t = setInterval(() => setPendingIdx((i) => Math.min(i + 1, PENDING_STEPS.length - 1)), 1100);
-    return () => clearInterval(t);
-  }, [phase]);
-
-  // Reveal returned steps one by one.
-  useEffect(() => {
-    if (shown >= trace.length) return;
-    const t = setTimeout(() => setShown((n) => n + 1), 450);
-    return () => clearTimeout(t);
-  }, [shown, trace.length]);
-
   // Undo window.
   useEffect(() => {
-    if (phase !== 'done' || editing || shown < trace.length) return;
+    if (phase !== 'done' || editing || !allShown) return;
     if (countdown <= 0) return;
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, countdown, editing, shown, trace.length]);
+  }, [phase, countdown, editing, allShown]);
 
   const start = useCallback(async (file: File) => {
     setPhase('working');
     setError(null);
     setTrace([]);
-    setShown(0);
-    setPendingIdx(0);
     setItem(null);
     setEditing(false);
     setCountdown(UNDO_SECONDS);
-    setPreview(file.type.startsWith('image/') && !/heic|heif/i.test(file.type) ? URL.createObjectURL(file) : null);
+    setPreview(previewUrl(file));
     try {
       const res = await api.scan(file);
       setTrace(res.trace);
@@ -77,13 +64,6 @@ export function Scan({ active = true, onClosetChange }: { active?: boolean; onCl
       setPhase('error');
     }
   }, [onClosetChange]);
-
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) start(f);
-  };
 
   const undo = async () => {
     if (!item) return;
@@ -106,16 +86,38 @@ export function Scan({ active = true, onClosetChange }: { active?: boolean; onCl
     setPreview(null);
   };
 
-  const allShown = shown >= trace.length && phase === 'done';
-
   return (
     <PageShell>
-      <div className="mb-8">
-        <p className="type-micro mb-2">Agentic closet scan</p>
-        <h1 className="type-display-lg">Digital closet</h1>
-        <p className="type-body-md mt-1 max-w-[560px]">
-          Take or upload a garment photo. The scan identifies the item and saves it to your closet.
-        </p>
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="type-micro mb-2">Agentic closet scan</p>
+          <h1 className="type-display-lg">Digital closet</h1>
+          <p className="type-body-md mt-1 max-w-[560px]">
+            Take or upload a garment photo. The scan identifies the item and saves it to your closet.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 self-start md:self-auto">
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-forest bg-forest px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-forest/90 focus-within:ring-2 focus-within:ring-emerald">
+            <IoShirtOutline size={16} /> Log today&apos;s outfit
+            <input
+              type="file"
+              accept="image/*"
+              capture="user"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (f) logOutfit(f);
+              }}
+            />
+          </label>
+          <Link
+            to="/buy"
+            className="flex items-center gap-1.5 rounded-full border border-forest bg-white/80 px-4 py-2 text-[13px] font-bold text-forest hover:bg-white"
+          >
+            <IoHelpCircleOutline size={16} /> Should I buy this?
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
@@ -123,31 +125,7 @@ export function Scan({ active = true, onClosetChange }: { active?: boolean; onCl
         <GlassPanel radius="hero" className="p-4">
           {phase === 'idle' || phase === 'error' ? active && (
             <GarmentCamera onScan={start}>
-              <label
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={onDrop}
-                className={`flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed text-center transition-colors lg:aspect-[5/6] ${
-                  dragOver ? 'border-emerald bg-[rgba(52,211,153,0.10)]' : 'border-sage-200 bg-white/60 hover:bg-white/80'
-                }`}
-              >
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-forest text-white">
-                  <IoCloudUploadOutline size={26} />
-                </span>
-                <span className="type-label-bold">Drop a photo or click to upload</span>
-                <span className="type-body-sm">JPG, PNG, WEBP or HEIC · up to 15 MB</span>
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                  className="sr-only"
-                  onChange={(e) => e.target.files?.[0] && start(e.target.files[0])}
-                />
-                {error && <span className="type-body-sm mt-2 text-error">{error}</span>}
-              </label>
+              <PhotoDrop onFile={start} error={error} />
             </GarmentCamera>
           ) : (
             <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-sand-100 lg:aspect-[5/6]">
@@ -170,43 +148,9 @@ export function Scan({ active = true, onClosetChange }: { active?: boolean; onCl
             {phase === 'idle' && (
               <p className="type-body-md">Steps will appear here as the scan runs: Vision → Claude → saved.</p>
             )}
-            <ol className="flex flex-col gap-3">
-              {trace.slice(0, shown).map((s, i) => (
-                <li key={s.id} className="animate-[fadeUp_.35s_ease-out] rounded-2xl bg-white/70 p-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenStep(openStep === s.id ? null : s.id)}
-                    className="flex w-full items-start gap-3 text-left"
-                  >
-                    <StepIcon step={s} />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="type-micro !tracking-[2px]">Step {i + 1}</span>
-                        <SourceBadge source={s.source} />
-                        {s.duration_ms != null && <span className="text-[11px] text-faint">{s.duration_ms} ms</span>}
-                      </span>
-                      <span className="type-label-medium mt-0.5 block">{s.title}</span>
-                      {s.detail && <span className="type-body-sm block">{s.detail}</span>}
-                    </span>
-                  </button>
-                  {openStep === s.id && (
-                    <div className="mt-3 flex flex-col gap-2 pl-11">
-                      <JsonBlock label="Request" value={s.args} />
-                      <JsonBlock label="Response" value={s.result} />
-                    </div>
-                  )}
-                </li>
-              ))}
-              {(phase === 'working' || (phase === 'done' && !allShown)) && (
-                <li className="flex items-center gap-3 rounded-2xl bg-white/50 p-3">
-                  <span className="h-8 w-8 animate-pulse rounded-full bg-sage-100" />
-                  <span className="type-body-md">{phase === 'working' ? PENDING_STEPS[pendingIdx] : 'Writing up…'}</span>
-                </li>
-              )}
-            </ol>
+            <StepList trace={trace} shown={shown} pending={pending} />
           </GlassPanel>
-
-          {phase === 'done' && item && (
+          {allShown && item && (
             <GlassPanel radius="hero" className="animate-[fadeUp_.35s_ease-out] p-5">
               {editing ? (
                 <EditForm item={item} onSave={saveEdit} onCancel={() => setEditing(false)} />
@@ -270,6 +214,7 @@ export function Scan({ active = true, onClosetChange }: { active?: boolean; onCl
           )}
         </div>
       </div>
+      {toast}
     </PageShell>
   );
 }

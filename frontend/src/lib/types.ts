@@ -63,17 +63,13 @@ export interface PlanDay {
   events: PlanEvent[];
 }
 
-export interface SecondhandSuggestion {
-  description: string;
-  why: string;
-  links: { site: string; url: string }[];
-}
-
 export interface Gap {
   need: string;
   severity: 'must-have' | 'nice-to-have' | string;
   reason: string;
-  suggestion: SecondhandSuggestion | null;
+  /** Shop page category to browse for this gap. */
+  shop_category?: string | null;
+  partner_picks?: PartnerPick[];
 }
 
 export interface Plan {
@@ -179,4 +175,175 @@ export interface GoogleCalendarStatus {
   configured: boolean;
   connected: boolean;
   email: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Should I Buy This?
+// ---------------------------------------------------------------------------
+export type Verdict = 'great_buy' | 'maybe' | 'skip';
+
+export interface BuyCheckItem {
+  name: string;
+  category: string;
+  subcategory: string;
+  color: string | null;
+  style: string | null;
+  brand: string | null;
+  season: string | null;
+  material: string | null;
+  formality: Formality | string;
+  waterproof: boolean;
+  image_url: string;
+}
+
+export interface BuyCheckResult {
+  score: number;
+  verdict: Verdict;
+  outfit_count: number;
+  duplicates: { item_id: string; name: string; reason: string }[];
+  gap_filled: string | null;
+  calendar_matches: { event: string; date: string }[];
+  est_wears_per_year: number;
+  /** Each outfit includes the new item, with id "new". */
+  top_outfits: { items: WardrobeItem[]; includes_new: boolean }[];
+  score_reason: string;
+}
+
+export interface BuyCheckUsage {
+  checks_used: number;
+  limit: number;
+  pro: boolean;
+}
+
+export interface BuyCheckResponse {
+  check_id: string;
+  item: BuyCheckItem;
+  result: BuyCheckResult;
+  trace: TraceStep[];
+  usage: BuyCheckUsage;
+}
+
+/** Body of the 402 the API returns once the free checks are used up. */
+export interface Paywall {
+  paywall: 'buy_check';
+  used: number;
+  limit: number;
+}
+
+// ---------------------------------------------------------------------------
+// Shop Your Gaps
+// ---------------------------------------------------------------------------
+export interface ShopProduct {
+  id: string;
+  name: string;
+  store: string;
+  price: number;
+  /** null until the catalog photo has been fetched; cards fall back to a color swatch. */
+  image: string | null;
+  category: string;
+  subcategory: string;
+  color: string | null;
+  formality: string;
+  season: string | null;
+  material: string | null;
+  waterproof: boolean;
+  sponsored: boolean;
+  /** The listing on the store's own site (thrift catalog only). */
+  url?: string | null;
+  store_location?: string | null;
+  /** In-stock sizes. */
+  sizes?: string[] | null;
+  secondhand?: boolean | null;
+  outfit_count: number;
+  outfit_count_label: string;
+  fills: string[];
+  score: number;
+  verdict: Verdict;
+}
+
+export interface ShopGap {
+  label: string;
+  category: string;
+  status: 'empty' | 'thin';
+  count: number;
+  /** How many of the shown products fill it. */
+  products: number;
+}
+
+export interface ShopResponse {
+  gaps: ShopGap[];
+  products: ShopProduct[];
+  hidden_by_trust_rule: number;
+  categories: string[];
+  trust_min: number;
+  /** thrift = live Utah thrift-store inventory; mock = the demo partner catalog. */
+  source?: 'thrift' | 'mock';
+  stores?: string[];
+}
+
+/** A partner product on a Stylist gap card. */
+export interface PartnerPick {
+  id: string;
+  name: string;
+  store: string;
+  price: number;
+  category?: string | null;
+  image: string | null;
+  color: string | null;
+  outfit_count: number;
+  outfit_count_label: string;
+  score: number;
+  sponsored: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Today's outfit
+// ---------------------------------------------------------------------------
+
+export interface DailyWeather {
+  date: string;
+  high_f: number | null;
+  low_f: number | null;
+  precip_pct: number | null;
+  summary?: string | null;
+  snow?: boolean;
+}
+
+export interface DailyOutfit {
+  ref: string;
+  item_ids: string[];
+  scores: Scores;
+  /** Short look name, e.g. "Smart Casual Edge". */
+  title: string;
+  tip: string;
+  rationale: string;
+}
+
+export interface DailyResponse {
+  date: string;
+  city: string;
+  weather: DailyWeather | null;
+  weather_note: string | null;
+  weather_source: ApiSource;
+  calendar: { source: 'google' | 'ics' | 'none'; label: string; note: string | null };
+  events: CalendarEvent[];
+  /** The event today's outfits are dressed for; null = an everyday look. */
+  occasion: CalendarEvent | null;
+  outfits: DailyOutfit[];
+  items: WardrobeItem[];
+  worn_item_ids: string[] | null;
+  scored_by: string | null;
+  candidates_scored: number;
+  error: string | null;
+}
+
+export interface DailyRequest {
+  date: string;
+  lat?: number;
+  lon?: number;
+  city?: string;
+  /** A calendar event id, or "everyday". Omit to let the server pick the day's main occasion. */
+  event_id?: string;
+  exclude?: string[][];
+  refresh?: boolean;
 }

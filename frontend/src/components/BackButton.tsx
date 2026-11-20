@@ -2,9 +2,10 @@ import { IoArrowBack } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 
 /** Goes back within the app if there's somewhere to go back to, otherwise home. */
-export function BackButton({ label = 'Back', to }: { label?: string; to?: string }) {
+export function BackButton({ label = 'Back', to, onClick }: { label?: string; to?: string; onClick?: () => void }) {
   const navigate = useNavigate();
   const go = () => {
+    if (onClick) return onClick();
     if (to) return navigate(to);
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
     if (idx > 0) navigate(-1);

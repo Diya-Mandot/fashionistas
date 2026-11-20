@@ -4,7 +4,7 @@ import { BackButton } from './BackButton';
 import { NavBar } from './NavBar';
 
 /** Soft photo backdrop + glass nav, like the capstone's Closet/Insights screens. */
-export function PageShell({ children }: { children: ReactNode }) {
+export function PageShell({ children, onBack }: { children: ReactNode; onBack?: () => void }) {
   return (
     <div className="relative min-h-screen">
       <div className="fixed inset-0 -z-10">
@@ -14,7 +14,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       <NavBar overlay dark={false} />
       <main className="mx-auto max-w-[1280px] px-5 pb-20 pt-24 md:px-10">
         <div className="mb-5">
-          <BackButton />
+          <BackButton onClick={onBack} />
         </div>
         {children}
       </main>

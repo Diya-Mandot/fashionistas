@@ -1,6 +1,6 @@
 """Per-run state shared by the agent's tools.
 
-Outfits and secondhand suggestions are registered under short refs ("E1-A",
+Outfits are registered under short refs ("E1-A",
 "S1"). The agent only ever references those refs; item IDs are mapped back
 server-side, so the model can't invent closet IDs (capstone outfit_curator pattern).
 """
@@ -39,7 +39,6 @@ class RunContext:
     events_seen: list[dict[str, Any]] = field(default_factory=list)
     outfits: dict[str, OutfitOption] = field(default_factory=dict)
     options_by_event: dict[str, list[str]] = field(default_factory=dict)
-    suggestions: dict[str, dict[str, Any]] = field(default_factory=dict)
     gaps: list[dict[str, Any]] = field(default_factory=list)
     plan: Optional[dict[str, Any]] = None
     sources: dict[str, set[str]] = field(default_factory=dict)

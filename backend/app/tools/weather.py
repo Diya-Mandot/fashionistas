@@ -27,7 +27,7 @@ _forecast_cache: dict[tuple[float, float], tuple[float, dict[str, Any]]] = {}
 _WMO = {
     0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 48: "fog",
     51: "light drizzle", 53: "drizzle", 55: "heavy drizzle", 61: "light rain", 63: "rain", 65: "heavy rain",
-    71: "light snow", 73: "snow", 75: "heavy snow", 80: "showers", 81: "showers", 82: "heavy showers",
+    71: "light snow", 73: "snow", 75: "heavy snow", 77: "snow grains", 80: "showers", 81: "showers", 82: "heavy showers", 85: "snow showers", 86: "heavy snow showers",
     95: "thunderstorms", 96: "thunderstorms", 99: "thunderstorms",
 }
 
@@ -64,7 +64,7 @@ def _forecast(lat: float, lon: float) -> tuple[dict[str, Any], bool]:
         params={
             "latitude": lat,
             "longitude": lon,
-            "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code",
+            "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,snowfall_sum",
             "temperature_unit": "fahrenheit",
             "timezone": "auto",
             "forecast_days": FORECAST_DAYS,
@@ -75,6 +75,15 @@ def _forecast(lat: float, lon: float) -> tuple[dict[str, Any], bool]:
     daily = res.json()["daily"]
     _forecast_cache[key] = (time.time(), daily)
     return daily, False
+
+
+def is_snow_code(code: Any) -> bool:
+    return code in (71, 73, 75, 77, 85, 86)
+
+
+def _at(daily: dict[str, Any], key: str, i: int) -> Any:
+    vals = daily.get(key) or []
+    return vals[i] if i < len(vals) else None
 
 
 def _parse_date(s: Optional[str], default: date) -> date:
@@ -115,6 +124,7 @@ def get_weather_forecast(ctx: RunContext, city: str, start_date: Optional[str] =
                 "low_f": round(daily["temperature_2m_min"][i]) if daily["temperature_2m_min"][i] is not None else None,
                 "precip_pct": daily["precipitation_probability_max"][i],
                 "summary": _WMO.get(daily["weather_code"][i], "mixed"),
+                "snow": is_snow_code(daily["weather_code"][i]) or (_at(daily, "snowfall_sum", i) or 0) > 0,
             }
             for i in range(len(daily["time"]))
         ]
@@ -134,8 +144,11 @@ def get_weather_forecast(ctx: RunContext, city: str, start_date: Optional[str] =
     for d in days:
         ctx.weather_by_date[d["date"]] = d
     span = _span_label(days)
-    rainy = [d for d in days if (d.get("precip_pct") or 0) >= 50]
+    snowy = [d for d in days if d.get("snow")]
+    rainy = [d for d in days if (d.get("precip_pct") or 0) >= 50 and not d.get("snow")]
     title = f"Checked weather for {label}, {span}"
+    if snowy:
+        title += f" · snow {_span_label(snowy)}"
     if rainy:
         title += f" · rain likely {_span_label(rainy)}"
     result: dict[str, Any] = {"city": label, "days": days}
