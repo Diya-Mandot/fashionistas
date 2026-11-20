@@ -15,7 +15,6 @@ from app.tools.closet_tool import query_closet
 from app.tools.context import RunContext, ToolOutput
 from app.tools.gaps import find_closet_gaps
 from app.tools.outfits import build_and_score_outfits
-from app.tools.secondhand import suggest_secondhand_item
 from app.tools.weather import get_weather_forecast
 from app.trace import Timer, TraceStep, truncate
 
@@ -115,22 +114,9 @@ TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
             },
         },
     ),
-    "suggest_secondhand_item": (
-        suggest_secondhand_item,
-        "Suggest a secondhand item to fill a closet gap. Returns a suggestion_ref and marketplace search links.",
-        {
-            "type": "object",
-            "properties": {
-                "description": {"type": "string", "description": "e.g. 'black trench coat'"},
-                "why": {"type": "string"},
-                "size": {"type": "string"},
-            },
-            "required": ["description"],
-        },
-    ),
     "submit_plan": (
         submit_plan,
-        "Submit the final day-by-day plan. Reference outfits ONLY by outfit_ref and suggestions by suggestion_ref. "
+        "Submit the final day-by-day plan. Reference outfits ONLY by outfit_ref. Gaps are linked to partner-shop products by the server. "
         "The server validates every ref and returns warnings you should fix.",
         SUBMIT_PLAN_SCHEMA,
     ),

@@ -1,7 +1,7 @@
 """Plan models and server-side assembly/validation of the agent's submission.
 
 The agent submits outfit refs ("E1-A"); we map them to real item IDs, attach
-scores, weather and secondhand suggestions, and drop anything unknown
+scores, weather and partner-shop picks for gaps, and drop anything unknown
 (noting it in the trace). Model output is never trusted blindly.
 """
 
@@ -16,9 +16,8 @@ from sqlmodel import Session, select
 from app.core.compatibility import as_piece
 from app.db import engine
 from app.models import WardrobeItem
-from app.services.catalog import partner_picks
+from app.services.catalog import gap_category, partner_picks
 from app.tools.context import RunContext
-from app.tools.secondhand import links_for
 
 
 class Scores(BaseModel):
@@ -58,12 +57,6 @@ class PlanDay(BaseModel):
     events: list[PlanEvent]
 
 
-class SecondhandSuggestion(BaseModel):
-    description: str
-    why: str
-    links: list[dict[str, str]]
-
-
 class PartnerPick(BaseModel):
     """A partner-catalog product that fills the gap and passes the trust rule (score 70+)."""
 
@@ -71,6 +64,7 @@ class PartnerPick(BaseModel):
     name: str
     store: str
     price: float
+    category: Optional[str] = None
     image: Optional[str] = None
     color: Optional[str] = None
     outfit_count: int
@@ -83,7 +77,7 @@ class Gap(BaseModel):
     need: str
     severity: str
     reason: str
-    suggestion: Optional[SecondhandSuggestion] = None
+    shop_category: Optional[str] = None  # Shop page category to browse when no pick fits
     partner_picks: list[PartnerPick] = Field(default_factory=list)
 
 
@@ -154,7 +148,6 @@ SUBMIT_PLAN_SCHEMA: dict[str, Any] = {
                     "need": {"type": "string"},
                     "severity": {"type": "string", "enum": ["must-have", "nice-to-have", "optional"]},
                     "reason": {"type": "string"},
-                    "suggestion_ref": {"type": "string", "description": "A suggestion_ref from suggest_secondhand_item, e.g. 'S1'"},
                 },
                 "required": ["need", "severity", "reason"],
             },
@@ -225,25 +218,13 @@ def assemble_plan(ctx: RunContext, submission: dict[str, Any]) -> tuple[Plan, li
     gaps: list[Gap] = []
     closet = [as_piece(i) for i in closet_rows]  # for partner picks (rules only, no Claude call)
     for g in submission.get("gaps") or []:
-        sug = None
-        ref = g.get("suggestion_ref")
-        if ref and ref in ctx.suggestions:
-            s = ctx.suggestions[ref]
-            sug = SecondhandSuggestion(description=s["description"], why=s["why"], links=s["links"])
-        elif ref:
-            warnings.append(f"Dropped unknown suggestion ref {ref!r}")
-        if sug is None:
-            need = str(g.get("need", ""))
-            match = next((s for s in ctx.suggestions.values() if any(w in s["description"].lower() for w in need.lower().split() if len(w) > 3)), None)
-            if match:
-                sug = SecondhandSuggestion(description=match["description"], why=match["why"], links=match["links"])
-            elif g.get("severity") == "must-have":
-                sug = SecondhandSuggestion(description=need, why=str(g.get("reason", "")), links=links_for(f"secondhand {need}"))
+        if g.get("suggestion_ref"):
+            warnings.append(f"Ignored suggestion ref {g['suggestion_ref']!r}: gaps link to the partner shop only")
         need = str(g.get("need", ""))
         picks = [PartnerPick(**{k: p[k] for k in PartnerPick.model_fields if k in p})
-                 for p in partner_picks(need, closet, ctx.events_seen, ctx.today)]
+                 for p in partner_picks(need, closet, ctx.events_seen, ctx.today, limit=4)]
         gaps.append(Gap(need=need, severity=str(g.get("severity", "nice-to-have")), reason=str(g.get("reason", "")),
-                        suggestion=sug, partner_picks=picks))
+                        shop_category=gap_category(need), partner_picks=picks))
 
     order = {iid: n for n, iid in enumerate(used)}
     packing = [PackingEntry(item_id=i, used_on=labels) for i, labels in sorted(used.items(), key=lambda kv: (-len(kv[1]), order[kv[0]]))]
