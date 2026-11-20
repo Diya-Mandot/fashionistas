@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import { IoArrowUndoOutline, IoCloudUploadOutline, IoCreateOutline, IoRefreshOutline } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import { MicroChip } from '../components/Chip';
+import { GarmentCamera } from '../components/GarmentCamera';
 import { GlassPanel } from '../components/GlassPanel';
 import { JsonBlock } from '../components/JsonBlock';
 import { PageShell } from '../components/PageShell';
@@ -15,7 +16,7 @@ const PENDING_STEPS = ['Checking photo…', 'Google Vision is looking at it…',
 
 type Phase = 'idle' | 'working' | 'done' | 'undone' | 'error';
 
-export function Scan() {
+export function Scan({ active = true }: { active?: boolean }) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [preview, setPreview] = useState<string | null>(null);
   const [trace, setTrace] = useState<TraceStep[]>([]);
@@ -28,6 +29,10 @@ export function Scan() {
   const [dragOver, setDragOver] = useState(false);
   const [openStep, setOpenStep] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (preview) return () => URL.revokeObjectURL(preview);
+  }, [preview]);
 
   // Cycle the "in progress" label while the request runs.
   useEffect(() => {
@@ -106,40 +111,41 @@ export function Scan() {
         <p className="type-micro mb-2">Agentic closet scan</p>
         <h1 className="type-display-lg">Digital closet</h1>
         <p className="type-body-md mt-1 max-w-[560px]">
-          Upload a photo of any piece, even a messy one. Google Vision reads it, Claude classifies it,
-          and it lands in your closet with zero typing.
+          Take or upload a garment photo. The scan identifies the item and saves it to your closet.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         {/* Left: upload / preview */}
         <GlassPanel radius="hero" className="p-4">
-          {phase === 'idle' || phase === 'error' ? (
-            <label
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={onDrop}
-              className={`flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed text-center transition-colors lg:aspect-[5/6] ${
-                dragOver ? 'border-emerald bg-[rgba(52,211,153,0.10)]' : 'border-sage-200 bg-white/60 hover:bg-white/80'
-              }`}
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-forest text-white">
-                <IoCloudUploadOutline size={26} />
-              </span>
-              <span className="type-label-bold">Drop a photo or click to upload</span>
-              <span className="type-body-sm">JPG, PNG, WEBP or HEIC · up to 15 MB</span>
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                className="sr-only"
-                onChange={(e) => e.target.files?.[0] && start(e.target.files[0])}
-              />
-              {error && <span className="type-body-sm mt-2 text-error">{error}</span>}
-            </label>
+          {phase === 'idle' || phase === 'error' ? active && (
+            <GarmentCamera onScan={start}>
+              <label
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={onDrop}
+                className={`flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed text-center transition-colors lg:aspect-[5/6] ${
+                  dragOver ? 'border-emerald bg-[rgba(52,211,153,0.10)]' : 'border-sage-200 bg-white/60 hover:bg-white/80'
+                }`}
+              >
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-forest text-white">
+                  <IoCloudUploadOutline size={26} />
+                </span>
+                <span className="type-label-bold">Drop a photo or click to upload</span>
+                <span className="type-body-sm">JPG, PNG, WEBP or HEIC · up to 15 MB</span>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                  className="sr-only"
+                  onChange={(e) => e.target.files?.[0] && start(e.target.files[0])}
+                />
+                {error && <span className="type-body-sm mt-2 text-error">{error}</span>}
+              </label>
+            </GarmentCamera>
           ) : (
             <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-sand-100 lg:aspect-[5/6]">
               {(item?.image_url || preview) && (

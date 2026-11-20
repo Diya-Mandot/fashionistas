@@ -34,7 +34,7 @@ function Tabs() {
         <Closet active={tab === 'closet'} />
       </div>
       <div hidden={tab !== 'scan'}>
-        <Scan />
+        <Scan active={tab === 'scan'} />
       </div>
     </>
   );
