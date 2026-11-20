@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     # Also include the seeded demo trips (Seattle/NYC/new job). Defaults to on only
     # when no real calendar is configured.
     calendar_include_demo: Optional[bool] = None
+    # Google Calendar sync (OAuth). Create a "Web application" OAuth client in Google Cloud
+    # Console and register google_oauth_redirect_uri as an authorized redirect URI.
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    google_oauth_redirect_uri: str = "http://localhost:8000/api/calendar/google/callback"
+    # Which calendars to read: "primary", comma-separated calendar IDs, or "all" (every
+    # calendar ticked in your Google Calendar sidebar).
+    google_calendar_ids: str = "primary"
+    google_token_file: str = str(BACKEND_DIR / "private_calendar" / "google_token.json")
     uploads_dir: str = str(BACKEND_DIR / "uploads")
     database_url: str = f"sqlite:///{BACKEND_DIR / 'ecostylist.db'}"
     frontend_origin: str = "http://localhost:5173"

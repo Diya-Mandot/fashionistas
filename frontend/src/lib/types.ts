@@ -167,8 +167,14 @@ export interface CalendarEvent {
 }
 
 export interface CalendarResponse {
-  source: 'ics' | 'demo';
+  source: 'google' | 'ics' | 'demo';
   label: string;
   note: string | null;
   events: CalendarEvent[];
+}
+
+export interface GoogleCalendarStatus {
+  configured: boolean;
+  connected: boolean;
+  email: string | null;
 }

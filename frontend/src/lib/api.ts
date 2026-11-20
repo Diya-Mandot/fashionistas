@@ -1,4 +1,4 @@
-import type { AgentRun, CalendarResponse, DeviceLocation, Health, Preflight, WardrobeItem } from './types';
+import type { AgentRun, CalendarResponse, DeviceLocation, GoogleCalendarStatus, Health, Preflight, WardrobeItem } from './types';
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
@@ -7,8 +7,13 @@ async function json<T>(res: Response): Promise<T> {
 
 export const api = {
   health: () => fetch('/api/health').then((r) => json<Health>(r)),
-  calendar: (start: string, end: string) =>
-    fetch(`/api/calendar?start=${start}&end=${end}`).then((r) => json<CalendarResponse>(r)),
+  calendar: (start: string, end: string, refresh = false) =>
+    fetch(`/api/calendar?start=${start}&end=${end}${refresh ? '&refresh=true' : ''}`).then((r) => json<CalendarResponse>(r)),
+  googleCalendarStatus: () => fetch('/api/calendar/google/status').then((r) => json<GoogleCalendarStatus>(r)),
+  /** A full-page navigation (not fetch): the backend redirects to Google's consent screen and back. */
+  googleCalendarConnectUrl: (returnTo: string) => `/api/calendar/google/connect?return_to=${encodeURIComponent(returnTo)}`,
+  disconnectGoogleCalendar: () =>
+    fetch('/api/calendar/google/disconnect', { method: 'POST' }).then((r) => json<GoogleCalendarStatus>(r)),
   preflight: () => fetch('/api/health/apis').then((r) => json<Preflight>(r)),
   runs: (limit = 5) => fetch(`/api/stylist/runs?limit=${limit}`).then((r) => json<AgentRun[]>(r)),
   reset: () => fetch('/api/dev/reset', { method: 'POST' }).then((r) => json<{ items: number }>(r)),

@@ -11,7 +11,7 @@ from sqlmodel import Session
 
 from app.config import BACKEND_DIR, get_settings
 from app.core.vision import vision_configured
-from app.services.calendar_source import calendar_configured
+from app.services.calendar_source import describe as describe_calendar
 from app.db import engine, init_db
 from app.integrations.openai_client import key_configured
 from app.routers import calendar, closet, dev, health, location, scan, stylist
@@ -72,7 +72,7 @@ def health() -> dict:
         "decisions_mode": settings.decisions_mode,
         "key_configured": key_configured(),
         "vision_configured": vision_configured(),
-        "calendar": "your calendar (iCal)" if calendar_configured() else "demo calendar",
+        "calendar": describe_calendar(),
         "home_city": settings.home_city,
     }
 

@@ -11,6 +11,9 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/nonexistent/tests-disable-adc.j
 os.environ["DECISIONS_MODE"] = "mock"
 os.environ["AGENTS_MODE"] = "mock"
 os.environ["CALENDAR_ICS_URL"] = ""  # never read the real calendar in tests
+os.environ["GOOGLE_OAUTH_CLIENT_ID"] = ""
+os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = ""
+os.environ["GOOGLE_TOKEN_FILE"] = f"{_tmp}/google_token.json"  # never touch the real Google token
 os.environ["HOME_CITY"] = "San Francisco"
 
 import pytest  # noqa: E402
