@@ -140,15 +140,11 @@ export function Stylist({ active = true }: { active?: boolean }) {
       {!started ? (
         <section className="mx-auto flex min-h-screen w-full max-w-[880px] flex-col justify-center px-5 pb-16 pt-32 md:px-10">
           <p className="type-micro mb-4 text-white/80">Context-aware stylist</p>
-          <h1 className="font-display text-[40px] font-bold leading-[44px] tracking-[-1px] text-white md:text-[56px] md:leading-[60px] md:tracking-[-1.4px]">
+          <h1 className="font-display text-[40px] font-bold leading-[44px] tracking-[-1px] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.45),0_4px_24px_rgba(0,0,0,0.55)] md:text-[56px] md:leading-[60px] md:tracking-[-1.4px]">
             Tell me the plan and the vibe.
             <br />
-            <span className="text-sand">I’ll pack your closet for it.</span>
+            <span className="text-sand brightness-125">I’ll pack your closet for it.</span>
           </h1>
-          <p className="type-body-lg mt-4 max-w-[560px] text-white/80">
-            An agent checks the weather, reads your calendar and searches your closet, then lets a decision engine
-            score every outfit.
-          </p>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
           <UpcomingEvents onStyle={styleEvent} busy={styling} />

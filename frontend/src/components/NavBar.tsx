@@ -16,17 +16,21 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
   const { pathname } = useLocation();
   return (
     <header
-      className={`${overlay ? 'absolute inset-x-0 top-0 z-20' : 'relative border-b border-line-subtle bg-paper'}`}
+      className={`${overlay ? 'absolute inset-x-0 top-0 z-20' : 'relative border-b border-line-subtle bg-paper'} ${
+        light ? 'bg-gradient-to-b from-black/55 via-black/25 to-transparent pb-6' : ''
+      }`}
     >
       <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-5 py-5 md:px-10">
-        <NavLink to="/" aria-label="Home">
+        <NavLink to="/" aria-label="Home" className={light ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]' : ''}>
           <Wordmark light={light} size={24} />
         </NavLink>
         <div className="flex items-center gap-3">
         <span className="hidden md:block">
           <ModeBadge light={light} />
         </span>
-        <div className={`flex gap-1 rounded-full p-1 ${overlay ? 'glass' : 'bg-sand-100'}`}>
+        <div className={`flex gap-1 rounded-full p-1 ${
+          light ? 'border border-white/20 bg-black/35 shadow-lg backdrop-blur-xl' : overlay ? 'glass' : 'bg-sand-100'
+        }`}>
           {LINKS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -39,7 +43,7 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
                   isActive
                     ? 'bg-forest text-white'
                     : light
-                      ? 'text-white/90 hover:bg-white/15'
+                      ? 'text-white hover:bg-white/15'
                       : 'text-ink hover:bg-white'
                 }`
                 );
