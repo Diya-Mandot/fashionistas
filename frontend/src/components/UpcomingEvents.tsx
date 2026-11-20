@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 import type { CalendarEvent, CalendarResponse, GoogleCalendarStatus } from '../lib/types';
 import { GlassPanel } from './GlassPanel';
 
-const DAYS_AHEAD = 14;
+const DAYS_AHEAD = 30;
 const COLLAPSED = 5;
 
 function isoDay(d: Date) {

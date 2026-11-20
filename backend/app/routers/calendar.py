@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/calendar", tags=["calendar"])
 def get_calendar(start: Optional[date] = None, end: Optional[date] = None, refresh: bool = False) -> dict:
     """Your Google Calendar / iCal feed, or the demo calendar, for a date range. refresh=true skips the cache."""
     start = start or date.today()
-    end = end or start + timedelta(days=14)
+    end = end or start + timedelta(days=30)
     cal = events_between(start, end, refresh=refresh)
     return {"source": cal.source, "label": cal.label, "note": cal.note, "events": cal.events}
 
