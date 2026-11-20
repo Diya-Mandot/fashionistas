@@ -7,8 +7,8 @@ import { SourceBadge } from './SourceBadge';
 import { StepIcon } from './StepIcon';
 
 const API_LABEL: Record<string, string> = {
-  build_and_score_outfits: 'Decisions API',
-  find_closet_gaps: 'Decisions API',
+  build_and_score_outfits: 'Claude scoring',
+  find_closet_gaps: 'Claude scoring',
   get_weather_forecast: 'Open-Meteo',
   read_calendar: 'Calendar',
   query_closet: 'Closet',
@@ -19,7 +19,7 @@ const API_LABEL: Record<string, string> = {
 function stepLabel(s: TraceStep): string {
   if (s.kind === 'input') return 'API input';
   if (s.tool) return `Tool · ${API_LABEL[s.tool] ?? s.tool}`;
-  if (s.kind === 'thinking' || s.kind === 'message') return 'Agents API';
+  if (s.kind === 'thinking' || s.kind === 'message') return 'Claude agent';
   return s.kind;
 }
 
@@ -95,7 +95,7 @@ export function AgentTrace({ run }: { run: AgentRun | null }) {
                   {s.decision?.winner_scores && (
                     <div className="mt-3 rounded-2xl bg-white/75 p-3">
                       <p className="type-micro mb-2">
-                        Winner · {s.decision.candidates_scored} scored · {s.decision.questions} Decisions questions
+                        Winner · {s.decision.candidates_scored} scored · {s.decision.questions} scoring questions
                       </p>
                       <ScoreBreakdown scores={s.decision.winner_scores} compact />
                     </div>

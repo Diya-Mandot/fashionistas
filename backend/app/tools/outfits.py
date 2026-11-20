@@ -1,5 +1,5 @@
 """build_and_score_outfits: the ported rules generator narrows the closet to ≤18
-sensible combos, then the Decisions API scores each one on five criteria.
+sensible combos, then Claude scores each one on five criteria.
 
 Candidates go to Decisions by index only; results come back to the agent as
 outfit refs ("E2-A"). Item IDs never leave the server.
@@ -154,10 +154,10 @@ def build_and_score_outfits(
             "weather_used": w.model_dump(),
             "candidates_scored": len(candidates),
             "ranking": "overall score, lightly penalising pieces already planned earlier this trip",
-            "scored_by": f"Decisions API ({scored.meta.source})",
+            "scored_by": f"Claude ({scored.meta.source})",
             "options": options,
         },
-        title=f"Scored {len(candidates)} outfit{'s' if len(candidates) != 1 else ''} for {event['name']} (Decisions API)",
+        title=f"Scored {len(candidates)} outfit{'s' if len(candidates) != 1 else ''} for {event['name']} (Claude)",
         detail=f"Winner {winner['overall']:.2f} overall · " + options[0]["why"]
         + (" · Rotated to avoid repeating pieces from earlier this trip" if rotated else "")
         + (f" · {scored.meta.note}" if scored.meta.note else ""),

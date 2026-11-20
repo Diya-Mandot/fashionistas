@@ -5,10 +5,10 @@
 
 Each photo is converted to JPEG (HEIC supported), downscaled, copied into
 seed_images/photos/, and classified with the same pipeline as the Scan page
-(Google Vision if configured -> Decisions API classify_item; mock without a key).
+(Google Vision if configured -> Claude classify_item; mock without a key).
 Results go to seed_images/photos/manifest.json, which seed.py reads, so every
 photo becomes a closet item that survives `make reset`. Edit manifest.json by hand
-to fix anything. Re-run with --reclassify after adding OPENAI_API_KEY to upgrade
+to fix anything. Re-run with --reclassify after adding ANTHROPIC_API_KEY to upgrade
 mock classifications to live ones (hand-labelled entries are kept unless
 --include-manual is passed).
 """
@@ -143,7 +143,7 @@ def main() -> int:
         print(f"Heads up: {wet} classified as WATERPROOF outerwear, so the rain-gap demo won't trigger. "
               "Set waterproof to false in manifest.json if that's wrong.")
     if any(e.get("classified_by", {}).get("decisions") == "mock" for e in extras):
-        print("Some items were classified by the MOCK classifier (no API key). After adding OPENAI_API_KEY run: "
+        print("Some items were classified by the MOCK classifier (no API key). After adding ANTHROPIC_API_KEY run: "
               "uv run python scripts/import_photos.py --reclassify")
     print("Now run `make reset` (with the backend running) to load them.")
     return 0

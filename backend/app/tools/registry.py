@@ -1,6 +1,6 @@
 """Tool registry: each tool is a plain Python function + a JSON schema.
 
-The schemas are what the Agents API sees; dispatch() runs a call, times it and
+The schemas are what the Claude agent sees; dispatch() runs a call, times it and
 records a trace step. The agent decides the order; nothing here sequences tools.
 """
 
@@ -77,7 +77,7 @@ TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
     ),
     "build_and_score_outfits": (
         build_and_score_outfits,
-        "For one event: build candidate outfits from the closet and have the Decisions API score them on vibe, "
+        "For one event: build candidate outfits from the closet and have Claude score them on vibe, "
         "dress code, weather, color harmony and freshness. Returns the top options as outfit_refs.",
         {
             "type": "object",
@@ -99,7 +99,7 @@ TOOLS: dict[str, tuple[Callable[..., ToolOutput], str, dict[str, Any]]] = {
     "find_closet_gaps": (
         find_closet_gaps,
         "Detect needs the closet can't meet for these events and forecast (e.g. rain and no waterproof layer). "
-        "Severity is rated by the Decisions API.",
+        "Severity is rated by Claude.",
         {
             "type": "object",
             "properties": {

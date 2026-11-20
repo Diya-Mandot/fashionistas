@@ -1,4 +1,4 @@
-"""find_closet_gaps: rules spot needs the closet can't meet; the Decisions API
+"""find_closet_gaps: rules spot needs the closet can't meet; Claude
 rates each one's severity (must-have / nice-to-have)."""
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ def find_closet_gaps(
     ctx.gaps = gaps
     top = gaps[0]
     return ToolOutput(
-        result={"gaps": gaps, "severity_rated_by": f"Decisions API ({rated.meta.source})"},
+        result={"gaps": gaps, "severity_rated_by": f"Claude ({rated.meta.source})"},
         title=f"Found gap{'s' if len(gaps) > 1 else ''}: {', '.join(g['need'] for g in gaps)}",
         detail=f"{top['need']} rated {top['severity']} · {top['reason']}" + (f" · {rated.meta.note}" if rated.meta.note else ""),
         source=rated.meta.source,

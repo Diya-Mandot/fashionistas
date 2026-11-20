@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from app.agent.runner import start_run, wait
 from app.config import get_settings
 from app.db import get_session
-from app.integrations.openai_client import key_configured
+from app.integrations.anthropic_client import key_configured
 from app.models import AgentRunRecord
 
 router = APIRouter(prefix="/api/stylist", tags=["stylist"])

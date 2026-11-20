@@ -1,12 +1,12 @@
 # Fashionistas: Context-Aware Stylist
 
-Hackathon **Track 1: Agents in Action**. Built on the OpenAI **Agents API** and **Decisions API**.
+Hackathon **Track 1: Agents in Action**. Built on **Claude** (Anthropic Messages API): a tool-use agent loop plus structured-output scoring and classification.
 
 Type something messy like *"Packing for a tech conference in Seattle Tue–Thu. There's a fancy dinner Tuesday night and I want to look professional but a little edgy."*
 
-The **agent** decides for itself to check the weather, read your calendar and search your closet. It builds candidate outfits for each event and asks the **Decisions API** to score them on five criteria: vibe, dress code, weather, color harmony and freshness. It flags closet gaps, like a rainy forecast with no waterproof layer, and suggests secondhand fixes. You get back a day-by-day packing plan. A live **Agent Trace** shows every input, tool call, decision and result.
+The **agent** decides for itself to check the weather, read your calendar and search your closet. It builds candidate outfits for each event and asks **Claude** to score them on five criteria: vibe, dress code, weather, color harmony and freshness. It flags closet gaps, like a rainy forecast with no waterproof layer, and suggests secondhand fixes. You get back a day-by-day packing plan. A live **Agent Trace** shows every input, tool call, decision and result.
 
-The **Scan** tab works the same way. Upload a photo, Google Vision reads it, the Decisions API classifies it, and it's saved to your closet with no typing.
+The **Scan** tab works the same way. Upload a photo, Google Vision reads it, Claude classifies it, and it's saved to your closet with no typing.
 
 See [PLAN.md](PLAN.md) for the full design.
 
@@ -17,7 +17,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Node 20+.
 ```bash
 uv python install 3.11                 # macOS system Python is too old
 make install                           # backend deps (uv) + frontend deps (npm)
-cp backend/.env.example backend/.env   # then paste OPENAI_API_KEY (see below)
+cp backend/.env.example backend/.env   # then paste ANTHROPIC_API_KEY (see below)
 make dev                               # backend :8000, frontend :5173
 ```
 
@@ -34,15 +34,26 @@ make reset       # restore the demo closet and clear runs
 
 ### API key
 
-One `OPENAI_API_KEY` covers both APIs. Create it at https://platform.openai.com/api-keys **in the project that holds the hackathon credits**. The Agents API needs `api.agents.read`, `api.agents.write` and `api.responses.write`. To check that the key loaded without printing it, run `cd backend && uv run python check_key.py`.
+One `ANTHROPIC_API_KEY` covers both the agent and the scoring calls. Create it at https://platform.claude.com/settings/keys. Both default to `claude-opus-5-5` at `low` effort; override with `AGENTS_MODEL` / `DECISIONS_MODEL` and `AGENTS_EFFORT` / `DECISIONS_EFFORT`. To check that the key loaded without printing it, run `cd backend && uv run python check_key.py`.
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
+
+## Deploy (Railway)
+
+One Railway service runs everything: the [Dockerfile](Dockerfile) builds the frontend and serves it and the API from uvicorn, the same as `make start`. Every push to the connected branch redeploys.
+
+1. In Railway: **New Project → Deploy from GitHub repo**, then pick this repo. Railway reads [railway.json](railway.json) and builds the Dockerfile. In the service's **Settings → Source**, set the branch to `main`.
+2. **Add a volume** (right-click the service → Attach volume) mounted at `/data`. Without it, the closet, scans and recordings are wiped on every deploy.
+3. **Variables:** `DATA_DIR=/data`, `ANTHROPIC_API_KEY`, `DEV_ENDPOINTS=false` (otherwise anyone can reset the closet), and optionally `GOOGLE_VISION_API_KEY`, `CALENDAR_ICS_URL` and `HOME_CITY`. For Google Calendar sync, also set `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` and `GOOGLE_OAUTH_REDIRECT_URI=https://<your-domain>/api/calendar/google/callback`, and add that same URI to the OAuth client in Google Cloud Console. The token is saved under `/data/private_calendar/`.
+4. **Settings → Networking → Generate Domain** to get a public `*.up.railway.app` URL.
+
+Keep it to one replica, since SQLite and in-progress plan runs live on that one machine. There's no login, so anyone with the URL can run plans on your Anthropic credits. Replay recordings are gitignored, so the deployed app starts with none; replay only works for calls it has made live itself.
 
 ## Calendar and location
 
 - **Google Calendar sync.** Put an OAuth client ID and secret in `backend/.env` (`GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`; setup below), restart the backend, and click **Connect Google Calendar** on the home page. Google asks for read-only calendar access. The refresh token is saved to `backend/private_calendar/google_token.json` (git-ignored), and events are read live from the Calendar API, cached for 2 minutes. The ↻ button forces a sync. Cancelled events, events you declined, and working-location, out-of-office and focus-time blocks are skipped. `GOOGLE_CALENDAR_IDS=all` reads every calendar ticked in your Google Calendar sidebar instead of only the primary one. If access is revoked or expires, the card says so, offers to reconnect, and the agent uses the demo calendar in the meantime.
   - *Getting the keys:* in [Google Cloud Console](https://console.cloud.google.com/), create or pick a project. Then: (1) **APIs & Services → Library**, enable **Google Calendar API**. (2) **Google Auth Platform / OAuth consent screen**, choose *External*, fill in the app name and emails, add the scope `.../auth/calendar.readonly`, and under **Audience → Test users** add every Google account that will connect. (3) **Credentials → Create credentials → OAuth client ID → Web application**, and under *Authorized redirect URIs* add exactly `http://localhost:8000/api/calendar/google/callback`. Copy the client ID and secret into `backend/.env`. While the app is in *Testing*, Google shows an "unverified app" warning (click *Continue*), and refresh tokens expire after 7 days, so you'll need to reconnect weekly. Publishing the app removes that limit.
-- **Calendar via iCal link (no OAuth).** Set `CALENDAR_ICS_URL` in `backend/.env` to your calendar's private iCal address, or to a folder holding an unzipped Google Calendar export (`backend/private_calendar/`, which is git-ignored; exports are a snapshot that doesn't update). In Google Calendar that's Settings → your calendar → *Integrate calendar* → **Secret address in iCal format**; Apple and Outlook ICS links work too. The agent's `read_calendar` tool then reads your real events, including recurring ones, and infers dress-code hints from titles or a "Dress code: …" line in the description. Without the URL, or if the feed fails, it uses the seeded demo calendar and says so in the trace. To show the demo trips alongside your events, set `CALENDAR_INCLUDE_DEMO=true`. Event titles and locations are sent to the Agents API as part of the plan.
+- **Calendar via iCal link (no OAuth).** Set `CALENDAR_ICS_URL` in `backend/.env` to your calendar's private iCal address, or to a folder holding an unzipped Google Calendar export (`backend/private_calendar/`, which is git-ignored; exports are a snapshot that doesn't update). In Google Calendar that's Settings → your calendar → *Integrate calendar* → **Secret address in iCal format**; Apple and Outlook ICS links work too. The agent's `read_calendar` tool then reads your real events, including recurring ones, and infers dress-code hints from titles or a "Dress code: …" line in the description. Without the URL, or if the feed fails, it uses the seeded demo calendar and says so in the trace. To show the demo trips alongside your events, set `CALENDAR_INCLUDE_DEMO=true`. Event titles and locations are sent to Claude as part of the plan.
 - **Location.** Click **Use my location** under the prompt. The browser asks permission, and the backend turns the coordinates into a city using OpenStreetMap. When a message doesn't name a destination, the agent plans for that city, and the weather tool uses your exact coordinates. Without it, `HOME_CITY` is used.
 
 ## The demo closet
@@ -70,7 +81,7 @@ In `live` mode the fallback is automatic: live, then replay, then mock. Every tr
 
 ```
 backend/   FastAPI, SQLModel + SQLite (create_all, no migrations), Python 3.11 via uv
-  app/integrations/agents_client.py    run_agent(): Agents API session, function tools, requires_action loop
+  app/integrations/agents_client.py    run_agent(): Claude tool-use loop (tool_use -> local tool -> tool_result)
   app/integrations/decisions_client.py score_outfits / classify_item / rate_gaps
   app/tools/                           the agent's tools (function + JSON schema each)
   app/agent/                           run orchestration (background thread, persisted trace), plan validation
@@ -86,8 +97,8 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind; pages Stylist, Closet,
 | `get_weather_forecast` | Open-Meteo, cached 30 min. Beyond the forecast window it returns the furthest available days; on failure it uses a seasonal average. |
 | `read_calendar` | Your connected Google Calendar (OAuth) or iCal feed; otherwise a demo calendar seeded relative to today. |
 | `query_closet` | Closet items with attributes and wear history. |
-| `build_and_score_outfits` | Ported generator, then the Decisions API: 5 `score` questions per candidate, candidates sent **by index only**. |
-| `find_closet_gaps` | Rules detect gaps; the Decisions API rates each must-have / nice-to-have. |
+| `build_and_score_outfits` | Ported generator, then Claude: 5 `score` questions per candidate, candidates sent **by index only**. |
+| `find_closet_gaps` | Rules detect gaps; Claude rates each must-have / nice-to-have. |
 | `suggest_secondhand_item` | Depop, ThredUp, Poshmark and eBay search links. No scraping. |
 | `submit_plan` | The server maps outfit refs to real item IDs and drops unknown refs/IDs with a warning. |
 

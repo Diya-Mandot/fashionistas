@@ -13,7 +13,7 @@ from app.config import BACKEND_DIR, get_settings
 from app.core.vision import vision_configured
 from app.services.calendar_source import describe as describe_calendar
 from app.db import engine, init_db
-from app.integrations.openai_client import key_configured
+from app.integrations.anthropic_client import key_configured
 from app.routers import calendar, closet, dev, health, location, scan, stylist
 from app.seed import seed_if_empty
 
@@ -25,7 +25,7 @@ SEED_IMAGES_DIR = BACKEND_DIR / "seed_images"
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    (BACKEND_DIR / "logs").mkdir(exist_ok=True)
+    Path(settings.logs_dir).mkdir(parents=True, exist_ok=True)
     init_db()
     with Session(engine) as session:
         seed_if_empty(session)
