@@ -173,7 +173,7 @@ export function BuyCheck({ active = true }: { active?: boolean }) {
 
         {/* Right: progress, then the verdict */}
         <div className="flex min-w-0 flex-col gap-4">
-          {phase === 'paywall' && paywall && <PaywallNotice paywall={paywall} />}
+          {phase === 'paywall' && paywall && <PaywallNotice paywall={paywall} onOverride={reset} />}
           {phase === 'idle' && !urlCheck && (
             <GlassPanel radius="hero" className="p-5">
               <p className="type-micro mb-3">What you get</p>
@@ -426,12 +426,40 @@ function OutfitPreview({ items }: { items: WardrobeItem[] }) {
   );
 }
 
-function PaywallNotice({ paywall }: { paywall: Paywall }) {
+function PaywallNotice({ paywall, onOverride }: { paywall: Paywall; onOverride: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  // Testing only: gives back the free checks; the limit kicks in again after the next few.
+  const override = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      await api.resetBuyChecks();
+      onOverride();
+    } catch {
+      setErr('Override failed. Are dev endpoints on (DEV_ENDPOINTS)?');
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <GlassPanel radius="hero" className="p-5">
       <p className="type-micro mb-2">Free plan</p>
       <h2 className="type-display-sm">You've used your {paywall.limit} free checks this month.</h2>
       <p className="type-body-md mt-2">Pro gives you unlimited checks. Upgrades are coming soon.</p>
+      {import.meta.env.DEV && (
+        <div className="mt-4 border-t border-dashed border-line pt-3">
+          <button
+            type="button"
+            onClick={override}
+            disabled={busy}
+            className="rounded-full border border-dashed border-ink/40 px-3.5 py-1.5 text-[12px] font-semibold text-ink hover:bg-white disabled:opacity-50"
+          >
+            {busy ? 'Resetting…' : `Dev: reset ${paywall.limit} free checks`}
+          </button>
+          {err && <p className="mt-2 text-[12px] text-muted">{err}</p>}
+        </div>
+      )}
     </GlassPanel>
   );
 }

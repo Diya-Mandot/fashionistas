@@ -108,6 +108,20 @@ def test_pro_skips_the_limit_and_reset_clears_it(client):
     assert res.status_code == 200 and res.json()["usage"] == {"checks_used": 1, "limit": 3, "pro": False}
 
 
+def test_dev_override_restores_free_checks_and_the_limit_returns(client):
+    for _ in range(3):
+        assert _check(client).status_code == 200
+    assert _check(client).status_code == 402
+
+    res = client.post("/api/dev/reset-buy-checks")
+    assert res.json() == {"checks_used": 0, "limit": 3, "pro": False}
+    for n in range(1, 4):
+        r = _check(client)
+        assert r.status_code == 200 and r.json()["usage"]["checks_used"] == n
+    assert _check(client).json() == {"paywall": "buy_check", "used": 3, "limit": 3}
+    assert client.get("/api/buy-check/" + r.json()["check_id"]).status_code == 200  # past checks kept
+
+
 def test_get_returns_a_past_check(client):
     body = _check(client).json()
     again = client.get(f"/api/buy-check/{body['check_id']}").json()

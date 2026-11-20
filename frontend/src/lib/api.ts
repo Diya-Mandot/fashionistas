@@ -80,6 +80,11 @@ export const api = {
     if (!res.ok) throw new Error(await errorText(res));
     return res.json() as Promise<BuyCheckResponse>;
   },
+  /** Dev/testing override: restores the free Should I Buy checks; the limit applies again after. */
+  resetBuyChecks: () =>
+    fetch('/api/dev/reset-buy-checks', { method: 'POST' }).then((r) =>
+      json<{ checks_used: number; limit: number; pro: boolean }>(r),
+    ),
   getBuyCheck: (id: string) => fetch(`/api/buy-check/${id}`).then((r) => json<BuyCheckResponse>(r)),
   keepBuyCheck: async (id: string): Promise<{ item: WardrobeItem }> => {
     const res = await fetch(`/api/buy-check/${id}/keep`, { method: 'POST' });

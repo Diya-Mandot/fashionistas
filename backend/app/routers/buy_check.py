@@ -31,6 +31,8 @@ router = APIRouter(prefix="/api/buy-check", tags=["buy-check"])
 
 FREE_CHECKS = 3
 PRO_FLAG = "pro"
+# Dev override: only checks after this ISO timestamp count toward the free limit.
+USAGE_RESET_FLAG = "buy_check_usage_reset_at"
 NEW_ITEM_ID = "new"  # id of the not-yet-owned item inside top_outfits
 
 
@@ -50,14 +52,29 @@ def is_pro(session: Session) -> bool:
     return bool(flag and flag.value == "1")
 
 
+def _aware(dt: datetime) -> datetime:
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)  # SQLite drops tzinfo
+
+
 def checks_this_month(session: Session, now: datetime | None = None) -> int:
     now = now or datetime.now(timezone.utc)
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    reset = session.get(AppFlag, USAGE_RESET_FLAG)
+    if reset and reset.value:
+        start = max(start, _aware(datetime.fromisoformat(reset.value)))
     count = 0
     for created in session.exec(select(BuyCheck.created_at)):
-        created = created if created.tzinfo else created.replace(tzinfo=timezone.utc)  # SQLite drops tzinfo
-        count += created >= start
+        count += _aware(created) >= start
     return count
+
+
+def reset_usage(session: Session, now: datetime | None = None) -> None:
+    """Dev override: start the free count over without deleting past checks."""
+    stamp = (now or datetime.now(timezone.utc)).isoformat()
+    flag = session.get(AppFlag, USAGE_RESET_FLAG) or AppFlag(key=USAGE_RESET_FLAG)
+    flag.value = stamp
+    session.add(flag)
+    session.commit()
 
 
 def usage(session: Session) -> dict[str, Any]:
