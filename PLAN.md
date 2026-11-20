@@ -86,7 +86,7 @@ The calendar reads a real iCal feed when `CALENDAR_ICS_URL` is set, and the demo
 
 - System Python is 3.9, so we use `uv` to pin Python 3.11.
 - Open-Meteo forecasts only about 16 days out, so demo trips are seeded 3–10 days from today.
-- The demo closet is 22 real product photos stored locally in `backend/seed_images/photos/` (hand-labelled manifest), not hotlinked.
+- The demo closet is 41 real product photos (openly licensed, credited in `CREDITS.md`) stored locally in `backend/seed_images/photos/` (hand-labelled manifest), not hotlinked.
 - HEIC support needs `pillow-heif`. If it won't install, HEIC is disabled and nothing else breaks.
 - A live plan can take 20–40 seconds. The streamed trace covers the wait.
 
