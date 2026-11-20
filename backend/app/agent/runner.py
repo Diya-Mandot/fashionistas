@@ -5,15 +5,21 @@ from __future__ import annotations
 
 import threading
 from datetime import date, datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
-from sqlmodel import Session
+import anthropic
+from sqlmodel import Session, select
 
 from app.agent.plan import fallback_submission
 from app.config import get_settings
+from app.core.outfit_generator import normalize_color
+from app.core.vision import InvalidImageError, ValidatedImage, load_profile_photo
 from app.db import engine
 from app.integrations.agents_client import build_goal, run_agent
-from app.models import AgentRunRecord
+from app.integrations.anthropic_client import ApiNotConfigured
+from app.integrations.palette_client import analyze_palette, load_palette_evidence
+from app.models import AgentRunRecord, WardrobeItem
 from app.services.location import reverse_geocode
 from app.tools.context import RunContext
 from app.tools.registry import dispatch, submit_plan, tool_specs
@@ -50,7 +56,11 @@ class _Persist:
             session.commit()
 
 
-def start_run(message: str, home_city: Optional[str] = None, location: Optional[dict[str, Any]] = None) -> str:
+def start_run(
+    message: str, home_city: Optional[str] = None, location: Optional[dict[str, Any]] = None,
+    preferred_colors: tuple[str, ...] = (),
+    portrait: Optional[ValidatedImage] = None,
+) -> str:
     home = (home_city or "").strip()
     coords = None
     if location:
@@ -66,7 +76,8 @@ def start_run(message: str, home_city: Optional[str] = None, location: Optional[
         session.add(rec)
         session.commit()
         run_id = rec.id
-    t = threading.Thread(target=_execute, args=(run_id, message, home, coords), daemon=True)
+    colors = frozenset(filter(None, map(normalize_color, preferred_colors)))
+    t = threading.Thread(target=_execute, args=(run_id, message, home, coords, colors, portrait), daemon=True)
     _threads[run_id] = t
     t.start()
     return run_id
@@ -78,15 +89,95 @@ def wait(run_id: str, timeout: float = 240) -> None:
         t.join(timeout)
 
 
-def _execute(run_id: str, message: str, home: str, coords: Optional[tuple[float, float]] = None) -> None:
+def _prepare_palette(ctx: RunContext, portrait: Optional[ValidatedImage]) -> None:
+    manual = sorted(ctx.preferred_colors)
+    configured_path = get_settings().stylist_profile_photo_path.strip()
+    if portrait is None and configured_path:
+        try:
+            portrait = load_profile_photo(Path(configured_path))
+        except (InvalidImageError, OSError):
+            ctx.emit(TraceStep(
+                kind="fallback", tool="personal_palette", title="Profile photo unavailable",
+                detail="The stylist could not read the configured profile photo.", source="local",
+            ))
+    if portrait is None:
+        if manual:
+            ctx.emit(TraceStep(
+                kind="tool_call", tool="personal_palette", title="Used your preferred colors",
+                detail=", ".join(manual), source="local", result={"colors_used_for_ranking": manual},
+            ))
+        return
+
+    with Session(engine) as session:
+        colors = session.exec(
+            select(WardrobeItem.color)
+            .where(WardrobeItem.category.in_(("tops", "dresses", "outerwear", "activewear")))
+            .distinct().order_by(WardrobeItem.color).limit(60)
+        )
+        closet_colors = [color[:40] for color in colors if color and color.strip()]
+    timer = Timer()
+    evidence, evidence_source = load_palette_evidence()
+    step = TraceStep(
+        kind="tool_call", tool="personal_palette", title="Checking clothing colors from your photo",
+        args={"profile_photo": True, "preferred_colors": manual, "closet_color_count": len(closet_colors),
+              "research_source": evidence_source, "research_version": evidence.version,
+              "research": evidence.model_dump(mode="json", exclude_none=True)["sources"]}, status="running",
+    )
+    ctx.emit(step)
+    try:
+        advice = analyze_palette(portrait, ctx.preferred_colors, closet_colors, evidence)
+    except ApiNotConfigured:
+        detail = "Live Claude scoring and an API key are required for photo suggestions."
+    except (anthropic.APIError, ValueError, OSError):
+        detail = "Claude could not return a photo palette for this run."
+    else:
+        suggested = frozenset(filter(None, map(normalize_color, advice.colors)))
+        applied = suggested if advice.confidence == "moderate" else frozenset()
+        assessment = f"{advice.confidence.capitalize()} confidence. {advice.summary}"
+        provenance = {
+            "llamapress": "LlamaPress research",
+            "bundled": "Bundled research",
+            "bundled_fallback": "Bundled research. LlamaPress was unavailable or returned invalid data.",
+        }[evidence_source]
+        detail = f"{provenance} · {assessment}"
+        if applied:
+            detail = f"{', '.join(sorted(applied))} · {detail}"
+        ctx.preferred_colors |= applied
+        ctx.note_source("palette", "live")
+        ctx.emit(step.model_copy(update={
+            "kind": "decision",
+            "title": "Suggested colors from your photo" if applied else "Photo did not give a reliable palette",
+            "detail": detail,
+            "result": {"confidence": advice.confidence, "summary": advice.summary,
+                       "photo_suggestions": sorted(applied), "colors_used_for_ranking": sorted(ctx.preferred_colors)},
+            "source": "live", "status": "done", "duration_ms": timer.ms,
+        }))
+        return
+
+    ctx.emit(step.model_copy(update={
+        "kind": "fallback", "title": "Photo colors unavailable", "detail": detail,
+        "result": {"colors_used_for_ranking": manual}, "source": "local", "status": "done",
+        "duration_ms": timer.ms,
+    }))
+
+
+def _execute(
+    run_id: str, message: str, home: str, coords: Optional[tuple[float, float]] = None,
+    preferred_colors: frozenset[str] = frozenset(),
+    portrait: Optional[ValidatedImage] = None,
+) -> None:
     p = _Persist(run_id)
     total = Timer()
     today = date.today()
-    ctx = RunContext(run_id=run_id, message=message, today=today, home_city=home, emit=p.emit, home_coords=coords)
+    ctx = RunContext(
+        run_id=run_id, message=message, today=today, home_city=home, emit=p.emit, home_coords=coords,
+        preferred_colors=preferred_colors,
+    )
     p.emit(TraceStep(kind="input", title="Your request", detail=message, source="local",
                      args={"message": message, "home_city": home, "device_location": bool(coords)}))
     agent_source = "mock"
     try:
+        _prepare_palette(ctx, portrait)
         run = run_agent(
             build_goal(today, home, located=bool(coords)),
             tool_specs(),

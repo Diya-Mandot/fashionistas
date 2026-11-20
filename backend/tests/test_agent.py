@@ -132,3 +132,41 @@ def test_brunch_is_not_a_workout():
     assert is_athletic("Morning run") and is_athletic("Running club") and is_athletic("gym")
     assert _hint("Networking Brunch", "") == "smart casual"
     assert _hint("Trail run", "") == "athletic"
+
+
+def test_preferred_color_changes_ranking_without_changing_color_harmony(client):
+    for item in client.get("/api/closet").json():
+        assert client.delete(f"/api/closet/{item['id']}").status_code == 204
+    tops = {}
+    for category, name, color in [
+        ("tops", "Cotton Shirt", "Grey"),
+        ("tops", "Cotton Shirt", "Navy Blue"),
+        ("bottoms", "Pants", "Black"),
+        ("shoes", "Sneakers", "Black"),
+    ]:
+        item = client.post("/api/closet", json={"category": category, "name": name, "color": color})
+        assert item.status_code == 201
+        if category == "tops":
+            tops[item.json()["id"]] = color
+
+    def winner(preferred_colors):
+        plan = client.post("/api/stylist/plan", json={
+            "message": "Lunch in Seattle", "wait": True, "preferred_colors": preferred_colors,
+        }).json()["plan"]
+        return plan["days"][0]["events"][0]["outfit"]
+
+    weather_mod._forecast_cache.clear()
+    weather_mod._geo_cache.clear()
+    with respx.mock(assert_all_called=False) as router:
+        _mock_open_meteo(router, start=date.today().isoformat(), precip=0)
+        baseline = winner([])
+        baseline_shirt = next(item_id for item_id in baseline["item_ids"] if item_id in tops)
+        preferred_shirt = next(item_id for item_id in tops if item_id != baseline_shirt)
+        preferred_color = "Navy" if tops[preferred_shirt] == "Navy Blue" else "Gray"
+        personalized = winner([preferred_color])
+
+    assert preferred_shirt in personalized["item_ids"]
+    assert personalized["palette_matches"] == [preferred_color.lower()]
+    assert personalized["scores"]["color"] == baseline["scores"]["color"]
+    assert personalized["scores"]["palette"] == 1.0
+    assert baseline["scores"]["palette"] is None

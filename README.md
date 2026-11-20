@@ -1,4 +1,4 @@
-# Fashionistas: Context-Aware Stylist
+# Wearth: Context-Aware Stylist
 
 Hackathon **Track 1: Agents in Action**. Built on **Claude** (Anthropic Messages API): a tool-use agent loop plus structured-output scoring and classification.
 
@@ -37,6 +37,55 @@ make reset       # restore the demo closet and clear runs
 One `ANTHROPIC_API_KEY` covers both the agent and the scoring calls. Create it at https://platform.claude.com/settings/keys. Both default to `claude-opus-5-5` at `low` effort; override with `AGENTS_MODEL` / `DECISIONS_MODEL` and `AGENTS_EFFORT` / `DECISIONS_EFFORT`. To check that the key loaded without printing it, run `cd backend && uv run python check_key.py`.
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
+
+### Import clothing purchases
+
+**MCP.** Run Wearth as a local stdio MCP server from the backend directory. The app and server must use the same `DATABASE_URL` or `DATA_DIR`. An MCP client can use `list_closet` and `import_purchase`. An email workflow with access to both tools can pass a confirmed receipt to `import_purchase`.
+
+```json
+{
+  "mcpServers": {
+    "fashionistas": {
+      "command": "/absolute/path/to/fashionistas/backend/.venv/bin/python",
+      "args": ["-m", "app.mcp_server"],
+      "cwd": "/absolute/path/to/fashionistas/backend"
+    }
+  }
+}
+```
+
+If your MCP client has no `cwd` field, use a launcher that changes to the backend directory before it runs Python. A sample `import_purchase` argument is:
+
+```json
+{"receipt":{"merchant":"Example Shop","order_number":"A-123","items":[{"name":"Navy cotton shirt","category":"tops","color":"navy","quantity":1}]}}
+```
+
+**Automatic Gmail import.** This runs in the backend and works without an MCP client.
+
+1. Enable Gmail API in your Google Cloud project. Create a **Desktop app** OAuth client and download its JSON file. If the consent screen is in testing, add your Gmail account as a test user.
+2. Create a label named `Fashionistas/Receipts` in Gmail. Set up filters to label order confirmations from the stores you trust. Label a test receipt to check the setup.
+3. From the backend directory, run `uv run python -m scripts.connect_gmail_receipts /path/to/google-desktop-client.json`. Sign in to Google and grant read-only access. The script stores the token under `backend/private_email/` by default.
+4. Set `GMAIL_RECEIPTS_ENABLED=true` and `ANTHROPIC_API_KEY` in `backend/.env`. Restart the backend. It checks the label at startup and every five minutes by default.
+
+The Gmail permission grants read access. Wearth fetches only messages with the selected label from the configured lookback window, which defaults to 14 days. It sends the subject, sender, and capped message text to Claude, which extracts clothing items. Wearth stores the closet items and import identifiers. It does not store the email body, open links, or fetch attachments. The importer skips ambiguous orders, non-clothing purchases, and recognized cancellations. It deduplicates imports by merchant and order number. The closet marks imported garments **From receipt**.
+
+### Color harmony and profile photos
+
+For a single-user backend with an existing profile photo, set `STYLIST_PROFILE_PHOTO_PATH` in `backend/.env` to the absolute path to that file. Use a private path outside the app's public media directories. Restart the backend after changing the setting. An integration can also pass a photo per run through `POST /api/stylist/plan/photo`.
+
+When you start a plan, Wearth sends the resized portrait, closet color labels, and research summaries to Claude. The **Agent Trace** stores the color assessment. This option needs an Anthropic API key and `DECISIONS_MODE=live`. If Claude cannot assess the photo with moderate confidence, the stylist still returns the outfit plan and its garment color harmony score.
+
+**Palette match** appears under **Color harmony** when there is a palette and the outfit has labeled garments near the face. It shows the share of those garments that match the palette. The ranker adds up to 0.08 to the outfit's ranking score. The Agent Trace shows the exact addition.
+
+- [Clothing Aesthetics](https://journals.sagepub.com/doi/10.1177/20416695211053361) tested simulated clothing colors against 12 faces of White women. It supports testing color near the face and has limited coverage of skin tones.
+- The photo prompt uses two CC BY 4.0 data summaries. It counts the cool-hue column by face group for Experiment 1 in [Perrett and Sprengelmeyer's trial data](https://doi.org/10.6084/m9.figshare.14596905.v1). It also averages the Experiment 2 warmth columns by eye-color group, across participants, tasks, and hair conditions, in [Perrett's participant means](https://doi.org/10.6084/m9.figshare.20795986.v1).
+- [Outfits for You (O4U)](https://github.com/AemikaChow/AiDLab-fAshIon-Data) provides 29,352 outfits with expert annotations that include skin color. The authors restrict the data to academic use without further permission.
+- [Polyvore Outfits](https://github.com/mvasil/fashion-compatibility) provides outfit compatibility benchmarks. [Learning Color Compatibility in Fashion Outfits](https://arxiv.org/abs/2007.02388) uses this benchmark to study outfit colors.
+- [Color Compatibility From Large Datasets](https://www.dgp.toronto.edu/~donovan/color/) provides human-rated five-color themes under CC BY-NC-SA. The themes represent general palette preferences.
+
+**LlamaPress research source.** Copy [the versioned research file](backend/app/data/palette-evidence.json) to `public/fashionistas/palette-evidence.json` in your LlamaPress Rails app. Verify that the app-only URL serves the JSON at that path. Set `LLAMAPRESS_PALETTE_URL` in `backend/.env` to the HTTPS URL of that file, then restart Wearth.
+
+Wearth downloads the research with a GET request. It sends no portrait or closet information with that request. Claude uses the research and profile photo to suggest colors. If the LlamaPress file is unavailable or invalid, Wearth uses the bundled evidence and records the source in the trace.
 
 ## Deploy (Railway)
 
@@ -119,6 +168,8 @@ frontend/  React + Vite + TypeScript (strict) + Tailwind; pages Stylist, Closet,
 Demo closet photos are stored in the repo under `backend/seed_images/photos/`, so the demo never depends on image hosts.
 
 ## 2-minute demo script
+
+**Laptop camera scan.** Open the app in a browser over HTTPS or on localhost. Go to **Scan → Use camera** and allow camera access. Check the live frame, then select **Take photo and save**. After **Saved to closet** appears, select **View closet** to see the new item. You can also upload a photo from the laptop.
 
 1. *"Our capstone, EcoStylist, generated outfits from hardcoded rules. Watch what happens with a real request."* Paste the Seattle prompt (below) and click **Plan my outfits**.
 2. **Point at the trace.** The agent chose to check the weather, read the calendar and query the closet. That's the API input and the agent's tasks, each with its exact request and response.

@@ -38,6 +38,7 @@ W_STYLE = 0.25
 W_WEATHER = 0.20
 W_ROTATION = 0.15
 W_FAVORITE = 0.05
+PALETTE_BONUS = 0.08
 W_JITTER = 0.02                 # tie-breaker only; must stay below meaningful signal gaps
 
 SHOELESS_PENALTY = 0.25
@@ -267,6 +268,31 @@ def color_harmony(items: Sequence[ItemData]) -> float:
     return -1.0
 
 
+def normalize_color(color: str) -> str:
+    name = " ".join(color.lower().replace("-", " ").split())
+    return {"grey": "gray", "navy blue": "navy"}.get(name, name)
+
+
+def assess_palette(items: Sequence[ItemData], preferred_colors: frozenset[str]) -> tuple[list[str], float | None]:
+    """Return matched shades and the share of labeled garments that match near the face."""
+    if not preferred_colors:
+        return [], None
+    matches = set()
+    labeled = 0
+    matched = 0
+    for item in items:
+        slots = item_slots(item)
+        if not item.color or not slots & {"top", "dress", "outerwear"} or "bottom" in slots:
+            continue
+        colors = set(map(normalize_color, re.split(r"[,/&+]|\band\b", item.color.lower()))) - {""}
+        if colors:
+            labeled += 1
+            matching_colors = colors & preferred_colors
+            matched += bool(matching_colors)
+            matches.update(matching_colors)
+    return sorted(matches), matched / labeled if labeled else None
+
+
 # ---------------------------------------------------------------------------
 # Styles
 # ---------------------------------------------------------------------------
@@ -431,6 +457,7 @@ def score_combo(
     today: date,
     rng: random.Random,
     shoeless: bool = False,
+    preferred_colors: frozenset[str] = frozenset(),
 ) -> float:
     """Weighted sum of the outfit signals; higher is better.
 
@@ -446,6 +473,7 @@ def score_combo(
         + W_ROTATION * rotation
         + W_FAVORITE * favorite
         + W_JITTER * rng.random()
+        + PALETTE_BONUS * (assess_palette(items, preferred_colors)[1] or 0)
     )
     if shoeless:
         score -= SHOELESS_PENALTY
@@ -467,6 +495,7 @@ def generate_candidates(
     today: date,
     seed: Optional[int] = None,
     exclude: Iterable[frozenset] = (),
+    preferred_colors: frozenset[str] = frozenset(),
 ) -> list[Candidate]:
     """Build every valid templated combo (bounded) and return them ranked by score.
 
@@ -493,7 +522,11 @@ def generate_candidates(
             slots[slot].append(item)
 
     # Keep only the strongest items per slot. Ties break on id so the cut is stable.
-    rank = {item.id: _item_rank_score(item, weather, today, rng) for item in pool}
+    rank = {
+        item.id: _item_rank_score(item, weather, today, rng)
+        + PALETTE_BONUS * (assess_palette((item,), preferred_colors)[1] or 0)
+        for item in pool
+    }
     for slot, members in slots.items():
         members.sort(key=lambda i: (-rank[i.id], i.id))
         limit = MAX_LAYER_OPTIONS if slot in ("outerwear", "extra") else MAX_PER_SLOT
@@ -511,12 +544,12 @@ def generate_candidates(
         assigned = [("top", top), ("bottom", bottom)]
         if shoe is not None:
             assigned.append(("shoes", shoe))
-        bases.append((score_combo([i for _, i in assigned], weather, today, rng, shoeless), assigned))
+        bases.append((score_combo([i for _, i in assigned], weather, today, rng, shoeless, preferred_colors), assigned))
     for dress, shoe in itertools.product(slots["dress"], shoe_options):
         assigned = [("dress", dress)]
         if shoe is not None:
             assigned.append(("shoes", shoe))
-        bases.append((score_combo([i for _, i in assigned], weather, today, rng, shoeless), assigned))
+        bases.append((score_combo([i for _, i in assigned], weather, today, rng, shoeless, preferred_colors), assigned))
 
     bases.sort(key=lambda b: (-b[0], tuple(i.id for _, i in b[1])))
     bases = bases[:MAX_BASE_COMBOS]
@@ -545,7 +578,7 @@ def generate_candidates(
             if len(key) != len(ordered) or key in seen or key in excluded:
                 continue
             seen.add(key)
-            score = score_combo(ordered, weather, today, rng, shoeless)
+            score = score_combo(ordered, weather, today, rng, shoeless, preferred_colors)
             candidates.append(Candidate(items=ordered, score=round(score, 4), shoeless=shoeless))
 
     candidates.sort(key=lambda c: (-c.score, tuple(c.item_ids)))

@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "sources": [
+    {
+      "title": "Clothing Aesthetics (Perrett and Sprengelmeyer, 2021)",
+      "url": "https://doi.org/10.1177/20416695211053361",
+      "dataset": "https://doi.org/10.6084/m9.figshare.14596905.v1",
+      "finding": "In Experiment 1, cool hues were chosen in 651 of 1,152 trials for fair faces and 426 of 1,152 trials for tanned faces. These are repeated choices by 96 observers using 12 White women's faces. They do not establish rules across skin tones."
+    },
+    {
+      "title": "Eye Color and Clothing Aesthetics (Perrett, 2023)",
+      "url": "https://doi.org/10.1037/aca0000626",
+      "dataset": "https://doi.org/10.6084/m9.figshare.20795986.v1",
+      "finding": "Across 99 rows of the Experiment 2 participant means table, the average share of warm choices was 59% for dark-eye stimuli and 46% for light-eye stimuli, averaging both tasks and hair conditions. Consider visible eye color alongside skin and hair contrast."
+    },
+    {
+      "title": "The Science of Style (Gray et al., 2014)",
+      "url": "https://doi.org/10.1371/journal.pone.0102772",
+      "finding": "In controlled outfit sets, raters preferred moderate coordination. This result concerns garment combinations, not a person's ideal palette."
+    }
+  ]
+}

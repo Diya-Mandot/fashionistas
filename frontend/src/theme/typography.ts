@@ -1,5 +1,5 @@
 // "Luxury of Less" typography system, ported from ecostylistfe/theme/typography.ts.
-// Display: Syne. Body: Manrope. Only the wordmark uses Playfair Display.
+// Plus Jakarta Sans everywhere, Ms Madi for one headline accent word. Only the wordmark uses Playfair Display.
 // Each preset maps to a Tailwind utility class defined in src/index.css.
 export const type = {
   displayLg: 'type-display-lg',

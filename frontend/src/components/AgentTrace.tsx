@@ -7,6 +7,7 @@ import { SourceBadge } from './SourceBadge';
 import { StepIcon } from './StepIcon';
 
 const API_LABEL: Record<string, string> = {
+  personal_palette: 'Personal colors',
   build_and_score_outfits: 'Claude scoring',
   find_closet_gaps: 'Claude scoring',
   get_weather_forecast: 'Open-Meteo',

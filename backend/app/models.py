@@ -41,9 +41,22 @@ class WardrobeItem(WardrobeItemBase, table=True):
     __tablename__ = "wardrobe_items"
 
     id: str = Field(default_factory=lambda: new_id("itm"), primary_key=True)
-    source: str = "seed"  # seed | scan | manual | buy_check
+    source: str = "seed"  # seed | scan | manual | buy_check | receipt
     scan_meta: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ImportedReceipt(SQLModel, table=True):
+    __tablename__ = "imported_receipts"
+
+    id: str = Field(primary_key=True)
+    item_ids: list[str] = Field(sa_column=Column(JSON, nullable=False))
+
+
+class ProcessedReceiptEmail(SQLModel, table=True):
+    __tablename__ = "processed_receipt_emails"
+
+    id: str = Field(primary_key=True)
 
 
 class AgentRunRecord(SQLModel, table=True):

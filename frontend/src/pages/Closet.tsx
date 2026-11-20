@@ -16,7 +16,9 @@ const SHOP_LINKS = [
   { to: '/shop', title: 'Shop', blurb: 'Fill the gaps in your wardrobe', icon: IoStorefrontOutline },
 ];
 
-export function Closet({ active = true }: { active?: boolean }) {
+export function Closet({
+  active = true, revision, latestScanId,
+}: { active?: boolean; revision: number; latestScanId: string | null }) {
   const [items, setItems] = useState<WardrobeItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState('all');
@@ -24,8 +26,28 @@ export function Closet({ active = true }: { active?: boolean }) {
   const [selected, setSelected] = useState<WardrobeItem | null>(null);
 
   useEffect(() => {
-    if (active) api.closet().then(setItems).catch((e: Error) => setError(e.message));
-  }, [active]);
+    if (!active) return;
+    let stopped = false;
+    const refresh = async () => {
+      try {
+        const closet = await api.closet();
+        if (!stopped) {
+          setItems(closet);
+          setError(null);
+        }
+      } catch (e) {
+        if (!stopped) setError(e instanceof Error ? e.message : String(e));
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refresh();
+    }, 30_000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+  }, [active, revision]);
 
   // /closet?item=itm_… opens that item (linked from Should I Buy This? duplicates).
   const linkedId = new URLSearchParams(useLocation().search).get('item');
@@ -41,9 +63,13 @@ export function Closet({ active = true }: { active?: boolean }) {
         .filter(
           (i) => (category === 'all' || i.category === category) && (formality === 'any' || i.formality === formality),
         )
-        .sort((a, b) => CATEGORY_FILTERS.indexOf(a.category) - CATEGORY_FILTERS.indexOf(b.category)),
-    [items, category, formality],
+        .sort((a, b) => (
+          Number(b.id === latestScanId) - Number(a.id === latestScanId)
+          || CATEGORY_FILTERS.indexOf(a.category) - CATEGORY_FILTERS.indexOf(b.category)
+        )),
+    [items, category, formality, latestScanId],
   );
+  const hiddenScan = items?.find((item) => item.id === latestScanId && !visible.some((shown) => shown.id === item.id));
 
   const onDelete = async (item: WardrobeItem) => {
     await api.deleteItem(item.id);
@@ -103,6 +129,18 @@ export function Closet({ active = true }: { active?: boolean }) {
       </div>
 
       {error && <p className="type-body-md text-error">Couldn’t load your closet: {error}</p>}
+      {hiddenScan && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <p className="type-body-sm">{hiddenScan.name} was saved. Your current filters hide it.</p>
+          <button
+            type="button"
+            className="text-sm font-semibold text-ocean-deep underline"
+            onClick={() => { setCategory('all'); setFormality('any'); }}
+          >
+            Show scanned item
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {visible.map((item) => (

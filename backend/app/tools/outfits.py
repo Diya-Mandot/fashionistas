@@ -114,7 +114,9 @@ def build_and_score_outfits(
     wctx = gen.WeatherContext(temp_f=w.temp_f, precipitation=w.precipitation)
     seed = int(hashlib.sha256(f"{event['name']}{event['date']}".encode()).hexdigest()[:8], 16)
     filtered = gen.filter_for_weather(data, wctx)
-    ranked_all = gen.generate_candidates(filtered, wctx, today=ctx.today, seed=seed)
+    ranked_all = gen.generate_candidates(
+        filtered, wctx, today=ctx.today, seed=seed, preferred_colors=ctx.preferred_colors,
+    )
     if exclude:
         ranked_all = [c for c in ranked_all if c.key not in exclude]
     if distinct:
@@ -161,7 +163,11 @@ def build_and_score_outfits(
             ctx.used_items.get(i, 0) for i in candidates[idx].item_ids if by_id[i].category not in REWEARABLE
         )
 
-    ranked = sorted(scored.scores, key=lambda s: -(s.scores.overall - repeat_cost(s.index)))
+    palettes = [gen.assess_palette(c.items, ctx.preferred_colors) for c in candidates]
+    ranked = sorted(
+        scored.scores,
+        key=lambda s: -(s.scores.overall - repeat_cost(s.index) + gen.PALETTE_BONUS * (palettes[s.index][1] or 0)),
+    )
     rotated = ranked[0].index != max(scored.scores, key=lambda s: s.scores.overall).index
     for item_id in candidates[ranked[0].index].item_ids:
         ctx.used_items[item_id] = ctx.used_items.get(item_id, 0) + 1
@@ -175,28 +181,39 @@ def build_and_score_outfits(
         cand = candidates[s.index]
         ref = f"{ekey}-{chr(ord('A') + rank)}"
         scores = s.scores.model_dump()
+        hint = _hint(scores)
+        palette_matches, palette_score = palettes[s.index]
+        if palette_score is not None:
+            scores["palette"] = palette_score
         opt = OutfitOption(
             ref=ref, event_name=event["name"], event_date=event["date"], item_ids=cand.item_ids,
-            item_names=[by_id[i].name for i in cand.item_ids], scores=scores, hint=_hint(scores),
+            item_names=[by_id[i].name for i in cand.item_ids], scores=scores, hint=hint,
+            palette_matches=palette_matches,
         )
         ctx.outfits[ref] = opt
         refs.append(ref)
-        options.append({"outfit_ref": ref, "items": opt.item_names, "scores": scores, "why": opt.hint})
+        options.append({"outfit_ref": ref, "items": opt.item_names, "scores": scores, "why": opt.hint,
+                        "palette_matches": opt.palette_matches})
     ctx.options_by_event[f"{event['name']}|{event['date']}"] = refs
 
     winner = options[0]["scores"]
+    palette_score = winner.get("palette")
+    palette_bonus = gen.PALETTE_BONUS * (palette_score or 0)
     return ToolOutput(
         result={
             "event": event,
             "weather_used": w.model_dump(),
             "candidates_scored": len(candidates),
-            "ranking": "overall score, lightly penalising pieces already planned earlier this trip",
+            "ranking": "Overall score with adjustments for repeats and preferred colors worn near the face",
+            "palette_weight": gen.PALETTE_BONUS if ctx.preferred_colors else 0,
+            "winner_palette_bonus": round(palette_bonus, 3),
             "scored_by": f"Claude ({scored.meta.source})",
             "options": options,
         },
         title=f"Scored {len(candidates)} outfit{'s' if len(candidates) != 1 else ''} for {event['name']} (Claude)",
         detail=f"Winner {winner['overall']:.2f} overall · " + options[0]["why"]
-        + (" · Rotated to avoid repeating pieces from earlier this trip" if rotated else "")
+        + (f" · Personal colors {palette_score:.2f} (+{palette_bonus:.2f} to ranking)" if palette_score is not None else "")
+        + (" · Ranking adjusted for repeats or color preferences" if rotated else "")
         + (f" · {scored.meta.note}" if scored.meta.note else ""),
         source=scored.meta.source,
         kind="decision",

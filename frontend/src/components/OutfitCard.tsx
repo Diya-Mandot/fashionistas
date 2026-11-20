@@ -33,7 +33,7 @@ export function OutfitCard({ event, items }: { event: PlanEvent; items: Map<stri
               return (
                 <figure key={id} className="overflow-hidden rounded-card bg-white/80">
                   <div className="aspect-[5/6] bg-sand-100">
-                    {it && <img src={it.image_url} alt={it.name} className="h-full w-full object-cover" />}
+                    {it?.image_url && <img src={it.image_url} alt={it.name} className="h-full w-full object-cover" />}
                   </div>
                   <figcaption className="px-2.5 py-2 text-[12px] font-semibold leading-4 text-ink">{it?.name ?? 'Item'}</figcaption>
                 </figure>
@@ -55,7 +55,7 @@ export function OutfitCard({ event, items }: { event: PlanEvent; items: Map<stri
             </div>
             {showWhy && (
               <div className="mt-3 rounded-2xl bg-white/75 p-4">
-                <p className="type-micro mb-3">Scored by Claude</p>
+                <p className="type-micro mb-3">Outfit scores</p>
                 <ScoreBreakdown scores={pick.scores} />
               </div>
             )}

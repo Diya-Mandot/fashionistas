@@ -11,4 +11,5 @@ backend/uploads
 backend/logs
 backend/recordings
 backend/private_calendar
+backend/private_email
 backend/tests

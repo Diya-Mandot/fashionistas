@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { BuyCheck } from './pages/BuyCheck';
 import { Closet } from './pages/Closet';
@@ -23,6 +23,10 @@ function Tabs() {
   const tab = tabFor(useLocation().pathname);
   const scroll = useRef<Record<Tab, number>>({ stylist: 0, today: 0, closet: 0, scan: 0, buy: 0, shop: 0 });
   const prev = useRef<Tab>(tab);
+  const [closetChange, setClosetChange] = useState<{ revision: number; scanId: string | null }>({ revision: 0, scanId: null });
+  const onClosetChange = useCallback((scanId: string | null) => {
+    setClosetChange(({ revision }) => ({ revision: revision + 1, scanId }));
+  }, []);
 
   useLayoutEffect(() => {
     if (prev.current === tab) return;
@@ -40,10 +44,10 @@ function Tabs() {
         <Today active={tab === 'today'} />
       </div>
       <div hidden={tab !== 'closet'}>
-        <Closet active={tab === 'closet'} />
+        <Closet active={tab === 'closet'} revision={closetChange.revision} latestScanId={closetChange.scanId} />
       </div>
       <div hidden={tab !== 'scan'}>
-        <Scan />
+        <Scan active={tab === 'scan'} onClosetChange={onClosetChange} />
       </div>
       <div hidden={tab !== 'buy'}>
         <BuyCheck active={tab === 'buy'} />

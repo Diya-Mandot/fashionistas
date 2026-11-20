@@ -1,4 +1,4 @@
-# Fashionistas: Context-Aware Stylist (Hackathon Plan)
+# Wearth: Context-Aware Stylist (Hackathon Plan)
 
 Track 1: **Agents in Action**. We use both the hackathon **Agents API** and **Decisions API**.
 

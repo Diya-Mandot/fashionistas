@@ -23,6 +23,7 @@ class OutfitOption:
     item_names: list[str]
     scores: dict[str, float]
     hint: str
+    palette_matches: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -43,6 +44,7 @@ class RunContext:
     sources: dict[str, set[str]] = field(default_factory=dict)
     event_counter: int = 0
     used_items: dict[str, int] = field(default_factory=dict)
+    preferred_colors: frozenset[str] = frozenset()
 
     def note_source(self, api: str, source: str) -> None:
         self.sources.setdefault(api, set()).add(source)

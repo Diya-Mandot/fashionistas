@@ -27,6 +27,7 @@ class Scores(BaseModel):
     weather: float
     color: float
     freshness: float
+    palette: Optional[float] = None
 
 
 class OutfitPick(BaseModel):
@@ -34,6 +35,7 @@ class OutfitPick(BaseModel):
     scores: Scores
     rationale: str
     ref: Optional[str] = None
+    palette_matches: list[str] = Field(default_factory=list)
 
 
 class PlanEvent(BaseModel):
@@ -183,7 +185,10 @@ def assemble_plan(ctx: RunContext, submission: dict[str, Any]) -> tuple[Plan, li
         ids = [i for i in opt.item_ids if i in closet_ids]
         if len(ids) != len(opt.item_ids):
             warnings.append(f"Dropped {len(opt.item_ids) - len(ids)} item(s) from {ref} that are no longer in the closet")
-        return OutfitPick(item_ids=ids, scores=Scores(**opt.scores), rationale=(rationale or opt.hint).strip(), ref=opt.ref)
+        return OutfitPick(
+            item_ids=ids, scores=Scores(**opt.scores), rationale=(rationale or opt.hint).strip(), ref=opt.ref,
+            palette_matches=opt.palette_matches if len(ids) == len(opt.item_ids) else [],
+        )
 
     trip_in = submission.get("trip") or {}
     days: list[PlanDay] = []

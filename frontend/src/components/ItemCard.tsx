@@ -1,4 +1,4 @@
-import { IoHeart } from 'react-icons/io5';
+import { IoHeart, IoShirtOutline } from 'react-icons/io5';
 import type { WardrobeItem } from '../lib/types';
 import { MicroChip } from './Chip';
 
@@ -10,20 +10,26 @@ export function ItemCard({ item, onClick }: { item: WardrobeItem; onClick?: () =
       className="glass group flex flex-col overflow-hidden rounded-card text-left transition-transform hover:-translate-y-0.5"
     >
       <div className="relative aspect-[5/6] w-full overflow-hidden bg-sand-100">
-        <img
-          src={item.image_url}
-          alt={item.name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-        />
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-forest/50" aria-hidden="true">
+            <IoShirtOutline size={34} />
+          </span>
+        )}
         {item.is_favorite && (
           <span className="absolute right-3 top-3 rounded-full bg-white/80 p-1.5 text-forest">
             <IoHeart size={12} />
           </span>
         )}
-        {item.source === 'scan' && (
+        {(item.source === 'scan' || item.source === 'receipt') && (
           <span className="absolute left-3 top-3">
-            <MicroChip tone="ocean">Scanned</MicroChip>
+            <MicroChip tone="ocean">{item.source === 'receipt' ? 'From receipt' : 'Scanned'}</MicroChip>
           </span>
         )}
       </div>

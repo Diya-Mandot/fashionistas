@@ -31,6 +31,7 @@ export interface Scores {
   weather: number;
   color: number;
   freshness: number;
+  palette?: number | null;
 }
 
 export interface OutfitPick {
@@ -38,6 +39,7 @@ export interface OutfitPick {
   scores: Scores;
   rationale: string;
   ref?: string | null;
+  palette_matches?: string[];
 }
 
 export interface PlanEvent {
