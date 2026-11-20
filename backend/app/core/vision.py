@@ -27,7 +27,7 @@ import httpx
 import pillow_heif
 from fastapi import UploadFile
 from fastapi.concurrency import run_in_threadpool
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.config import get_settings
 
@@ -134,7 +134,7 @@ async def validate_upload(file: UploadFile) -> ValidatedImage:
 def to_data_url(image: ValidatedImage, max_side: int = 768) -> str:
     """Downscaled JPEG data URL for sending the photo to Claude."""
     with Image.open(BytesIO(image.content)) as im:
-        im = im.convert("RGB")
+        im = ImageOps.exif_transpose(im).convert("RGB")
         im.thumbnail((max_side, max_side))
         buf = BytesIO()
         im.save(buf, format="JPEG", quality=82)

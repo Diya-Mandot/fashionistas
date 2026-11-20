@@ -6,6 +6,7 @@ const CRITERIA: { key: keyof Omit<Scores, 'overall'>; label: string; meaning: st
   { key: 'dress_code', label: 'Dress code', meaning: 'Fit for the event and its dress code' },
   { key: 'weather', label: 'Weather', meaning: 'Comfort for the temperature and rain chance' },
   { key: 'color', label: 'Color harmony', meaning: 'How well the colors work together' },
+  { key: 'palette', label: 'Personal colors', meaning: 'Share of labeled garments near your face that match your palette' },
   { key: 'freshness', label: 'Freshness', meaning: 'Rotation: how recently these pieces were worn' },
 ];
 
@@ -13,9 +14,11 @@ const CRITERIA: { key: keyof Omit<Scores, 'overall'>; label: string; meaning: st
 export function ScoreBreakdown({ scores, compact = false }: { scores: Scores; compact?: boolean }) {
   const [hover, setHover] = useState<string | null>(null);
   return (
-    <div className="flex flex-col gap-2" role="table" aria-label="Claude score breakdown">
+    <div className="flex flex-col gap-2" role="table" aria-label="Outfit score breakdown">
       {CRITERIA.map(({ key, label, meaning }) => {
-        const v = Math.max(0, Math.min(1, scores[key]));
+        const score = scores[key];
+        if (score == null) return null;
+        const v = Math.max(0, Math.min(1, score));
         return (
           <div
             key={key}

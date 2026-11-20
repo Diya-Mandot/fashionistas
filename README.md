@@ -38,6 +38,26 @@ One `ANTHROPIC_API_KEY` covers both the agent and the scoring calls. Create it a
 
 **Google Vision** (Scan) uses the first available of: `GOOGLE_VISION_API_KEY`, a service-account file in `GOOGLE_APPLICATION_CREDENTIALS`, or your gcloud login (`gcloud auth application-default login`, same as the capstone). With none of these, Scan uses the photo plus colors detected on your machine, and says so in the trace.
 
+### Personal colors
+
+Open **Colors that suit me** in the stylist. Enter colors you like near your face, then run a plan. The stylist gives a small ranking boost to outfits with a matching top, dress, or jacket. The outfit card shows the matching shades. Your browser saves the list, and each new plan sends it to the backend for ranking.
+
+Color harmony measures how garments work together. Your preferred colors are a separate input. The ranker uses the closet's color labels, so accurate labels matter.
+
+The **Personal colors** row shows the share of labeled tops, dresses, and jackets that match the palette. The ranker adds up to 0.08 to an outfit's ranking score. It uses this addition alongside the existing score and repeat penalty. The Agent Trace shows the exact addition.
+
+You can also select a **Profile photo** under **Colors that suit me**. Use a clear photo in daylight. When you start a plan, Fashionistas sends the resized photo, your preferred colors, closet color labels, and research summaries to Claude. The photo stays selected until you remove it or reload the page. Fashionistas saves the color assessment in the **Agent Trace** and does not save the photo. This option needs an Anthropic API key and `DECISIONS_MODE=live`. If Claude cannot assess the photo with moderate confidence, the stylist uses your manually entered colors.
+
+- [Clothing Aesthetics](https://journals.sagepub.com/doi/10.1177/20416695211053361) tested simulated clothing colors against 12 faces of White women. It supports testing color near the face and has limited coverage of skin tones.
+- The photo prompt uses two CC BY 4.0 data summaries. It counts the cool-hue column by face group for Experiment 1 in [Perrett and Sprengelmeyer's trial data](https://doi.org/10.6084/m9.figshare.14596905.v1). It also averages the Experiment 2 warmth columns by eye-color group, across participants, tasks, and hair conditions, in [Perrett's participant means](https://doi.org/10.6084/m9.figshare.20795986.v1).
+- [Outfits for You (O4U)](https://github.com/AemikaChow/AiDLab-fAshIon-Data) provides 29,352 outfits with expert annotations that include skin color. The authors restrict the data to academic use without further permission.
+- [Polyvore Outfits](https://github.com/mvasil/fashion-compatibility) provides outfit compatibility benchmarks. [Learning Color Compatibility in Fashion Outfits](https://arxiv.org/abs/2007.02388) uses this benchmark to study outfit colors.
+- [Color Compatibility From Large Datasets](https://www.dgp.toronto.edu/~donovan/color/) provides human-rated five-color themes under CC BY-NC-SA. The themes represent general palette preferences.
+
+**LlamaPress research source.** Copy [the versioned research file](backend/app/data/palette-evidence.json) to `public/fashionistas/palette-evidence.json` in your LlamaPress Rails app. Verify that the app-only URL serves the JSON at that path. Set `LLAMAPRESS_PALETTE_URL` in `backend/.env` to the HTTPS URL of that file, then restart Fashionistas.
+
+Fashionistas downloads the research with a GET request. It sends no portrait or closet information with that request. Claude uses the research and profile photo to suggest colors. If the LlamaPress file is unavailable or invalid, Fashionistas uses the bundled evidence and records the source in the trace.
+
 ## Deploy (Railway)
 
 One Railway service runs everything: the [Dockerfile](Dockerfile) builds the frontend and serves it and the API from uvicorn, the same as `make start`. Every push to the connected branch redeploys.
