@@ -3,7 +3,7 @@ recordings exist if the network fails on stage.
 
     cd backend && uv run python scripts/warmup.py
 
-Requires the backend to be running (make dev) and OPENAI_API_KEY in backend/.env.
+Requires the backend to be running (make dev) and ANTHROPIC_API_KEY in backend/.env.
 """
 
 import sys

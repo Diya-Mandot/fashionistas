@@ -14,14 +14,17 @@ class Settings(BaseSettings):
 
     app_name: str = "Fashionistas"
 
-    # One OpenAI key powers both the Agents API and the Decisions API.
-    openai_api_key: str = ""
-    agents_model: str = "gpt-6-astra"
-    decisions_model: str = "gpt-6-luna"
+    # One Anthropic key powers both the stylist agent loop and the scoring/classification calls.
+    anthropic_api_key: str = ""
+    agents_model: str = "claude-opus-5-5"
+    decisions_model: str = "claude-opus-5-5"
+    # Claude effort (low | medium | high | xhigh | max). Low keeps the agent loop snappy.
+    agents_effort: str = "low"
+    decisions_effort: str = "low"
     agents_mode: ApiMode = "live"
     decisions_mode: ApiMode = "live"
 
-    api_timeout_s: float = 45.0
+    api_timeout_s: float = 90.0
     api_max_retries: int = 3
 
     google_vision_api_key: str = ""

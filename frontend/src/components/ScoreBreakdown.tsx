@@ -13,7 +13,7 @@ const CRITERIA: { key: keyof Omit<Scores, 'overall'>; label: string; meaning: st
 export function ScoreBreakdown({ scores, compact = false }: { scores: Scores; compact?: boolean }) {
   const [hover, setHover] = useState<string | null>(null);
   return (
-    <div className="flex flex-col gap-2" role="table" aria-label="Decisions API score breakdown">
+    <div className="flex flex-col gap-2" role="table" aria-label="Claude score breakdown">
       {CRITERIA.map(({ key, label, meaning }) => {
         const v = Math.max(0, Math.min(1, scores[key]));
         return (

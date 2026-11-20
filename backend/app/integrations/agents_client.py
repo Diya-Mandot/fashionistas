@@ -1,11 +1,11 @@
-"""Adapter for the OpenAI Agents API (beta; POST /v1/agents/sessions, model gpt-6-astra).
+"""Stylist agent on Claude (Messages API tool-use loop, model claude-opus-5-5 by default).
 
 run_agent(goal, tools, context) -> AgentRun
 
-Live: create a session with our function tools and environment "none", stream its
-events, and whenever it emits agent.session.requires_action, run each pending
-function_call locally and return results via agent.session.input.tool_result.
-The agent alone decides which tools to call and in what order.
+Live: send the goal as the system prompt and our function tools to Claude. Whenever
+it stops with tool_use blocks, run each call locally and send every tool_result back
+in one user message; repeat until Claude ends its turn. Claude alone decides which
+tools to call and in what order.
 
 Fallbacks, in order (each visibly labelled in the trace):
   replay: re-run the exact tool sequence a live agent chose for this same message
@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.integrations import recorder
-from app.integrations.openai_client import ApiNotConfigured, get_client, short_error
+from app.integrations.anthropic_client import ApiNotConfigured, fallback_kwargs, get_client, short_error
 from app.seed import _next_weekday
 from app.trace import TraceStep, truncate
 
@@ -125,22 +125,24 @@ def run_agent(
 # ---------------------------------------------------------------------------
 # Live
 # ---------------------------------------------------------------------------
-def _to_dict(obj: Any) -> dict[str, Any]:
-    if isinstance(obj, dict):
-        return obj
-    for attr in ("to_dict", "model_dump"):
-        fn = getattr(obj, attr, None)
-        if callable(fn):
-            try:
-                return fn()
-            except TypeError:
-                continue
-    return json.loads(json.dumps(obj, default=lambda o: getattr(o, "__dict__", str(o))))
+MAX_TURNS = 40
+TOOL_RESULT_MAX_CHARS = 200_000
 
 
-def _is_root(d: dict[str, Any]) -> bool:
-    turn = d.get("turn") or {}
-    return turn.get("subagent_id") in (None, "")
+def to_claude_tools(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Our registry specs ({type: function, name, description, parameters}) -> Claude tool defs."""
+    out = []
+    for t in tools:
+        out.append(
+            {
+                "name": t["name"],
+                "description": t.get("description", ""),
+                "input_schema": t.get("parameters") or {"type": "object", "properties": {}},
+                # Stream large tool inputs (submit_plan) as they're generated; dispatch() validates args.
+                "eager_input_streaming": True,
+            }
+        )
+    return out
 
 
 def _run_live(
@@ -153,90 +155,78 @@ def _run_live(
 ) -> AgentRun:
     s = get_settings()
     client = get_client()
-    agent = {"model": s.agents_model, "instructions": goal, "tools": tools, "reasoning": {"effort": "low"}}
-    user_input = [{"role": "user", "content": [{"type": "input_text", "text": message}]}]
-    request_log = {"agent": {**agent, "tools": [t["name"] for t in tools]}, "environment": {"type": "none"}, "input": user_input}
+    claude_tools = to_claude_tools(tools)
+    messages: list[dict[str, Any]] = [{"role": "user", "content": message}]
+    request_log = {"model": s.agents_model, "effort": s.agents_effort, "tools": [t["name"] for t in tools], "message": message}
     started = time.perf_counter()
-    session_id: Optional[str] = None
-    handled: set[str] = set()
     final_text: Optional[str] = None
-    event_types: list[str] = []
+    stop_reasons: list[str] = []
+    usage = {"input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0}
 
-    emit(TraceStep(kind="thinking", title="Agents API session started", detail=f"{s.agents_model} · {len(tools)} tools · environment: none", source="live",
-                   args=truncate(request_log)))
+    emit(TraceStep(kind="thinking", title="Claude agent started", detail=f"{s.agents_model} · {len(tools)} tools · effort: {s.agents_effort}",
+                   source="live", args=truncate(request_log)))
 
-    def handle_actions(actions: list[dict[str, Any]], turn_id_hint: Optional[str] = None) -> None:
+    for _turn in range(MAX_TURNS):
+        if time.perf_counter() - started > LIVE_DEADLINE_S:
+            raise AgentFailed(f"Agent exceeded {LIVE_DEADLINE_S}s")
+        with client.beta.messages.stream(
+            model=s.agents_model,
+            max_tokens=32000,
+            system=goal,
+            tools=claude_tools,
+            messages=messages,
+            output_config={"effort": s.agents_effort},
+            cache_control={"type": "ephemeral"},  # each turn resends the history; cache the prefix
+            **fallback_kwargs(),
+        ) as stream:
+            response = stream.get_final_message()
+
+        stop_reasons.append(str(response.stop_reason))
+        u = response.usage
+        usage["input_tokens"] += u.input_tokens or 0
+        usage["output_tokens"] += u.output_tokens or 0
+        usage["cache_read_input_tokens"] += getattr(u, "cache_read_input_tokens", 0) or 0
+
+        if response.stop_reason == "refusal":
+            raise AgentFailed("Claude declined the request (refusal)")
+        if response.stop_reason == "max_tokens":
+            # Tool inputs may be truncated: don't run them.
+            raise AgentFailed("Claude hit max_tokens mid-turn")
+
+        text = "".join(b.text for b in response.content if b.type == "text").strip()
+        if text:
+            final_text = text
+            emit(TraceStep(kind="message", title="Agent", detail=text[:400], source="live"))
+
+        # Echo the full content back (thinking, fallback and tool_use blocks included).
+        messages.append({"role": "assistant", "content": response.content})
+
+        if response.stop_reason == "pause_turn":
+            continue
+        tool_uses = [b for b in response.content if b.type == "tool_use"]
+        if not tool_uses:
+            break
+
         results = []
-        for a in actions:
-            a = _to_dict(a)
-            if a.get("type") != "function_call" or a.get("call_id") in handled:
-                continue
-            handled.add(a["call_id"])
-            args = a.get("arguments") or {}
-            if isinstance(args, str):
-                try:
-                    args = json.loads(args)
-                except json.JSONDecodeError:
-                    args = {}
-            calls.append({"name": a.get("name"), "args": args})
-            output, ok = execute(a.get("name", ""), args)
-            entry: dict[str, Any] = {"type": "agent.session.input.tool_result", "turn_id": a.get("turn_id") or turn_id_hint, "call_id": a["call_id"]}
+        for b in tool_uses:
+            args = b.input if isinstance(b.input, dict) else {}
+            calls.append({"name": b.name, "args": args})
+            output, ok = execute(b.name, args)
             if ok:
-                entry.update(success=True, output=json.dumps(output, default=str)[:3_500_000])
+                results.append({"type": "tool_result", "tool_use_id": b.id,
+                                "content": json.dumps(output, default=str)[:TOOL_RESULT_MAX_CHARS]})
             else:
-                entry.update(success=False, error=str(output.get("error", "Tool failed"))[:2000])
-            results.append(entry)
-        if results and session_id:
-            client.beta.agents.sessions.events.create(session_id, events=results)
-            recorder.log_call(API, "tool_results", source="live", request={"session_id": session_id, "results": [{"call_id": r["call_id"], "success": r["success"]} for r in results]})
-
-    stream = client.beta.agents.sessions.create(agent=agent, environment={"type": "none"}, input=user_input, stream=True)
-    completed = False
-    with stream:
-        for event in stream:
-            d = _to_dict(event)
-            etype = d.get("type", "")
-            event_types.append(etype)
-            session_id = session_id or (d.get("session") or {}).get("id") or d.get("session_id")
-            if time.perf_counter() - started > LIVE_DEADLINE_S:
-                raise AgentFailed(f"Agent exceeded {LIVE_DEADLINE_S}s")
-            if etype == "agent.session.requires_action":
-                actions = (d.get("session") or {}).get("required_actions")
-                if actions is None and session_id:
-                    actions = _to_dict(client.beta.agents.sessions.retrieve(session_id)).get("required_actions", [])
-                handle_actions(actions or [])
-            elif etype == "agent.session.turn.output_text.done" and _is_root(d):
-                final_text = d.get("text") or final_text
-                if final_text:
-                    emit(TraceStep(kind="message", title="Agent", detail=final_text[:400], source="live"))
-            elif etype == "error":
-                raise AgentFailed((d.get("error") or {}).get("message", "error event"))
-            elif etype in ("agent.session.failed", "agent.session.environment.failed"):
-                raise AgentFailed(etype)
-            elif etype in ("agent.session.turn.failed", "agent.session.turn.cancelled") and _is_root(d):
-                raise AgentFailed(f"{etype}: {((d.get('turn') or {}).get('error') or {}).get('message', '')}")
-            elif etype == "agent.session.turn.completed" and _is_root(d):
-                completed = True
-                break
-
-    if not completed and session_id:
-        # Stream closed early: recover from saved state (per docs) by polling.
-        while time.perf_counter() - started < LIVE_DEADLINE_S:
-            sess = _to_dict(client.beta.agents.sessions.retrieve(session_id))
-            status = sess.get("status")
-            if status == "requires_action":
-                handle_actions(sess.get("required_actions") or [])
-            elif status == "failed":
-                raise AgentFailed("session failed")
-            elif status == "idle":
-                completed = True
-                break
-            time.sleep(0.7)
-    if not completed:
-        raise AgentFailed("Stream closed before the turn completed")
+                results.append({"type": "tool_result", "tool_use_id": b.id, "is_error": True,
+                                "content": str(output.get("error", "Tool failed"))[:2000]})
+        # All results for this turn go back in one user message.
+        messages.append({"role": "user", "content": results})
+        recorder.log_call(API, "tool_results", source="live",
+                          request={"results": [{"tool_use_id": r["tool_use_id"], "success": not r.get("is_error")} for r in results]})
+    else:
+        raise AgentFailed(f"Agent did not finish within {MAX_TURNS} turns")
 
     recorder.log_call(API, "session", source="live", request=request_log,
-                      response={"session_id": session_id, "event_types": event_types[-200:], "tool_calls": calls, "final_text": final_text},
+                      response={"stop_reasons": stop_reasons[-200:], "tool_calls": calls, "final_text": final_text, "usage": usage},
                       duration_ms=int((time.perf_counter() - started) * 1000))
     return AgentRun(source="live", final_text=final_text, tool_calls=calls)
 
@@ -319,7 +309,7 @@ def _run_mock(context: dict[str, Any], execute: Execute, emit: Emit) -> AgentRun
     emit(
         TraceStep(
             kind="thinking",
-            title=f"Plan: {city}, {start.strftime('%a %b %-d')} → {end.strftime('%a %b %-d')}",
+            title=f"Plan: {city}, {start:%a %b} {start.day} → {end:%a %b} {end.day}",
             detail=f"Vibe: “{vibe}”. I need the forecast, the calendar for those dates, and the closet.",
             source="mock",
         )

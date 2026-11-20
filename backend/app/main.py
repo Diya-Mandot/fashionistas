@@ -13,7 +13,7 @@ from app.config import BACKEND_DIR, get_settings
 from app.core.vision import vision_configured
 from app.services.calendar_source import calendar_configured
 from app.db import engine, init_db
-from app.integrations.openai_client import key_configured
+from app.integrations.anthropic_client import key_configured
 from app.routers import calendar, closet, dev, health, location, scan, stylist
 from app.seed import seed_if_empty
 
