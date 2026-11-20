@@ -40,14 +40,24 @@ class Settings(BaseSettings):
     # Also include the seeded demo trips (Seattle/NYC/new job). Defaults to on only
     # when no real calendar is configured.
     calendar_include_demo: Optional[bool] = None
-    # Where runtime state lives (database, uploads, recordings, logs). Defaults to backend/.
-    # On Railway, set DATA_DIR to the volume's mount path (e.g. /data) so state survives
-    # redeploys. An explicit UPLOADS_DIR / DATABASE_URL / RECORDINGS_DIR / LOGS_DIR still wins.
+    # Google Calendar sync (OAuth). Create a "Web application" OAuth client in Google Cloud
+    # Console and register google_oauth_redirect_uri as an authorized redirect URI.
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    google_oauth_redirect_uri: str = "http://localhost:8000/api/calendar/google/callback"
+    # Which calendars to read: "primary", comma-separated calendar IDs, or "all" (every
+    # calendar ticked in your Google Calendar sidebar).
+    google_calendar_ids: str = "primary"
+    # Where runtime state lives (database, uploads, recordings, logs, Google token). Defaults
+    # to backend/. On Railway, set DATA_DIR to the volume's mount path (e.g. /data) so state
+    # survives redeploys. An explicit UPLOADS_DIR / DATABASE_URL / RECORDINGS_DIR / LOGS_DIR /
+    # GOOGLE_TOKEN_FILE still wins.
     data_dir: str = ""
     uploads_dir: str = ""
     database_url: str = ""
     recordings_dir: str = ""
     logs_dir: str = ""
+    google_token_file: str = ""
     frontend_origin: str = "http://localhost:5173"
     dev_endpoints: bool = True
 
@@ -57,6 +67,9 @@ class Settings(BaseSettings):
         self.database_url = self.database_url or f"sqlite:///{base / 'ecostylist.db'}"
         self.recordings_dir = self.recordings_dir or str(base / "recordings")
         self.logs_dir = self.logs_dir or str(base / "logs")
+        self.google_token_file = self.google_token_file or str(
+            base / "private_calendar" / "google_token.json"
+        )
 
 
 @lru_cache

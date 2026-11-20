@@ -6,7 +6,7 @@ from app.tools.context import RunContext, ToolOutput
 
 
 def read_calendar(ctx: RunContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> ToolOutput:
-    """The user's real calendar (iCal feed) if configured, else the seeded demo calendar."""
+    """The user's real calendar (Google Calendar or iCal feed) if connected, else the seeded demo calendar."""
     try:
         start = date.fromisoformat(start_date) if start_date else ctx.today
         end = date.fromisoformat(end_date) if end_date else start + timedelta(days=7)
