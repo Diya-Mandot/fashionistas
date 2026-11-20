@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { IoArrowUndoOutline, IoCreateOutline, IoHelpCircleOutline, IoRefreshOutline } from 'react-icons/io5';
+import { IoArrowUndoOutline, IoCreateOutline, IoHelpCircleOutline, IoRefreshOutline, IoShirtOutline } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import { MicroChip } from '../components/Chip';
 import { GlassPanel } from '../components/GlassPanel';
 import { PageShell } from '../components/PageShell';
 import { PhotoDrop, previewUrl } from '../components/PhotoDrop';
 import { StepList, useStepReveal } from '../components/StepList';
+import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
 import type { TraceStep, WardrobeItem } from '../lib/types';
 
@@ -24,6 +25,12 @@ export function Scan() {
   const [editing, setEditing] = useState(false);
   const { shown, allShown: traceShown, pending } = useStepReveal(trace, phase === 'working', PENDING_STEPS);
   const allShown = traceShown && phase === 'done';
+  const { toast, show: showToast } = useToast();
+
+  // Daily outfit log: placeholder until the backend can pick out each worn piece.
+  const logOutfit = (file: File) => {
+    showToast(`Outfit photo received (${file.name}). Daily logging is coming soon.`);
+  };
 
   // Undo window.
   useEffect(() => {
@@ -82,12 +89,28 @@ export function Scan() {
             and it lands in your closet with zero typing.
           </p>
         </div>
-        <Link
-          to="/buy"
-          className="flex shrink-0 items-center gap-1.5 self-start rounded-full border border-forest bg-white/80 px-4 py-2 text-[13px] font-bold text-forest hover:bg-white md:self-auto"
-        >
-          <IoHelpCircleOutline size={16} /> Should I buy this?
-        </Link>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 self-start md:self-auto">
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-forest bg-forest px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-forest/90 focus-within:ring-2 focus-within:ring-emerald">
+            <IoShirtOutline size={16} /> Log today&apos;s outfit
+            <input
+              type="file"
+              accept="image/*"
+              capture="user"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (f) logOutfit(f);
+              }}
+            />
+          </label>
+          <Link
+            to="/buy"
+            className="flex items-center gap-1.5 rounded-full border border-forest bg-white/80 px-4 py-2 text-[13px] font-bold text-forest hover:bg-white"
+          >
+            <IoHelpCircleOutline size={16} /> Should I buy this?
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
@@ -182,6 +205,7 @@ export function Scan() {
           )}
         </div>
       </div>
+      {toast}
     </PageShell>
   );
 }
