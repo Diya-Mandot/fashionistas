@@ -239,6 +239,15 @@ def keep_buy_check(check_id: str, session: Session = Depends(get_session)) -> di
     attrs = {k: v for k, v in check.attrs.items() if k in WardrobeItem.model_fields and k != "image_url"}
     item = WardrobeItem(id=item_id, source="buy_check", image_url=image_url, **attrs)
     check.kept, check.item_id = True, item_id
+    if image_url:  # point the stored result at the photo's new home (JSON columns need reassigning)
+        check.attrs = {**check.attrs, "image_url": image_url}
+        check.result = {
+            **check.result,
+            "top_outfits": [
+                {**o, "items": [{**i, "image_url": image_url} if i.get("id") == NEW_ITEM_ID else i for i in o["items"]]}
+                for o in check.result.get("top_outfits", [])
+            ],
+        }
     session.add(item)
     session.add(check)
     session.commit()

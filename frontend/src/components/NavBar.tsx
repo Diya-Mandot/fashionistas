@@ -37,7 +37,8 @@ export function NavBar({ overlay = false, dark = true }: { overlay?: boolean; da
               to={to === '/' ? stylistPath : to}
               end
               className={({ isActive: active }) => {
-                const isActive = to === '/' ? pathname === '/' : active;
+                // Should I Buy This? (/buy) is part of the Scan tab.
+                const isActive = to === '/' ? pathname === '/' : active || (to === '/scan' && pathname.startsWith('/buy'));
                 return (
                 `flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors ${
                   isActive

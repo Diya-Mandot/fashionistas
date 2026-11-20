@@ -59,6 +59,11 @@ def test_nothing_saved_until_keep(client):
     closet = client.get("/api/closet").json()
     assert len(closet) == before + 1 and any(i["id"] == item["id"] for i in closet)
     assert client.post(f"/api/buy-check/{check_id}/keep").status_code == 409
+    # Refetching the check now points at the moved photo, not the pending one.
+    again = client.get(f"/api/buy-check/{check_id}").json()
+    assert again["item"]["image_url"] == item["image_url"]
+    news = [i for o in again["result"]["top_outfits"] for i in o["items"] if i["id"] == "new"]
+    assert news and all(i["image_url"] == item["image_url"] for i in news)
 
 
 def test_owning_one_makes_the_next_a_duplicate(client):

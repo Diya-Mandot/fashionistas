@@ -1,8 +1,39 @@
-import type { AgentRun, CalendarResponse, DeviceLocation, GoogleCalendarStatus, Health, Preflight, WardrobeItem } from './types';
+import type {
+  AgentRun,
+  BuyCheckResponse,
+  CalendarResponse,
+  DeviceLocation,
+  GoogleCalendarStatus,
+  Health,
+  Paywall,
+  Preflight,
+  WardrobeItem,
+} from './types';
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
   return res.json() as Promise<T>;
+}
+
+/** Thrown when the free monthly checks are used up (HTTP 402). */
+export class PaywallError extends Error {
+  readonly paywall: Paywall;
+  constructor(paywall: Paywall) {
+    super(`You've used your ${paywall.limit} free checks this month.`);
+    this.paywall = paywall;
+  }
+}
+
+/** FastAPI errors arrive as {"detail": "..."}; show just the message. */
+async function errorText(res: Response): Promise<string> {
+  const text = await res.text();
+  try {
+    const detail = (JSON.parse(text) as { detail?: unknown }).detail;
+    if (typeof detail === 'string') return detail;
+  } catch {
+    // not JSON
+  }
+  return text || res.statusText;
 }
 
 export const api = {
@@ -40,6 +71,20 @@ export const api = {
     return fetch('/api/closet/scan', { method: 'POST', body }).then((r) =>
       json<{ item: WardrobeItem; trace: import('./types').TraceStep[] }>(r),
     );
+  },
+  buyCheck: async (file: File): Promise<BuyCheckResponse> => {
+    const body = new FormData();
+    body.append('file', file);
+    const res = await fetch('/api/buy-check', { method: 'POST', body });
+    if (res.status === 402) throw new PaywallError((await res.json()) as Paywall);
+    if (!res.ok) throw new Error(await errorText(res));
+    return res.json() as Promise<BuyCheckResponse>;
+  },
+  getBuyCheck: (id: string) => fetch(`/api/buy-check/${id}`).then((r) => json<BuyCheckResponse>(r)),
+  keepBuyCheck: async (id: string): Promise<{ item: WardrobeItem }> => {
+    const res = await fetch(`/api/buy-check/${id}/keep`, { method: 'POST' });
+    if (!res.ok) throw new Error(await errorText(res));
+    return res.json() as Promise<{ item: WardrobeItem }>;
   },
 };
 

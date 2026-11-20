@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { IoAddOutline } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FilterChip } from '../components/Chip';
 import { ItemCard } from '../components/ItemCard';
 import { ItemDrawer } from '../components/ItemDrawer';
@@ -21,6 +21,14 @@ export function Closet({ active = true }: { active?: boolean }) {
   useEffect(() => {
     if (active) api.closet().then(setItems).catch((e: Error) => setError(e.message));
   }, [active]);
+
+  // /closet?item=itm_… opens that item (linked from Should I Buy This? duplicates).
+  const linkedId = new URLSearchParams(useLocation().search).get('item');
+  useEffect(() => {
+    if (!active || !linkedId || !items) return;
+    const found = items.find((i) => i.id === linkedId);
+    if (found) setSelected(found);
+  }, [active, linkedId, items]);
 
   const visible = useMemo(
     () =>

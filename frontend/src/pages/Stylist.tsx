@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { IoArrowBack, IoArrowForward, IoRainyOutline, IoSparklesOutline } from 'react-icons/io5';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { IoArrowBack, IoArrowForward, IoBagHandleOutline, IoRainyOutline, IoSparklesOutline } from 'react-icons/io5';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AgentTrace } from '../components/AgentTrace';
 import { DayTabs } from '../components/DayTabs';
 import { GapCard } from '../components/GapCard';
@@ -147,6 +147,13 @@ export function Stylist({ active = true }: { active?: boolean }) {
           </h1>
           <PromptBox message={message} setMessage={setMessage} onSubmit={onSubmit} dark geo={geo} />
           {error && <p className="mt-3 text-[13px] text-white">Couldn’t start: {error}</p>}
+          <Link
+            to="/buy"
+            className="mt-4 flex w-fit items-center gap-2 rounded-full border border-white/25 bg-black/35 px-4 py-2 text-[13px] font-semibold text-white backdrop-blur-xl hover:bg-black/45"
+          >
+            <IoBagHandleOutline size={16} /> Thinking of buying something? See if it works with your closet
+            <IoArrowForward size={14} />
+          </Link>
           <UpcomingEvents onStyle={styleEvent} busy={styling} />
         </section>
       ) : (

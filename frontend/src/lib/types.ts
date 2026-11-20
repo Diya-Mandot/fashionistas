@@ -178,3 +178,56 @@ export interface GoogleCalendarStatus {
   connected: boolean;
   email: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// Should I Buy This?
+// ---------------------------------------------------------------------------
+export type Verdict = 'great_buy' | 'maybe' | 'skip';
+
+export interface BuyCheckItem {
+  name: string;
+  category: string;
+  subcategory: string;
+  color: string | null;
+  style: string | null;
+  brand: string | null;
+  season: string | null;
+  material: string | null;
+  formality: Formality | string;
+  waterproof: boolean;
+  image_url: string;
+}
+
+export interface BuyCheckResult {
+  score: number;
+  verdict: Verdict;
+  outfit_count: number;
+  duplicates: { item_id: string; name: string; reason: string }[];
+  gap_filled: string | null;
+  calendar_matches: { event: string; date: string }[];
+  est_wears_per_year: number;
+  /** Each outfit includes the new item, with id "new". */
+  top_outfits: { items: WardrobeItem[]; includes_new: boolean }[];
+  score_reason: string;
+}
+
+export interface BuyCheckUsage {
+  checks_used: number;
+  limit: number;
+  pro: boolean;
+}
+
+export interface BuyCheckResponse {
+  check_id: string;
+  item: BuyCheckItem;
+  result: BuyCheckResult;
+  trace: TraceStep[];
+  usage: BuyCheckUsage;
+}
+
+/** Body of the 402 the API returns once the free checks are used up. */
+export interface Paywall {
+  paywall: 'buy_check';
+  used: number;
+  limit: number;
+}
