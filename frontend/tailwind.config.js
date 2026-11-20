@@ -29,8 +29,11 @@ export default {
         'emerald-deep': colors.emeraldDeep,
       },
       fontFamily: {
-        display: ['Syne', 'sans-serif'],
-        sans: ['Manrope', 'system-ui', 'sans-serif'],
+        // Same fonts as EcoStylist: Plus Jakarta Sans everywhere, Ms Madi
+        // only for one accent word in a big headline.
+        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        script: ['"Ms Madi"', 'cursive'],
         logo: ['"Playfair Display"', 'serif'],
       },
       borderRadius: {
